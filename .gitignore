@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual env
+.venv/
+venv/
+ENV/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# IDE (선택: 팀 규칙에 맞게 조정)
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 프로젝트 산출물·바이너리·대용량
+out/
+*.pdf
+*.zip
+*.bsp
+*.ephem
+
+# 로그·캐시
+*.log
+.cache/
+cache/
+
+# 폰트 디렉터리(로컬 설치본)
+assets/fonts/
+**/fonts/
