@@ -30,6 +30,8 @@ from engine.sajuCalculator import calculate_saju
 from engine.full_analyzer import analyze_full
 from engine.counsel_service import run_counsel_turn
 from engine.compatibility_analyzer import analyze_compatibility
+from engine.hidden_stems import compute_hidden_stems
+from engine.sipsin import ten_god_stem
 from reports.monthly_report import build_monthly_report_pdf
 import traceback
 
@@ -38,6 +40,155 @@ import traceback
 # 고정 출력 경로 (1개로 통일)
 # -------------------------
 OUT_PDF = Path("out") / "monthly_report.pdf"
+
+_STEM_EL_YY: dict[str, tuple[str, str]] = {
+    "甲": ("목", "+"), "乙": ("목", "-"), "丙": ("화", "+"), "丁": ("화", "-"),
+    "戊": ("토", "+"), "己": ("토", "-"), "庚": ("금", "+"), "辛": ("금", "-"),
+    "壬": ("수", "+"), "癸": ("수", "-"),
+}
+_BRANCH_EL_YY: dict[str, tuple[str, str]] = {
+    "子": ("수", "+"), "丑": ("토", "-"), "寅": ("목", "+"), "卯": ("목", "-"),
+    "辰": ("토", "+"), "巳": ("화", "-"), "午": ("화", "+"), "未": ("토", "-"),
+    "申": ("금", "+"), "酉": ("금", "-"), "戌": ("토", "+"), "亥": ("수", "-"),
+}
+_STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+
+
+def _void_by_pillar(stem: str, branch: str) -> str:
+    idx = -1
+    for i in range(60):
+        if _STEMS[i % 10] == stem and _BRANCHES[i % 12] == branch:
+            idx = i
+            break
+    if idx < 0:
+        return "—"
+    groups = ["戌亥", "申酉", "午未", "辰巳", "寅卯", "子丑"]
+    return groups[idx // 10]
+
+
+def _build_saju_overview(engine_result: dict[str, Any]) -> dict[str, Any]:
+    pillars = engine_result.get("pillars") if isinstance(engine_result.get("pillars"), dict) else {}
+    analysis = engine_result.get("analysis") if isinstance(engine_result.get("analysis"), dict) else {}
+
+    year = pillars.get("year") if isinstance(pillars.get("year"), dict) else {}
+    month = pillars.get("month") if isinstance(pillars.get("month"), dict) else {}
+    day = pillars.get("day") if isinstance(pillars.get("day"), dict) else {}
+    hour = pillars.get("hour") if isinstance(pillars.get("hour"), dict) else {}
+
+    pnorm = {
+        "year": {"stem": str(year.get("gan") or ""), "branch": str(year.get("ji") or "")},
+        "month": {"stem": str(month.get("gan") or ""), "branch": str(month.get("ji") or "")},
+        "day": {"stem": str(day.get("gan") or ""), "branch": str(day.get("ji") or "")},
+        "hour": {"stem": str(hour.get("gan") or ""), "branch": str(hour.get("ji") or "")},
+    }
+    day_stem = pnorm["day"]["stem"]
+    hidden = compute_hidden_stems(pnorm)
+
+    tf = analysis.get("twelve_fortunes") if isinstance(analysis.get("twelve_fortunes"), dict) else {}
+    sh = analysis.get("shinsal") if isinstance(analysis.get("shinsal"), dict) else {}
+    sh_items = sh.get("items") if isinstance(sh.get("items"), list) else []
+
+    by_where_shinsal: dict[str, list[str]] = {"year": [], "month": [], "day": [], "hour": []}
+    for it in sh_items:
+        if not isinstance(it, dict):
+            continue
+        w = str(it.get("where") or "").strip()
+        n = str(it.get("name") or "").strip()
+        if w in by_where_shinsal and n and ("12운성" not in n) and (not n.startswith("12")):
+            by_where_shinsal[w].append(n)
+    for k in by_where_shinsal:
+        # 중복 제거 + 기둥별 최대 8개 노출(누락 체감 방지)
+        uniq = []
+        seen = set()
+        for x in by_where_shinsal[k]:
+            if x not in seen:
+                seen.add(x)
+                uniq.append(x)
+        by_where_shinsal[k] = uniq[:8]
+
+    pillars_out: dict[str, Any] = {}
+    yin_yang_counts: dict[str, int] = {"+목": 0, "-목": 0, "+화": 0, "-화": 0, "+토": 0, "-토": 0, "+금": 0, "-금": 0, "+수": 0, "-수": 0}
+    for key in ("hour", "day", "month", "year"):
+        s = pnorm[key]["stem"]
+        b = pnorm[key]["branch"]
+        s_el, s_yy = _STEM_EL_YY.get(s, ("", ""))
+        b_el, b_yy = _BRANCH_EL_YY.get(b, ("", ""))
+        if s_el and s_yy:
+            yin_yang_counts[f"{s_yy}{s_el}"] += 1
+        if b_el and b_yy:
+            yin_yang_counts[f"{b_yy}{b_el}"] += 1
+        hs = hidden.get(key) if isinstance(hidden.get(key), dict) else {}
+        hlist = hs.get("hiddens") if isinstance(hs.get("hiddens"), list) else []
+        hidden_out = []
+        for h in hlist:
+            if not isinstance(h, dict):
+                continue
+            st = str(h.get("stem") or "")
+            hidden_out.append(
+                {
+                    "stem": st,
+                    "role": str(h.get("role") or ""),
+                    "sipsin": str(h.get("sipsin") or (ten_god_stem(day_stem, st) if day_stem and st else "")),
+                }
+            )
+        pillars_out[key] = {
+            "gan": s,
+            "ji": b,
+            "ganOhaeng": f"{s_yy}{s_el}" if s_el else "—",
+            "jiOhaeng": f"{b_yy}{b_el}" if b_el else "—",
+            "sipsin": ten_god_stem(day_stem, s) if day_stem and s else "—",
+            "twelve": str((tf.get(key) or {}).get("fortune") or "—") if isinstance(tf.get(key), dict) else "—",
+            "shinsal": by_where_shinsal.get(key, []),
+            "hiddenStems": hidden_out,
+        }
+
+    oh = engine_result.get("oheng") if isinstance(engine_result.get("oheng"), dict) else {}
+    counts = oh.get("counts") if isinstance(oh.get("counts"), dict) else {}
+    total_counts = {
+        "목": int(counts.get("목", counts.get("木", 0)) or 0),
+        "화": int(counts.get("화", counts.get("火", 0)) or 0),
+        "토": int(counts.get("토", counts.get("土", 0)) or 0),
+        "금": int(counts.get("금", counts.get("金", 0)) or 0),
+        "수": int(counts.get("수", counts.get("水", 0)) or 0),
+    }
+
+    km = analysis.get("kongmang")
+    km_void = ()
+    if isinstance(km, dict):
+        vb = km.get("void_branches")
+        if isinstance(vb, (list, tuple)) and len(vb) == 2:
+            km_void = (str(vb[0]), str(vb[1]))
+
+    daewoon = analysis.get("daewoon") if isinstance(analysis.get("daewoon"), list) else []
+    dae_out = []
+    for d in daewoon[:12]:
+        if not isinstance(d, dict):
+            continue
+        dae_out.append(
+            {
+                "pillar": str(d.get("pillar") or ""),
+                "startAge": d.get("start_age"),
+                "endAge": d.get("end_age"),
+                "direction": str(d.get("direction") or ""),
+                "isCurrent": bool(d.get("is_current", False)),
+            }
+        )
+
+    return {
+        "pillars": pillars_out,
+        "fiveElements": {"counts": total_counts, "yinYangCounts": yin_yang_counts},
+        "gongmang": {
+            "dayBase": _void_by_pillar(pnorm["day"]["stem"], pnorm["day"]["branch"]),
+            "yearBase": _void_by_pillar(pnorm["year"]["stem"], pnorm["year"]["branch"]),
+            "engineVoidBranches": list(km_void) if km_void else [],
+        },
+        "daewoon": dae_out,
+        "calcMeta": {
+            "monthTerm": str(((engine_result.get("pillars") or {}).get("meta") or {}).get("month_term") or ""),
+            "monthTermTimeKst": str(((engine_result.get("pillars") or {}).get("meta") or {}).get("month_term_time_kst") or ""),
+        },
+    }
 
 
 # -------------------------
@@ -166,7 +317,7 @@ def _pillars_to_dict(pillars_obj: Any) -> Dict[str, Any]:
     }
 
 
-def _normalize_birth(birth: str) -> str:
+def _normalize_birth(birth: str, calendar: str = "solar") -> str:
     """
     birth를 'YYYY-MM-DD HH:MM'로 최대한 정규화.
     """
@@ -183,6 +334,13 @@ def _normalize_birth(birth: str) -> str:
         datetime.strptime(s, "%Y-%m-%d %H:%M")
     except Exception:
         raise ValueError("birth format must be 'YYYY-MM-DD HH:MM'")
+
+    cal = (calendar or "solar").strip().lower()
+    if cal in ("lunar", "lunar_leap"):
+        from engine.counsel_birth import normalize_birth_string
+
+        d, t = s.split(" ", 1)
+        return normalize_birth_string(d, t, cal)
     return s
 
 
@@ -340,13 +498,13 @@ def analyze(req: AnalyzeRequest):
     PDF 생성 없이 빠르게 분석 결과만 받을 수 있다.
     """
     try:
-        birth = _normalize_birth(req.birth)
+        birth = _normalize_birth(req.birth, req.calendar)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     try:
-        from engine.sajuCalculator import analyze_saju
-        engine_result = analyze_saju(birth)
+        pillars = calculate_saju(birth)
+        engine_result = analyze_full(cast(Any, pillars), birth_str=birth)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -371,6 +529,8 @@ def analyze(req: AnalyzeRequest):
         return str(obj)
 
     result = _clean(engine_result)
+    if isinstance(result, dict):
+        result["saju_overview"] = _clean(_build_saju_overview(engine_result if isinstance(engine_result, dict) else {}))
 
     if isinstance(result, dict):
         result["request"] = {
@@ -390,7 +550,7 @@ def make_monthly_report(req: AnalyzeRequest):
     그리고 PDF 파일을 바로 반환한다.
     """
     try:
-        birth = _normalize_birth(req.birth)
+        birth = _normalize_birth(req.birth, req.calendar)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -502,7 +662,7 @@ def make_monthly_report_meta(req: AnalyzeRequest):
     PDF를 만들되, 파일은 반환하지 않고 메타만 반환(디버깅/앱 연동용).
     """
     try:
-        birth = _normalize_birth(req.birth)
+        birth = _normalize_birth(req.birth, req.calendar)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

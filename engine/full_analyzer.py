@@ -1732,6 +1732,13 @@ def analyze_full(
         packed.setdefault("meta", {})["monthly_reports_error"] = f"{type(e).__name__}: {e}"
         packed["monthly_reports"] = []
 
+    try:
+        from engine.monthly_fortune_engine_report import attach_monthly_fortune_engine
+
+        attach_monthly_fortune_engine(packed)
+    except Exception as e:
+        packed.setdefault("meta", {})["monthly_fortune_engine_error"] = f"{type(e).__name__}: {e}"
+
     packed["unified"] = _build_unified_schema_v1(packed)
     # 리포트/월운 어댑터가 최상위에서 바로 찾을 수 있도록 별칭(참조 동일)
     _u = packed["unified"]

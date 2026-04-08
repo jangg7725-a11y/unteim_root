@@ -41,6 +41,9 @@ J_EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉
 
 # 관용 앵커: 1984-02-02(KST) = 甲子(간지)일
 ANCHOR_JIAZI_DAY_KST = date(1984, 2, 2)
+# 실측 만세력(천을귀인 포함) 대조 시 일주가 2일 뒤로 어긋나던 문제 보정
+# idx60 = (days_delta + DAY_GANJI_OFFSET) % 60
+DAY_GANJI_OFFSET = 2
 
 # 절기 보정 (입춘 전이면 전년도 적용)
 from .solar_terms import is_before_ipchun_kst
@@ -71,7 +74,7 @@ def year_ganji(dt_kst: datetime) -> GanJi:
 def day_ganji(dt_kst: datetime) -> GanJi:
     dt_kst = _ensure_kst(dt_kst)
     days_delta = (dt_kst.date() - ANCHOR_JIAZI_DAY_KST).days
-    idx60 = days_delta % 60
+    idx60 = (days_delta + DAY_GANJI_OFFSET) % 60
     gan_idx = idx60 % 10
     ji_idx = idx60 % 12
     return GanJi(gan=HEAVENLY_STEMS[gan_idx], ji=J_EARTHLY_BRANCHES[ji_idx])

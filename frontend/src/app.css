@@ -113,6 +113,7 @@ body {
 .api-banner__text {
   margin: 0;
   flex: 1 1 12rem;
+  min-width: 0;
 }
 
 .api-banner__code {

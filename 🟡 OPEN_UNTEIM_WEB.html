@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="refresh" content="2;url=http://localhost:5173/" />
+  <title>운트임 웹 열기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #1e1535 0%, #2d1f4e 50%, #1a1228 100%);
+      color: #ffeb3b;
+      text-align: center;
+    }
+    h1 {
+      font-size: clamp(1.25rem, 4vw, 1.75rem);
+      font-weight: 700;
+      margin: 0 0 0.75rem;
+      color: #ffeb3b;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+    p {
+      margin: 0.35rem 0;
+      font-size: 1rem;
+      color: #fff176;
+    }
+    a {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.65rem 1.25rem;
+      border-radius: 10px;
+      background: rgba(255, 235, 59, 0.15);
+      border: 1px solid rgba(255, 235, 59, 0.45);
+      color: #ffeb3b;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    a:hover {
+      background: rgba(255, 235, 59, 0.28);
+    }
+    .hint {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #fdd835;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <h1>운트임 웹 (개발 서버)으로 이동합니다</h1>
+  <p>잠시 후 자동으로 열립니다.</p>
+  <p class="hint">프론트: <strong>cd frontend</strong> 후 <strong>npm run dev</strong> · 리포트·상담까지 쓰려면 별도 터미널에서 프로젝트 루트에서 <strong>python scripts/run_api_server_v1.py</strong> (백엔드, 기본 포트 8000)</p>
+  <a href="http://localhost:5173/">바로 열기 (http://localhost:5173)</a>
+</body>
+</html>

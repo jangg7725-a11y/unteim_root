@@ -68,9 +68,13 @@ function AppShell() {
       <main className="app-shell__main">
         {tab === "input" ? (
           <SajuInputScreen
+            birth={birth}
+            report={reportData}
+            loading={reportLoading}
+            error={reportError}
+            onGoReport={() => setTab("report")}
             onSubmit={async (p) => {
               setBirth(p);
-              setTab("report");
               setReportError(null);
               setReportLoading(true);
               try {

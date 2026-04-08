@@ -22,6 +22,118 @@
   color: var(--muted, #6b6578);
 }
 
+.saju-overview {
+  margin: 0 0 1rem;
+  padding: 0.95rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(250, 247, 255, 0.92));
+  border: 1px solid rgba(124, 58, 237, 0.16);
+  box-shadow: 0 6px 18px rgba(62, 41, 110, 0.08);
+}
+
+.saju-overview__title {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+  color: #4338ca;
+}
+
+.saju-overview__sub {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: #6b6578;
+}
+
+.saju-overview__table {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(110, 90, 140, 0.14);
+  background: #fff;
+}
+
+.saju-overview__row {
+  display: grid;
+  grid-template-columns: 7.2rem minmax(0, 1fr);
+  border-top: 1px solid rgba(110, 90, 140, 0.1);
+}
+
+.saju-overview__row:first-child {
+  border-top: 0;
+}
+
+.saju-overview__th {
+  padding: 0.62rem 0.68rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4f46e5;
+  background: rgba(124, 58, 237, 0.08);
+  border-right: 1px solid rgba(110, 90, 140, 0.1);
+}
+
+.saju-overview__td {
+  padding: 0.62rem 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #3f3a50;
+}
+
+.saju-overview__td--accent {
+  background: rgba(248, 250, 255, 0.75);
+}
+
+.saju-overview__td--accent2 {
+  background: rgba(255, 248, 240, 0.65);
+}
+
+.saju-overview__td--accent3 {
+  background: rgba(246, 250, 246, 0.8);
+}
+
+.saju-overview__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.saju-overview__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.saju-overview__chip--wood {
+  color: #166534;
+  background: #ecfdf5;
+  border-color: #86efac;
+}
+
+.saju-overview__chip--fire {
+  color: #9a3412;
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.saju-overview__chip--earth {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.saju-overview__chip--metal {
+  color: #374151;
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.saju-overview__chip--water {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
 .report-page__state {
   margin: 0;
   padding: 0.85rem 0.95rem;
@@ -138,6 +250,10 @@
 @media (max-width: 720px) {
   .report-page__grid {
     grid-template-columns: 1fr;
+  }
+
+  .saju-overview__row {
+    grid-template-columns: 5.8rem minmax(0, 1fr);
   }
 }
 

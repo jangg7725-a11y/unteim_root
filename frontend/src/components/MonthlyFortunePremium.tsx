@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MonthlyFortuneEntry, YearlyMonthlyFortune } from "@/types/report";
 import { MOCK_YEARLY_MONTHLY_FORTUNE } from "@/data/monthlyFortuneMock";
+import { UNLOCK_PREMIUM_CONTENT } from "@/config/featureFlags";
 import "./monthly-fortune-premium.css";
+import "./monthly-fortune-book.css";
 
 type Props = {
   data?: YearlyMonthlyFortune;
+  /** 목 데모에서도 AI 상담으로 이어가기 (선택) */
+  onGoCounsel?: () => void;
 };
 
 function Stars({ score }: { score: MonthlyFortuneEntry["score"] }) {
   const filled = "★".repeat(score) + "☆".repeat(5 - score);
-  return <span className="monthly-fortune-premium__stars">{filled}</span>;
+  return <span className="mfb__stars">{filled}</span>;
 }
 
 function MonthCard({ entry }: { entry: MonthlyFortuneEntry }) {
@@ -48,7 +52,117 @@ function pickFirstSentence(text: string): string {
   return m ? m[1].trim() : s;
 }
 
-export function MonthlyFortunePremium({ data = MOCK_YEARLY_MONTHLY_FORTUNE }: Props) {
+function MonthEntriesBook({
+  entries,
+  bestMonth,
+  cautionMonth,
+  onGoCounsel,
+}: {
+  entries: MonthlyFortuneEntry[];
+  bestMonth: number;
+  cautionMonth: number;
+  onGoCounsel?: () => void;
+}) {
+  const sorted = useMemo(() => [...entries].sort((a, b) => a.month - b.month), [entries]);
+  const total = sorted.length;
+  const [idx, setIdx] = useState(0);
+  const safeIdx = Math.min(idx, Math.max(0, total - 1));
+  const e = sorted[safeIdx];
+
+  const goPrev = useCallback(() => setIdx((i) => Math.max(0, i - 1)), []);
+  const goNext = useCallback(() => setIdx((i) => Math.min(total - 1, i + 1)), [total]);
+
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "ArrowLeft") goPrev();
+      if (ev.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goPrev, goNext]);
+
+  if (!e || total === 0) return null;
+
+  return (
+    <>
+      <div className="mfb__book-wrap">
+        <div className="mfb__book">
+          <div className="mfb__book-spine" aria-hidden />
+          <div className="mfb__book-inner">
+            <div className="mfb__progress">
+              <span>
+                {safeIdx + 1} / {total} 장 · {e.month}월
+              </span>
+              <div className="mfb__progress-dots" aria-hidden>
+                {sorted.map((x, i) => (
+                  <span key={x.month} className={`mfb__dot${i === safeIdx ? " mfb__dot--on" : ""}`} />
+                ))}
+              </div>
+            </div>
+            <header className="mfb__page-head">
+              <h3 className="mfb__page-month">
+                {e.month}월
+                <span className="mfb__page-year">요약 리포트 (데모)</span>
+              </h3>
+              <Stars score={e.score} />
+            </header>
+            <dl className="mfb__signals">
+              <div>
+                <dt>이 해의 참고 달</dt>
+                <dd>
+                  기회 {bestMonth}월 · 주의 {cautionMonth}월
+                </dd>
+              </div>
+            </dl>
+            <p className="mfb__section-title">흐름</p>
+            <div className="mfb__narrative">
+              <p>{e.flow}</p>
+            </div>
+            <div className="mfb__short-grid">
+              <p>
+                <strong>기회</strong> {e.good}
+              </p>
+              <p>
+                <strong>주의</strong> {e.caution}
+              </p>
+              <p>
+                <strong>행동 가이드</strong> {e.action}
+              </p>
+            </div>
+            <nav className="mfb__nav" aria-label="월 넘기기">
+              <button type="button" className="mfb__nav-btn" onClick={goPrev} disabled={safeIdx <= 0}>
+                ← 이전 달
+              </button>
+              <p className="mfb__nav-hint">
+                좌우 방향키로 넘길 수 있어요.
+                <br />
+                {safeIdx >= total - 1 ? "마지막 장입니다." : "다음 달로 계속 읽어 보세요."}
+              </p>
+              <button
+                type="button"
+                className="mfb__nav-btn mfb__nav-btn--primary"
+                onClick={goNext}
+                disabled={safeIdx >= total - 1}
+              >
+                다음 달 →
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+      {onGoCounsel && (
+        <div className="mfb__cta">
+          <p className="mfb__cta-text">월별 요약을 읽으셨다면, 내 상황에 맞게 AI 상담으로 이어가 보세요.</p>
+          <button type="button" className="mfb__cta-btn" onClick={onGoCounsel}>
+            AI 상담으로 이어가기
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function MonthlyFortunePremium({ data = MOCK_YEARLY_MONTHLY_FORTUNE, onGoCounsel }: Props) {
   const [unlocked, setUnlocked] = useState(false);
   const currentMonth = new Date().getMonth() + 1;
   const nextMonth = currentMonth + 1;
@@ -80,6 +194,15 @@ export function MonthlyFortunePremium({ data = MOCK_YEARLY_MONTHLY_FORTUNE }: Pr
         </div>
       </div>
 
+      {UNLOCK_PREMIUM_CONTENT ? (
+        <MonthEntriesBook
+          entries={data.monthly}
+          bestMonth={data.bestMonth}
+          cautionMonth={data.cautionMonth}
+          onGoCounsel={onGoCounsel}
+        />
+      ) : (
+        <>
       <div className="monthly-fortune-premium__grid">
         {preview.map((m) => (
           <MonthCard key={m.month} entry={m} />
@@ -153,11 +276,14 @@ export function MonthlyFortunePremium({ data = MOCK_YEARLY_MONTHLY_FORTUNE }: Pr
       )}
 
       {unlocked && (
-        <div className="monthly-fortune-premium__grid">
-          {(nextPreview ? [nextPreview, ...locked] : locked).map((m) => (
-            <MonthCard key={m.month} entry={m} />
-          ))}
-        </div>
+        <MonthEntriesBook
+          entries={nextPreview ? [nextPreview, ...locked] : locked}
+          bestMonth={data.bestMonth}
+          cautionMonth={data.cautionMonth}
+          onGoCounsel={onGoCounsel}
+        />
+      )}
+        </>
       )}
     </section>
   );

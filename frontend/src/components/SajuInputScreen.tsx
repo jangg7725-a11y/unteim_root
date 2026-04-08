@@ -7,10 +7,17 @@ import { TimeInput } from "./TimeInput";
 import { SCREEN_COPY } from "@/constants/screenCopy";
 import type { BirthFormState } from "@/types/birthInput";
 import { buildBirthPayload } from "@/types/birthInput";
+import type { SajuReportData } from "@/types/report";
+import { SajuSummaryDashboard } from "./SajuSummaryDashboard";
 import "./saju-screen.css";
 
 type Props = {
   onSubmit?: (payload: NonNullable<ReturnType<typeof buildBirthPayload>>) => void;
+  birth: NonNullable<ReturnType<typeof buildBirthPayload>> | null;
+  report: SajuReportData | null;
+  loading: boolean;
+  error: string | null;
+  onGoReport: () => void;
 };
 
 const initial: BirthFormState = {
@@ -22,7 +29,7 @@ const initial: BirthFormState = {
   leapResolutionSource: "user",
 };
 
-export function SajuInputScreen({ onSubmit }: Props) {
+export function SajuInputScreen({ onSubmit, birth, report, loading, error, onGoReport }: Props) {
   const [form, setForm] = useState<BirthFormState>(initial);
 
   const payload = useMemo(() => buildBirthPayload(form), [form]);
@@ -106,11 +113,33 @@ export function SajuInputScreen({ onSubmit }: Props) {
           >
             이 정보로 계속하기
           </button>
+          <button type="button" className="saju-screen__reset" onClick={() => setForm(initial)}>
+            입력 초기화
+          </button>
           {!payload && (
             <p className="saju-screen__hint">생년월일, 시간, 성별을 모두 입력해 주세요.</p>
           )}
         </div>
       </form>
+
+      <SajuSummaryDashboard birth={payload ?? birth} report={report} />
+
+      <section className="saju-screen__progress" aria-label="분석 진행 영역">
+        {loading ? (
+          <p className="saju-screen__progress-text">사주 분석과 월별 리포트를 생성하고 있습니다…</p>
+        ) : error ? (
+          <p className="saju-screen__progress-text saju-screen__progress-text--error">{error}</p>
+        ) : report ? (
+          <div className="saju-screen__progress-ready">
+            <p className="saju-screen__progress-text">요약이 준비되었습니다. 아래 버튼으로 상세 리포트를 확인하세요.</p>
+            <button type="button" className="saju-screen__report-btn" onClick={onGoReport}>
+              사주 리포트 보기
+            </button>
+          </div>
+        ) : (
+          <p className="saju-screen__progress-text">입력 후 분석을 시작하면 이곳에 진행 상태와 결과 연결이 표시됩니다.</p>
+        )}
+      </section>
     </div>
   );
 }

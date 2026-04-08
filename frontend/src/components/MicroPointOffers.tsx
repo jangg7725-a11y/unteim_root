@@ -1,4 +1,5 @@
 import { MICRO_POINT_OFFERS, type MicroPointOfferItem } from "@/data/microPointOffersMock";
+import { UNLOCK_PREMIUM_CONTENT } from "@/config/featureFlags";
 import "./micro-point-offers.css";
 
 type Props = {
@@ -31,7 +32,9 @@ export function MicroPointOffers({ onSelectSingle, onSelectPair }: Props) {
                 >
                   <p className="micro-point-offers__q">{item.question}</p>
                   <p className="micro-point-offers__desc">{item.description}</p>
-                  <p className="micro-point-offers__price">{item.price.toLocaleString()}P</p>
+                  {!UNLOCK_PREMIUM_CONTENT && (
+                    <p className="micro-point-offers__price">{item.price.toLocaleString()}P</p>
+                  )}
                 </button>
               ))}
             </div>

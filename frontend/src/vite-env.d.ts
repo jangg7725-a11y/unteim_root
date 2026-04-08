@@ -15,4 +15,9 @@ interface ImportMetaEnv {
    * 배포 빌드에는 포함되지 않음.
    */
   readonly VITE_DEV_PROXY_TARGET?: string;
+  /**
+   * `false`일 때만 유료 UI(월별 블러, 포인트 가격) 표시.
+   * 미설정·`true`면 잠금 해제(기본).
+   */
+  readonly VITE_UNLOCK_PREMIUM?: string;
 }

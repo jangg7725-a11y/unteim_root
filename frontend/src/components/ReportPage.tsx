@@ -4,6 +4,7 @@ import type { SajuReportData } from "@/types/report";
 import { SCREEN_COPY } from "@/constants/screenCopy";
 import { TodayFortuneCard } from "./TodayFortuneCard";
 import { MonthlyFortunePremium } from "./MonthlyFortunePremium";
+import { MonthlyFortuneEngine } from "./MonthlyFortuneEngine";
 import { MicroPointOffers } from "./MicroPointOffers";
 import { PartnerInputModal } from "./PartnerInputModal";
 import { AICounselPreview } from "./AICounselPreview";
@@ -33,6 +34,7 @@ function ReportSection({ title, body }: SectionProps) {
     </section>
   );
 }
+
 
 export function ReportPage({ birth, report, loading, error, onRetry, onGoCounsel }: Props) {
   const [pairOpen, setPairOpen] = useState(false);
@@ -83,8 +85,6 @@ export function ReportPage({ birth, report, loading, error, onRetry, onGoCounsel
         <p className="report-page__sub">{SCREEN_COPY.output.subtitle}</p>
       </header>
 
-      {!loading && <TodayFortuneCard />}
-
       {loading && (
         <p className="report-page__state" role="status">
           사주 리포트를 생성하고 있습니다…
@@ -102,6 +102,14 @@ export function ReportPage({ birth, report, loading, error, onRetry, onGoCounsel
 
       {!loading && !error && report && (
         <>
+          {report.monthlyFortune && report.monthlyFortune.months.length > 0 && !report.monthlyFortune.error ? (
+            <MonthlyFortuneEngine data={report.monthlyFortune} onGoCounsel={onGoCounsel} />
+          ) : (
+            <MonthlyFortunePremium onGoCounsel={onGoCounsel} />
+          )}
+
+          <TodayFortuneCard />
+
           <div className="report-page__grid">
             <ReportSection title="총운" body={report.total} />
             <ReportSection title="성격" body={report.personality} />
@@ -125,8 +133,6 @@ export function ReportPage({ birth, report, loading, error, onRetry, onGoCounsel
               <p className="report-page__compat-line"><strong>행동 가이드:</strong> {compatibility.guide}</p>
             </section>
           )}
-
-          <MonthlyFortunePremium />
 
           <AICounselPreview onClick={onGoCounsel} />
         </>
