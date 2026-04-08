@@ -72,6 +72,111 @@ def append_selected_topic_sections(story: List[Any], styles: Mapping[str, Any], 
             continue
         title = str(blk.get("title") or tid)
         status = blk.get("status")
+        fv = blk.get("free_version")
+        pv = blk.get("premium_version")
+        if isinstance(fv, dict) and isinstance(pv, dict):
+            head = f"<b><font color='#6A1B9A'>{title}</font></b>"
+            if status == "planned":
+                head += "<br/><font size=9 color='#C62828'>[추가 예정 확장 분석]</font>"
+            elif blk.get("tier") == "extend":
+                head += "<br/><font size=9 color='#455A64'>[선택형 카테고리]</font>"
+
+            free_lines: List[str] = []
+            fs = str(fv.get("summary") or "").strip()
+            if fs:
+                free_lines.append(fs)
+            fe = str(fv.get("emotion") or "").strip()
+            if fe:
+                free_lines.append("<font size=10>느낌(일부): " + fe + "</font>")
+            free_body = "<br/><br/>".join(free_lines) if free_lines else "—"
+            free_head = head + "<br/><font size=9 color='#1565C0'>[무료 · 요약]</font>"
+
+            story.append(
+                build_counsel_card(
+                    free_head,
+                    free_body,
+                    font_name=fn,
+                    paragraph_style=body,
+                    bg=colors.HexColor("#E3F2FD"),
+                    border_color=colors.HexColor("#64B5F6"),
+                    border_w=1.2,
+                    pad=12,
+                    vpad=9,
+                )
+            )
+            story.append(Spacer(1, 6))
+            trig = str(blk.get("trigger_message") or "").strip()
+            cta = str(blk.get("cta_message") or "").strip()
+            if trig:
+                story.append(
+                    Paragraph(
+                        f"<font size=10 color='#37474F'><i>{trig}</i></font>",
+                        body,
+                    )
+                )
+                story.append(Spacer(1, 4))
+            if cta:
+                story.append(
+                    Paragraph(
+                        f"<b><font size=10 color='#5D4037'>{cta}</font></b>",
+                        body,
+                    )
+                )
+            if trig or cta:
+                story.append(Spacer(1, 8))
+            else:
+                story.append(Spacer(1, 6))
+
+            prem_lines: List[str] = []
+            for key, lab in (
+                ("cause", "원인"),
+                ("pattern", "반복"),
+                ("emotion", "느낌(전체)"),
+                ("insight", "이해"),
+                ("action", "방향"),
+            ):
+                tx = pv.get(key)
+                if isinstance(tx, str) and tx.strip():
+                    prem_lines.append(f"<b>{lab}</b><br/>{tx.strip()}")
+            nf = pv.get("narrative_flow")
+            if isinstance(nf, str) and nf.strip():
+                prem_lines.append("<b>흐름</b><br/>" + nf.strip())
+            tp = pv.get("trauma_profile")
+            if isinstance(tp, dict):
+                labs = tp.get("labels") or []
+                if isinstance(labs, list) and labs:
+                    prem_lines.append(
+                        "<font size=9>반복 패턴 성향: "
+                        + " · ".join(str(x) for x in labs[:5])
+                        + "</font>"
+                    )
+                tps = str(tp.get("summary") or "").strip()
+                if tps:
+                    prem_lines.append(tps)
+            pbul = pv.get("bullets")
+            if isinstance(pbul, list):
+                for b in pbul[:12]:
+                    if str(b).strip():
+                        prem_lines.append(f"• {b}")
+            prem_body = "<br/><br/>".join(prem_lines) if prem_lines else "—"
+            prem_head = head + "<br/><font size=9 color='#E65100'>[유료 · 전체 리포트]</font>"
+
+            story.append(
+                build_counsel_card(
+                    prem_head,
+                    prem_body,
+                    font_name=fn,
+                    paragraph_style=body,
+                    bg=colors.HexColor("#FFF8E1"),
+                    border_color=colors.HexColor("#FFB300"),
+                    border_w=1.6,
+                    pad=12,
+                    vpad=9,
+                )
+            )
+            story.append(Spacer(1, 8))
+            continue
+
         summary = str(blk.get("summary") or "").strip()
         bullets = blk.get("bullets") or []
         if not isinstance(bullets, list):
@@ -86,6 +191,14 @@ def append_selected_topic_sections(story: List[Any], styles: Mapping[str, Any], 
         lines = []
         if summary:
             lines.append(summary)
+        tp = blk.get("trauma_profile")
+        if isinstance(tp, dict):
+            labs = tp.get("labels") or []
+            if isinstance(labs, list) and labs:
+                lines.append("<font size=9>반복 패턴 성향: " + " · ".join(str(x) for x in labs[:5]) + "</font>")
+            tps = str(tp.get("summary") or "").strip()
+            if tps:
+                lines.append(tps)
         for b in bullets[:10]:
             if str(b).strip():
                 lines.append(f"• {b}")

@@ -1,0 +1,104 @@
+.counsel-session-card {
+  position: fixed;
+  right: 12rem;
+  bottom: 1rem;
+  z-index: 19;
+  width: min(16rem, calc(100vw - 13rem));
+  max-height: min(70vh, 22rem);
+  overflow: auto;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(248, 246, 255, 0.94));
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.12),
+    0 8px 28px rgba(40, 35, 70, 0.1);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #3d3a48;
+  pointer-events: auto;
+}
+
+.counsel-session-card__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #2e2a3d;
+}
+
+.counsel-session-card__block {
+  margin-bottom: 0.65rem;
+}
+
+.counsel-session-card__block:last-of-type {
+  margin-bottom: 0.5rem;
+}
+
+.counsel-session-card__label {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6366f1;
+  letter-spacing: 0.02em;
+}
+
+.counsel-session-card__text {
+  margin: 0;
+  color: #4b465c;
+}
+
+.counsel-session-card__text--caution {
+  color: #5c5266;
+}
+
+.counsel-session-card__actions {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.counsel-session-card__actions li {
+  margin-bottom: 0.2rem;
+}
+
+.counsel-session-card__cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+.counsel-session-card__cta-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.1);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.counsel-session-card__cta-btn:hover {
+  background: rgba(99, 102, 241, 0.18);
+}
+
+.counsel-session-card__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.7rem;
+  color: #6b6578;
+}
+
+@media (max-width: 720px) {
+  .counsel-session-card {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    max-height: none;
+    margin: 0 0 1rem;
+  }
+}

@@ -40,6 +40,12 @@ out/
 *.bsp
 *.ephem
 
+# 환경·비밀 (배포 준비)
+.env
+.env.local
+.env.*.local
+frontend/.env
+
 # 로그·캐시
 *.log
 .cache/

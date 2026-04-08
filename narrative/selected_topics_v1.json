@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "file_note": "선택형 주제별 문장 풀. topics 키는 레지스트리 id(travel_move, contract_doc 등)와 동일.",
+  "file_note": "선택형 주제별 문장 풀. topics 키는 레지스트리 id(travel_move, contract_doc 등)와 동일. 패턴 슬롯(cause 등)은 narrative/topic_slot_pools.json 과 sentence_set_integration 으로 합류.",
   "topics": {
     "career": {
       "title": "직장운",

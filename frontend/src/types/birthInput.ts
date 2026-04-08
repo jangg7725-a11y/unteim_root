@@ -1,0 +1,62 @@
+/**
+ * 사주 입력 화면 상태 · API 전송용 페이로드.
+ *
+ * 백엔드(`AnalyzeRequest`)와 맞추기:
+ * - `calendar`: "solar" | "lunar" | "lunar_leap" (기존 필드명 유지)
+ * - KASI API로 윤달 자동 판단 시: `leapResolutionSource` 를 "kasi_auto" 로 두고
+ *   서버에서 음력→양력 변환 후 동일 필드로 통일하면 됨.
+ */
+
+export type CalendarKind = "solar" | "lunar";
+
+/** 음력에서 해당 일이 평달인지 윤달(윤N월)인지 — 사용자 수동 또는 KASI 결과 */
+export type LunarMonthKind = "normal" | "leap";
+
+/**
+ * 윤달 판단 주체
+ * - user: 화면에서 평달/윤달 선택
+ * - kasi_auto: 천문연(KASI) 등 API로 자동 (UI는 결과만 표시하거나 숨김)
+ */
+export type LeapResolutionSource = "user" | "kasi_auto";
+
+export interface BirthFormState {
+  date: string;
+  time: string;
+  gender: "" | "male" | "female";
+  calendar: CalendarKind;
+  lunarMonthKind: LunarMonthKind;
+  leapResolutionSource: LeapResolutionSource;
+}
+
+export interface BirthInputPayload {
+  date: string;
+  time: string;
+  gender: "male" | "female";
+  calendar: CalendarKind;
+  /** API 문자열로 보낼 때: solar | lunar | lunar_leap */
+  calendarApi: "solar" | "lunar" | "lunar_leap";
+  lunarMonthKind?: LunarMonthKind;
+  leapResolutionSource: LeapResolutionSource;
+}
+
+export function toCalendarApi(
+  calendar: CalendarKind,
+  lunarMonthKind: LunarMonthKind
+): "solar" | "lunar" | "lunar_leap" {
+  if (calendar === "solar") return "solar";
+  return lunarMonthKind === "leap" ? "lunar_leap" : "lunar";
+}
+
+export function buildBirthPayload(state: BirthFormState): BirthInputPayload | null {
+  if (!state.date || !state.time || !state.gender) return null;
+  const calendarApi = toCalendarApi(state.calendar, state.lunarMonthKind);
+  return {
+    date: state.date,
+    time: state.time,
+    gender: state.gender,
+    calendar: state.calendar,
+    calendarApi,
+    lunarMonthKind: state.calendar === "lunar" ? state.lunarMonthKind : undefined,
+    leapResolutionSource: state.leapResolutionSource,
+  };
+}

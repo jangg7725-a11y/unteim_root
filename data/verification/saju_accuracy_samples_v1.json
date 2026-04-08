@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "owner": "accuracy-validation",
+  "description": "사주 계산 정확도 회귀 샘플. known-value(고정값)와 partial-value(부분 고정)를 함께 사용.",
+  "samples": [
+    {
+      "id": "core_19661104_full",
+      "input": {
+        "birth_str": "1966-11-04 02:05",
+        "calendar": "solar",
+        "sex": "F"
+      },
+      "expected": {
+        "pillars": {
+          "year": "丙午",
+          "month": "庚寅",
+          "day": "乙丑",
+          "hour": "丁丑"
+        },
+        "oheng_counts": {"木": 2, "火": 3, "土": 2, "金": 1, "水": 0},
+        "shinsal_contains": ["12운성:쇠", "12운성:절", "12운성:태"],
+        "twelve_fortunes_contains": ["쇠", "절", "태"],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {
+        "pillars": "out/engine_dump.json",
+        "oheng_counts": "out/engine_dump.json",
+        "shinsal_contains": "out/engine_dump.json"
+      }
+    },
+    {
+      "id": "ipchun_2026_before",
+      "input": {"birth_str": "2026-02-04 04:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": "乙巳", "month": null, "day": null, "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"year_pillar": "tests/test_edge_cases.py::test_before_ipchun_2026"}
+    },
+    {
+      "id": "ipchun_2026_after",
+      "input": {"birth_str": "2026-02-04 06:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": "丙午", "month": null, "day": null, "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"year_pillar": "tests/test_edge_cases.py::test_after_ipchun_2026"}
+    },
+    {
+      "id": "ipchun_1990_before",
+      "input": {"birth_str": "1990-02-04 10:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": "己巳", "month": null, "day": null, "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"year_pillar": "tests/test_edge_cases.py::test_before_ipchun_1990"}
+    },
+    {
+      "id": "ipchun_1990_after",
+      "input": {"birth_str": "1990-02-04 12:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": "庚午", "month": null, "day": null, "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"year_pillar": "tests/test_edge_cases.py::test_after_ipchun_1990"}
+    },
+    {
+      "id": "jan_before_ipchun_2026",
+      "input": {"birth_str": "2026-01-15 12:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": "乙巳", "month": null, "day": null, "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"year_pillar": "tests/test_edge_cases.py::test_year_changes_only_at_ipchun"}
+    },
+    {
+      "id": "hour_19900615_2300",
+      "input": {"birth_str": "1990-06-15 23:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": null, "month": null, "day": null, "hour": "?子"},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"hour_branch": "tests/test_edge_cases.py::test_2300_is_ja_si"}
+    },
+    {
+      "id": "hour_19900616_0100",
+      "input": {"birth_str": "1990-06-16 01:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": null, "month": null, "day": null, "hour": "?丑"},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"hour_branch": "tests/test_edge_cases.py::test_0100_is_chuk_si"}
+    },
+    {
+      "id": "day_anchor_19840202",
+      "input": {"birth_str": "1984-02-02 12:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": null, "month": null, "day": "甲子", "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"day_pillar": "tests/test_edge_cases.py::test_anchor_date_is_jiazi"}
+    },
+    {
+      "id": "day_anchor_19840203",
+      "input": {"birth_str": "1984-02-03 12:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": null, "month": null, "day": "乙丑", "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"day_pillar": "tests/test_edge_cases.py::test_next_day_is_eulchuk"}
+    },
+    {
+      "id": "day_anchor_19840402",
+      "input": {"birth_str": "1984-04-02 12:00", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": null, "month": null, "day": "甲子", "hour": null},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"day_pillar": "tests/test_edge_cases.py::test_60_days_later_is_jiazi_again"}
+    },
+    {
+      "id": "integrity_20001231",
+      "input": {"birth_str": "2000-12-31 23:59", "calendar": "solar"},
+      "expected": {
+        "pillars": {"year": null, "month": null, "day": null, "hour": "?子"},
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
+        "kongmang": null,
+        "yongshin": null
+      },
+      "basis": {"hour_branch": "12지지 시각 규칙(23:00~00:59=子시)"}
+    }
+  ]
+}

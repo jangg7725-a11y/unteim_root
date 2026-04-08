@@ -1,0 +1,35 @@
+[
+  {
+    "name": "문창",
+    "by": "day_branch",
+    "match": ["子","午"],
+    "place": "all",
+    "label": "문창"
+  },
+  {
+    "name": "천을귀인",
+    "by": "day_stem",
+    "map": {
+      "甲": "丑未", "乙": "子申", "丙": "亥酉", "丁": "亥酉",
+      "戊": "丑未", "己": "子申", "庚": "丑未", "辛": "亥酉",
+      "壬": "寅午", "癸": "卯巳"
+    },
+    "contains": "branch",
+    "place": "all",
+    "label": "천을귀인"
+  },
+  {
+    "name": "괴강",
+    "by": "day_stem",
+    "match": ["庚"],
+    "place": "day",
+    "label": "괴강"
+  },
+  {
+    "name": "홍염",
+    "by": "day_branch",
+    "match": ["午"],
+    "place": "all",
+    "label": "紅艶"
+  }
+]

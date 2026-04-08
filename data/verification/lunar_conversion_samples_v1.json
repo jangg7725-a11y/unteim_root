@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "description": "양력->음력/윤달 변환 샘플. KASI 응답 가능 환경에서 검증.",
+  "samples": [
+    {
+      "id": "lunar_newyear_2020",
+      "solar_date": "2020-01-25",
+      "expected_lunar": {"year": 2020, "month": 1, "day": 1, "is_leap": false},
+      "confidence": "high"
+    },
+    {
+      "id": "lunar_newyear_2023",
+      "solar_date": "2023-01-22",
+      "expected_lunar": {"year": 2023, "month": 1, "day": 1, "is_leap": false},
+      "confidence": "high"
+    },
+    {
+      "id": "lunar_newyear_2024",
+      "solar_date": "2024-02-10",
+      "expected_lunar": {"year": 2024, "month": 1, "day": 1, "is_leap": false},
+      "confidence": "high"
+    },
+    {
+      "id": "leap_month_2023_guess",
+      "solar_date": "2023-03-22",
+      "expected_lunar": {"year": 2023, "month": 2, "day": 1, "is_leap": true},
+      "confidence": "medium"
+    }
+  ]
+}

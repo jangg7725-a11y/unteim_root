@@ -1,0 +1,12 @@
+.env
+.env.*
+.venv/
+node_modules/
+dist/
+out/
+unteim_backup/
+*.db
+*.sqlite
+*.csv
+*.xlsx
+*.log

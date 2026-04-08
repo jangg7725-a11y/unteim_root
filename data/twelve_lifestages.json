@@ -1,0 +1,16 @@
+{
+  "sequence": ["長生","沐浴","冠帶","臨官","帝旺","衰","病","死","墓","絶","胎","養"],
+  "zodiac_order": ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"],
+  "stems": {
+    "甲": {"changsheng": "亥", "direction": "forward"},
+    "乙": {"changsheng": "午", "direction": "backward"},
+    "丙": {"changsheng": "寅", "direction": "forward"},
+    "丁": {"changsheng": "酉", "direction": "backward"},
+    "戊": {"changsheng": "寅", "direction": "forward"},
+    "己": {"changsheng": "酉", "direction": "backward"},
+    "庚": {"changsheng": "巳", "direction": "forward"},
+    "辛": {"changsheng": "子", "direction": "backward"},
+    "壬": {"changsheng": "申", "direction": "forward"},
+    "癸": {"changsheng": "卯", "direction": "backward"}
+  }
+}

@@ -1,0 +1,443 @@
+/* 톤·배경: .char-state--{expression} | 몸짓: .char-state--anim-{idle|thinking|speaking}, .char-motion--* */
+
+.char-state {
+  border-radius: 18px;
+  padding: 0.75rem;
+  transition:
+    background 0.45s ease,
+    box-shadow 0.45s ease,
+    transform 0.35s ease;
+}
+
+.char-state--idle {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(245, 242, 255, 0.65));
+}
+
+.char-state--speaking {
+  background: linear-gradient(160deg, rgba(238, 242, 255, 0.85), rgba(250, 245, 255, 0.75));
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.08);
+}
+
+.char-state--guiding {
+  background: linear-gradient(165deg, rgba(236, 253, 245, 0.5), rgba(245, 250, 255, 0.75));
+}
+
+.char-state--empathizing {
+  background: linear-gradient(165deg, rgba(255, 248, 250, 0.9), rgba(252, 245, 255, 0.65));
+}
+
+.char-state--thinking {
+  background: linear-gradient(165deg, rgba(245, 246, 250, 0.95), rgba(250, 248, 255, 0.7));
+}
+
+.char-state--gentle_warning {
+  background: linear-gradient(165deg, rgba(255, 251, 235, 0.95), rgba(255, 248, 240, 0.8));
+}
+
+.char-state--tts,
+.char-state.tts-active {
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.14),
+    0 4px 22px rgba(99, 102, 241, 0.08);
+}
+
+/* --- 감정 baseline + 강도(char-level-1|2|3) — 행동 idle 일 때만, 과한 모션 없이 외곽·필터만 --- */
+
+/* comfort */
+.char-state.char-state--anim-idle.char-emotion-comfort.char-level-1 {
+  box-shadow: 0 0 0 1px rgba(130, 180, 210, 0.12);
+}
+
+.char-state.char-state--anim-idle.char-emotion-comfort.char-level-2 {
+  box-shadow:
+    0 0 0 1px rgba(130, 180, 210, 0.28),
+    0 6px 28px rgba(130, 170, 200, 0.1);
+}
+
+.char-state.char-state--anim-idle.char-emotion-comfort.char-level-3 {
+  box-shadow:
+    0 0 0 1px rgba(130, 180, 210, 0.38),
+    0 8px 32px rgba(130, 170, 200, 0.14);
+  transform: scale(1.01);
+}
+
+/* happy */
+.char-state.char-state--anim-idle.char-emotion-happy.char-level-1 {
+  box-shadow: 0 0 0 1px rgba(255, 200, 120, 0.18);
+  filter: saturate(1.01);
+}
+
+.char-state.char-state--anim-idle.char-emotion-happy.char-level-2 {
+  box-shadow:
+    0 0 0 1px rgba(255, 200, 120, 0.35),
+    0 6px 26px rgba(255, 190, 100, 0.12);
+  filter: saturate(1.03);
+}
+
+.char-state.char-state--anim-idle.char-emotion-happy.char-level-3 {
+  box-shadow:
+    0 0 0 1px rgba(255, 190, 100, 0.42),
+    0 8px 30px rgba(255, 180, 90, 0.16);
+  filter: saturate(1.06);
+}
+
+/* serious */
+.char-state.char-state--anim-idle.char-emotion-serious.char-level-1 {
+  box-shadow: 0 0 0 1px rgba(90, 95, 110, 0.14);
+  filter: brightness(0.98) saturate(0.96);
+}
+
+.char-state.char-state--anim-idle.char-emotion-serious.char-level-2 {
+  box-shadow:
+    0 0 0 1px rgba(90, 95, 110, 0.25),
+    0 4px 20px rgba(60, 65, 80, 0.08);
+  filter: saturate(0.92);
+}
+
+.char-state.char-state--anim-idle.char-emotion-serious.char-level-3 {
+  box-shadow:
+    0 0 0 1px rgba(55, 60, 75, 0.35),
+    0 4px 22px rgba(40, 45, 60, 0.12);
+  filter: contrast(1.04) saturate(0.88);
+  transform: scale(0.99);
+}
+
+/* sad */
+.char-state.char-state--anim-idle.char-emotion-sad.char-level-1 {
+  box-shadow: 0 0 0 1px rgba(150, 140, 170, 0.12);
+  filter: saturate(0.98);
+}
+
+.char-state.char-state--anim-idle.char-emotion-sad.char-level-2 {
+  box-shadow:
+    0 0 0 1px rgba(150, 140, 170, 0.22),
+    0 6px 24px rgba(120, 110, 150, 0.09);
+  filter: saturate(0.95);
+}
+
+.char-state.char-state--anim-idle.char-emotion-sad.char-level-3 {
+  box-shadow:
+    0 0 0 1px rgba(130, 120, 155, 0.3),
+    0 6px 28px rgba(100, 95, 130, 0.12);
+  filter: saturate(0.9);
+}
+
+/* excited */
+.char-state.char-state--anim-idle.char-emotion-excited.char-level-1 {
+  box-shadow: 0 0 0 1px rgba(120, 160, 255, 0.18);
+  filter: brightness(1.01);
+}
+
+.char-state.char-state--anim-idle.char-emotion-excited.char-level-2 {
+  box-shadow:
+    0 0 0 1px rgba(120, 160, 255, 0.32),
+    0 6px 26px rgba(99, 130, 240, 0.11);
+}
+
+.char-state.char-state--anim-idle.char-emotion-excited.char-level-3 {
+  box-shadow:
+    0 0 0 1px rgba(100, 140, 255, 0.42),
+    0 8px 30px rgba(90, 120, 235, 0.15);
+  transform: scale(1.015);
+}
+
+/* idle (키워드 없음) — 단계만 미세 차이 */
+.char-state.char-state--anim-idle.char-emotion-idle.char-level-1 {
+  opacity: 0.99;
+}
+
+.char-state.char-state--anim-idle.char-emotion-idle.char-level-3 {
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.06);
+}
+
+/* --- avatar 실루엣: 감정 × 강도 --- */
+.char-avatar.char-motion--idle.char-emotion-comfort.char-level-1 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.06);
+}
+
+.char-avatar.char-motion--idle.char-emotion-comfort.char-level-2 .char-avatar__silhouette {
+  box-shadow:
+    inset 0 -6px 12px rgba(80, 60, 120, 0.1),
+    0 0 12px rgba(140, 190, 220, 0.15);
+}
+
+.char-avatar.char-motion--idle.char-emotion-comfort.char-level-3 .char-avatar__silhouette {
+  box-shadow:
+    inset 0 -6px 12px rgba(80, 60, 120, 0.1),
+    0 0 18px rgba(140, 190, 220, 0.22);
+  transform: scale(1.02);
+}
+
+.char-avatar.char-motion--idle.char-emotion-happy.char-level-1 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.06);
+  filter: brightness(1.01);
+}
+
+.char-avatar.char-motion--idle.char-emotion-happy.char-level-2 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.08), 0 0 10px rgba(255, 210, 150, 0.2);
+}
+
+.char-avatar.char-motion--idle.char-emotion-happy.char-level-3 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.08), 0 0 14px rgba(255, 200, 130, 0.28);
+  transform: scale(1.02);
+}
+
+.char-avatar.char-motion--idle.char-emotion-serious.char-level-1 .char-avatar__silhouette {
+  filter: brightness(0.98) saturate(0.94);
+}
+
+.char-avatar.char-motion--idle.char-emotion-serious.char-level-2 .char-avatar__silhouette {
+  filter: saturate(0.9);
+}
+
+.char-avatar.char-motion--idle.char-emotion-serious.char-level-3 .char-avatar__silhouette {
+  filter: contrast(1.03) saturate(0.86);
+  transform: scale(0.98);
+}
+
+.char-avatar.char-motion--idle.char-emotion-sad.char-level-1 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(70, 60, 95, 0.08);
+}
+
+.char-avatar.char-motion--idle.char-emotion-sad.char-level-2 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 14px rgba(70, 60, 95, 0.12), 0 0 14px rgba(130, 120, 160, 0.1);
+}
+
+.char-avatar.char-motion--idle.char-emotion-sad.char-level-3 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 16px rgba(60, 55, 85, 0.14), 0 0 16px rgba(120, 110, 150, 0.14);
+}
+
+.char-avatar.char-motion--idle.char-emotion-excited.char-level-1 .char-avatar__silhouette {
+  filter: brightness(1.02);
+}
+
+.char-avatar.char-motion--idle.char-emotion-excited.char-level-2 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.1), 0 0 12px rgba(100, 140, 255, 0.18);
+}
+
+.char-avatar.char-motion--idle.char-emotion-excited.char-level-3 .char-avatar__silhouette {
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.1), 0 0 16px rgba(90, 130, 255, 0.26);
+  transform: scale(1.03);
+}
+
+/* 우하단 고정 스테이지 */
+.char-stage--dock {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  pointer-events: none;
+  max-width: min(11rem, 40vw);
+}
+
+.char-stage--dock .char-state {
+  pointer-events: auto;
+}
+
+.char-stage__inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 6.5rem;
+}
+
+.char-avatar {
+  position: relative;
+  width: 6.5rem;
+  text-align: center;
+  transition: transform 0.45s ease;
+  transform-origin: 50% 80%;
+}
+
+.char-avatar__silhouette {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #e8e4f2 0%, #d4cef0 100%);
+  box-shadow: inset 0 -6px 12px rgba(80, 60, 120, 0.12);
+  transform-origin: 50% 80%;
+  transition: transform 0.35s ease;
+}
+
+.char-avatar--undol .char-avatar__silhouette {
+  background: linear-gradient(180deg, #dde3f5 0%, #c9d0ec 100%);
+}
+
+.char-avatar--unsuni .char-avatar__silhouette {
+  background: linear-gradient(180deg, #f5e4ec 0%, #e8d0df 100%);
+}
+
+.char-avatar__face {
+  position: absolute;
+  left: 50%;
+  top: 1.65rem;
+  transform: translateX(-50%);
+  width: 3rem;
+  height: 1.25rem;
+}
+
+.char-avatar__eyes {
+  display: block;
+  width: 100%;
+  height: 6px;
+  background: radial-gradient(circle at 30% 50%, #3d3a48 2px, transparent 2.5px),
+    radial-gradient(circle at 70% 50%, #3d3a48 2px, transparent 2.5px);
+  background-size: 50% 100%, 50% 100%;
+  background-position: left, right;
+  background-repeat: no-repeat;
+  animation: blink-soft 5s ease-in-out infinite;
+}
+
+.char-avatar__mouth {
+  display: block;
+  margin: 0.35rem auto 0;
+  width: 1rem;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(60, 55, 75, 0.35);
+  transition: width 0.35s ease, height 0.35s ease;
+}
+
+/* --- animPhase: idle = breathe (호흡) --- */
+.char-motion--idle .char-avatar__silhouette {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+
+/* --- animPhase: thinking = tilt (갸웃) --- */
+.char-motion--thinking {
+  animation: tilt 2.8s ease-in-out infinite;
+}
+
+.char-motion--thinking .char-avatar__mouth {
+  width: 0.55rem;
+  height: 2px;
+}
+
+/* --- animPhase: speaking = talk (말하기) --- */
+.char-motion--speaking .char-avatar__silhouette {
+  animation: talk 1.6s ease-in-out infinite;
+}
+
+.char-motion--speaking .char-avatar__mouth {
+  width: 1.25rem;
+  height: 4px;
+  animation: mouth-soft 0.45s ease-in-out infinite alternate;
+}
+
+/* TTS 실제 재생 중 입·호흡 강조 */
+.char-avatar--tts-mouth .char-avatar__mouth {
+  animation-duration: 0.38s;
+  opacity: 0.95;
+}
+
+.char-avatar--tts-mouth.char-motion--speaking .char-avatar__silhouette {
+  animation: talk 1.35s ease-in-out infinite;
+}
+
+.char-avatar--empathizing .char-avatar__silhouette {
+  transform: scale(1.02);
+}
+
+.char-avatar--gentle_warning .char-avatar__silhouette {
+  box-shadow: inset 0 0 0 2px rgba(180, 140, 80, 0.15);
+}
+
+.char-avatar__caption {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: #6b6578;
+  line-height: 1.35;
+}
+
+.char-avatar__caption strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #3d3a48;
+}
+
+.char-avatar__sub {
+  display: block;
+  font-weight: 400;
+  margin-top: 0.15rem;
+}
+
+@keyframes blink-soft {
+  0%,
+  94%,
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  96% {
+    opacity: 0.85;
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes mouth-soft {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(1.08);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.01);
+  }
+}
+
+@keyframes tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  33% {
+    transform: rotate(-2.5deg);
+  }
+  66% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes talk {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.02);
+  }
+}
+
+/* --- 음성 톤(VoiceTone) — char-emotion·레벨과 병행, 과한 모션 없이 미세 톤만 --- */
+.char-state.char-tone-soft.char-state--anim-idle {
+  filter: saturate(0.98);
+}
+
+.char-state.char-tone-calm.char-state--anim-idle {
+  filter: brightness(0.99) saturate(0.96);
+}
+
+.char-state.char-tone-serious.char-state--anim-idle {
+  filter: contrast(1.02) saturate(0.94);
+}
+
+.char-state.char-tone-bright.char-state--anim-idle {
+  filter: saturate(1.04) brightness(1.01);
+}
+
+.char-avatar.char-motion--idle.char-tone-bright .char-avatar__silhouette {
+  filter: brightness(1.02);
+}
+
+.char-avatar.char-motion--idle.char-tone-calm .char-avatar__silhouette {
+  filter: brightness(0.99);
+}

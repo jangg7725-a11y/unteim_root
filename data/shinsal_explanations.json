@@ -1,0 +1,633 @@
+{
+  "metadata": { "version": "1.2", "locale": "ko" },
+  "rules": [
+    { "id": "dohwa_youth_single_pos",
+      "match": { "shinsal": "도화", "marital_status": ["single","divorced","widowed"], "age_band": ["youth"] },
+      "tone": "positive",
+      "title": "도화 (청년·미혼)",
+      "bullets": ["새 인연 기회↑","대인 매력·호감 상승","모임·SNS 노출 효과 큼"],
+      "advice": "새 인연 탐색은 {where_label}에 활발합니다. 관심 표현은 분명히, 금전·스킨십은 서두르지 말기.",
+      "flags": { "love": true, "scandal_risk": "low" }
+    },
+    { "id": "dohwa_mid_married_cau",
+      "match": { "shinsal": "도화", "marital_status": ["married"], "age_band": ["mid"] },
+      "tone": "caution",
+      "title": "도화 (장년·기혼)",
+      "bullets": ["외부 호감·접촉 증가","관계 외부변수 유입","신뢰·경계선 점검 필요"],
+      "advice": "칭찬·호의가 잦아질 수 있습니다. 일정·지출·연락처를 배우자와 투명 공유해 오해를 예방하세요.",
+      "flags": { "love": true, "scandal_risk": "mid" }
+    },
+    { "id": "dohwa_senior_neu",
+      "match": { "shinsal": "도화", "age_band": ["senior"] },
+      "tone": "neutral",
+      "title": "도화 (중장년/노년)",
+      "bullets": ["대인관계 활력","동호회·지인 모임에서 인기↑"],
+      "advice": "새 교류를 즐기되 경조사·금전 부탁은 원칙적으로.",
+      "flags": { "love": false }
+    },
+
+    { "id": "hongyeom_creator_pos",
+      "match": { "shinsal": "홍염", "job_group": ["creator","service"], "age_band": ["youth","mid"] },
+      "tone": "positive",
+      "title": "홍염 (창의/서비스직)",
+      "bullets": ["열정·몰입도 상승","콘텐츠·홍보운 호조","호감·설렘 증가"],
+      "advice": "열정을 성과로 연결하세요. 일정·체력 루틴을 지켜 과몰입을 방지.",
+      "flags": { "love": true, "impulse": "mid" }
+    },
+    { "id": "hongyeom_married_cau",
+      "match": { "shinsal": "홍염", "marital_status": ["married"] },
+      "tone": "caution",
+      "title": "홍염 (기혼/감정관리)",
+      "bullets": ["감정기복·설렘↑","외부 유혹 거리두기 필요"],
+      "advice": "설렘은 부부 리추얼(데이트·취미)로 전환하세요. SNS·메신저 경계선 유지.",
+      "flags": { "love": true, "scandal_risk": "mid" }
+    },
+    { "id": "hongyeom_senior_neu",
+      "match": { "shinsal": "홍염", "age_band": ["senior"] },
+      "tone": "neutral",
+      "title": "홍염 (노년/관계 온기)",
+      "bullets": ["가족·손주와 교류 활발","취미·동아리 열정 상승"],
+      "advice": "설렘을 건강한 일상 리듬으로, 과도한 지출은 점검.",
+      "flags": { "love": false }
+    },
+
+    { "id": "yeokma_sales_pos",
+      "match": { "shinsal": "역마", "job_group": ["sales","service"] },
+      "tone": "positive",
+      "title": "역마 (영업/서비스)",
+      "bullets": ["이동·만남 증가","계약·거래 확장 기회"],
+      "advice": "발로 뛰는 만큼 성과. 이동 피로·지출 관리 체크리스트 운영.",
+      "flags": { "move": true, "job": true }
+    },
+    { "id": "yeokma_public_cau",
+      "match": { "shinsal": "역마", "job_group": ["public"], "age_band": ["mid","senior"] },
+      "tone": "caution",
+      "title": "역마 (공직/인사변동)",
+      "bullets": ["예상치 못한 보직변동","절차·문서 꼼꼼함 요구"],
+      "advice": "변화를 ‘기회’로 전환. 기록·결재 라인 철저, 이해관계자 커뮤니케이션 강화.",
+      "flags": { "move": true }
+    },
+    { "id": "yeokma_general_neu",
+      "match": { "shinsal": "역마" },
+      "tone": "neutral",
+      "title": "역마 (이동/변화 신호)",
+      "bullets": ["출장·이사·직무변경 징조","새 환경 적응력 중요"],
+      "advice": "{where_label} 작동기에 이직/면접/계약운도 함께 움직입니다. 플랜B를 준비.",
+      "flags": { "move": true, "job": true }
+    },
+
+    { "id": "goegang_lead_cau",
+      "match": { "shinsal": "괴강" },
+      "tone": "caution",
+      "title": "괴강 (강단·시험대)",
+      "bullets": ["리더십·결단 요구","말·문서 실수 주의"],
+      "advice": "논쟁적 이슈는 팩트·증빙 우선. 계약·서명은 재검토, 정당성·원칙과 함께 밀어붙이기.",
+      "flags": { "risk": "mid", "leadership": true }
+    },
+    { "id": "goegang_youth_pos",
+      "match": { "shinsal": "괴강", "age_band": ["youth"] },
+      "tone": "positive",
+      "title": "괴강 (청년/성장기회)",
+      "bullets": ["난관 돌파력 상승","시험·선발운 활성"],
+      "advice": "난도가 높은 과제일수록 성장 보상이 큽니다. 기록습관·피드백 루틴으로 거칠게 성장하기.",
+      "flags": { "exam": true }
+    },
+
+    { "id": "cheoneul_all_pos",
+      "match": { "shinsal": "천을귀인" },
+      "tone": "positive",
+      "title": "천을귀인 (행운·도움)",
+      "bullets": ["귀인의 조력 연결","문제 해결의 실마리 도착"],
+      "advice": "도움을 요청하세요. {where_label}에 만나는 ‘한 사람’이 열쇠. 인사·감사 표현은 필수.",
+      "flags": { "luck": "high", "network": true }
+    },
+    { "id": "cheoneul_job_pos",
+      "match": { "shinsal": "천을귀인", "job_group": ["sales","creator","service"] },
+      "tone": "positive",
+      "title": "천을귀인 (커리어 조력)",
+      "bullets": ["추천·레퍼런스·콜라보 운","평판·브랜딩에 순풍"],
+      "advice": "멘토·고객·팬층과의 연결이 성과를 당깁니다. 감사 메시지·후속 DM을 바로 보내세요.",
+      "flags": { "luck": "high", "brand": true }
+    },
+
+    { "id": "dohwa_female_neu",
+      "match": { "shinsal": "도화", "gender": ["F"] },
+      "tone": "neutral",
+      "title": "도화 (여성/이미지 메이킹)",
+      "bullets": ["스타일·이미지업 효과","대외 호감도↑"],
+      "advice": "프로필 사진·퍼스널 브랜딩 업데이트. 관심은 선 긋고 관리.",
+      "flags": { "love": true }
+    },
+    { "id": "dohwa_male_neu",
+      "match": { "shinsal": "도화", "gender": ["M"] },
+      "tone": "neutral",
+      "title": "도화 (남성/관계 확장)",
+      "bullets": ["네트워킹 기회↑","대인 신뢰·매력 상승"],
+      "advice": "업무·지인 자리에서 신뢰를 쌓고 과시성 지출은 줄이기.",
+      "flags": { "love": true }
+    },
+
+    { "id": "hongyeom_single_pos",
+      "match": { "shinsal": "홍염", "marital_status": ["single","divorced","widowed"] },
+      "tone": "positive",
+      "title": "홍염 (싱글/설렘운)",
+      "bullets": ["감정 표현 강화","썸·연애운 활성화"],
+      "advice": "타이밍이 핵심. 감정은 솔직히, 속도는 천천히.",
+      "flags": { "love": true, "impulse": "mid" }
+    },
+
+    { "id": "yeokma_youth_pos",
+      "match": { "shinsal": "역마", "age_band": ["youth"] },
+      "tone": "positive",
+      "title": "역마 (청년/경험확장)",
+      "bullets": ["교환·인턴·단기이동 호조","환경 적응력 상승"],
+      "advice": "새 경험을 빠르게 흡수하세요. 이동 기록·포트폴리오화가 미래 자산.",
+      "flags": { "move": true, "job": true }
+    },
+
+    { "id": "goegang_public_cau",
+      "match": { "shinsal": "괴강", "job_group": ["public"] },
+      "tone": "caution",
+      "title": "괴강 (공공/규정 준수)",
+      "bullets": ["규정·감사 포인트 주의","보고·결재 라인 명확화"],
+      "advice": "문서·용어를 공식 표준으로. 회의록·근거자료를 남겨 리스크를 낮추세요.",
+      "flags": { "risk": "mid" }
+    },
+
+    {
+  "id": "lfs_changsheng_base",
+  "match": { "shinsal": "12운성:長生" },
+  "tone": "positive",
+  "title": "장생(長生) · 시작/활력",
+  "bullets": ["새 출발·탄생 에너지", "성장 동력 확보"],
+  "advice": "{where_label}에 새 기회가 돋습니다. 작게라도 바로 시작하세요.",
+  "flags": { "job": true }
+},
+{
+  "id": "lfs_muyuok_base",
+  "match": { "shinsal": "12운성:沐浴" },
+  "tone": "caution",
+  "title": "목욕(沐浴) · 유혹/감정",
+  "bullets": ["감정 기복·관계 변수", "이미지 관리 필요"],
+  "advice": "관심과 유혹을 분리하세요. 경계선(금전·메신저·스킨십) 명확히.",
+  "flags": { "love": true, "scandal_risk": "mid" }
+},
+{
+  "id": "lfs_guandae_base",
+  "match": { "shinsal": "12운성:冠帶" },
+  "tone": "positive",
+  "title": "관대(冠帶) · 명예/이미지",
+  "bullets": ["평판·브랜딩 유리", "공식석상 운세 좋음"],
+  "advice": "프로필·이력 갱신, 공식 발표/제출 타이밍 잡기.",
+  "flags": { "brand": true }
+},
+{
+  "id": "lfs_imkwan_base",
+  "match": { "shinsal": "12운성:臨官" },
+  "tone": "positive",
+  "title": "임관(臨官) · 권한/실무력",
+  "bullets": ["책임·권한 확대", "의사결정 영향력↑"],
+  "advice": "결정은 근거와 기록을 동반하세요. 리더십이 보상으로 연결됩니다.",
+  "flags": { "leadership": true }
+},
+{
+  "id": "lfs_diwang_base",
+  "match": { "shinsal": "12운성:帝旺" },
+  "tone": "positive",
+  "title": "제왕(帝旺) · 자존/성과",
+  "bullets": ["성과 극대화 국면", "독주→반발 리스크"],
+  "advice": "강하게 밀되, 이해관계자와 성과 공유. 독주 이미지는 피하기.",
+  "flags": { "risk": "low", "leadership": true }
+},
+{
+  "id": "lfs_sway_base",
+  "match": { "shinsal": "12운성:衰" },
+  "tone": "neutral",
+  "title": "쇠(衰) · 페이스 조절",
+  "bullets": ["체력·집중력 저하", "리듬 정비 시기"],
+  "advice": "속도를 80%로. 휴식·정비가 다음 상승을 만듭니다.",
+  "flags": {}
+},
+{
+  "id": "lfs_byeong_base",
+  "match": { "shinsal": "12운성:病" },
+  "tone": "caution",
+  "title": "병(病) · 컨디션/멘탈",
+  "bullets": ["과로·면역 저하 주의", "감정 소진 관리"],
+  "advice": "수면·식사·루틴 우선. 중요한 결정은 하루 미루어 재확인.",
+  "flags": { "risk": "mid" }
+},
+{
+  "id": "lfs_sa_base",
+  "match": { "shinsal": "12운성:死" },
+  "tone": "caution",
+  "title": "사(死) · 종료/마감",
+  "bullets": ["정리·관계 종료 신호", "불필요한 것 비우기"],
+  "advice": "깔끔한 마감이 곧 새 출발. 문서·약속 정리 리스트업.",
+  "flags": { "risk": "mid" }
+},
+{
+  "id": "lfs_myo_base",
+  "match": { "shinsal": "12운성:墓" },
+  "tone": "neutral",
+  "title": "묘(墓) · 보관/수습",
+  "bullets": ["정리·보관·아카이브", "과거 자산 재정비"],
+  "advice": "자료·계정·재정 폴더링. 미사용 구독/비용 컷.",
+  "flags": {}
+},
+{
+  "id": "lfs_jeol_base",
+  "match": { "shinsal": "12운성:絶" },
+  "tone": "caution",
+  "title": "절(絶) · 단절/리셋",
+  "bullets": ["미련 끊고 재정렬", "관계·습관 리셋 신호"],
+  "advice": "끊을 건 명확히. 핵심 3가지만 남기고 나머진 버리기.",
+  "flags": { "risk": "mid" }
+},
+{
+  "id": "lfs_tae_base",
+  "match": { "shinsal": "12운성:胎" },
+  "tone": "positive",
+  "title": "태(胎) · 씨앗/구상",
+  "bullets": ["아이디어 잉태", "준비·설계 적기"],
+  "advice": "초안·프로토타입부터. 작아도 구체화가 핵심.",
+  "flags": { "job": true }
+},
+{
+  "id": "lfs_yang_base",
+  "match": { "shinsal": "12운성:養" },
+  "tone": "neutral",
+  "title": "양(養) · 학습/내공",
+  "bullets": ["배움·멘토 도움", "기초 체력 키우기"],
+  "advice": "학습·연습·리뷰 루틴을 고정하세요. 성장 준비 단계입니다.",
+  "flags": {}
+},
+{
+  "id": "geobsal_general",
+  "match": { "shinsal": "겁살" },
+  "tone": "caution",
+  "title": "겁살(劫殺) · 돌발/손재 주의",
+  "bullets": ["예상치 못한 변수/사고", "말·문서 실수 주의", "계약·결제 재확인"],
+  "advice": "중요문서는 두 번 체크, 이동 시 안전 우선. 감정적 대응은 손실을 키웁니다.",
+  "flags": { "risk": "mid" }
+},
+{
+  "id": "geobsal_public_cau",
+  "match": { "shinsal": "겁살", "job_group": ["public","finance"] },
+  "tone": "caution",
+  "title": "겁살 · 공공/재무 리스크",
+  "bullets": ["감사/규정 이슈 가능", "승인·결재 절차 준수"],
+  "advice": "정식 절차+로그 남기기. 담당자와 사전 조율로 리스크 최소화.",
+  "flags": { "risk": "mid" }
+},
+
+{
+  "id": "jaesal_general",
+  "match": { "shinsal": "재살" },
+  "tone": "caution",
+  "title": "재살(災殺) · 사고/파손",
+  "bullets": ["장비·차량·가전 고장 주의", "수리/교체 지출 발생"],
+  "advice": "보험/보증기간 확인. 위험 작업·무리한 일정은 피하세요.",
+  "flags": { "risk": "mid" }
+},
+{
+  "id": "jaesal_move_cau",
+  "match": { "shinsal": "재살", "age_band": ["youth","mid"] },
+  "tone": "caution",
+  "title": "재살 · 이동·야외활동 주의",
+  "bullets": ["야외·운전 사고 리스크", "스포츠·레저 안전장비 필수"],
+  "advice": "야간운전/장거리 이동은 휴식 루틴 확보.",
+  "flags": { "move": true }
+},
+
+{
+  "id": "mangsin_general",
+  "match": { "shinsal": "망신살" },
+  "tone": "caution",
+  "title": "망신살(亡神) · 평판/체면",
+  "bullets": ["실언/유출 주의", "SNS·메신저 관리", "사생활 노출 리스크"],
+  "advice": "공개 발언은 한 번 더 생각하고, 사진·문서는 권한 제한.",
+  "flags": { "brand": true, "risk": "mid" }
+},
+{
+  "id": "mangsin_married_cau",
+  "match": { "shinsal": "망신살", "marital_status": ["married"] },
+  "tone": "caution",
+  "title": "망신살 · 기혼/관계관리",
+  "bullets": ["오해·스캔들 소지", "대외 이미지 점검"],
+  "advice": "배우자와 일정·연락 투명공유, 업무·사적경계 명확히.",
+  "flags": { "scandal_risk": "mid" }
+},
+
+{
+  "id": "hwagae_neutral",
+  "match": { "shinsal": "화개살" },
+  "tone": "neutral",
+  "title": "화개(華蓋) · 고독/집중",
+  "bullets": ["혼자에 강함", "내면 탐구·예술성↑"],
+  "advice": "관계는 선택과 집중, 창작·연구에 몰입하면 성과가 납니다.",
+  "flags": {}
+},
+{
+  "id": "hwagae_creator_pos",
+  "match": { "shinsal": "화개살", "job_group": ["creator","research"] },
+  "tone": "positive",
+  "title": "화개 · 창작/연구 성과",
+  "bullets": ["예술·연구 몰입도 상승", "결과물/포트폴리오 성과"],
+  "advice": "루틴을 일정표로 박고, 결과를 기록·발표하세요.",
+  "flags": { "brand": true }
+},
+{
+  "id": "hwagae_single_neu",
+  "match": { "shinsal": "화개살", "marital_status": ["single"] },
+  "tone": "neutral",
+  "title": "화개 · 싱글/관계 템포 느림",
+  "bullets": ["연애보다 자기개발에 포커스", "친밀관계 형성 속도↓"],
+  "advice": "연애 기대치는 낮추고, 실력·건강 루틴을 키우세요.",
+  "flags": {}
+},
+
+{
+  "id": "cheonsal_general",
+  "match": { "shinsal": "천살" },
+  "tone": "caution",
+  "title": "천살(天殺) · 변동/거리두기",
+  "bullets": ["예상 밖 변수·거리감", "관계·일정의 갑작스런 변경"],
+  "advice": "계획을 유연하게, 감정적 판단은 하루 보류.",
+  "flags": { "risk": "low" }
+},
+
+{
+  "id": "jisal_general",
+  "match": { "shinsal": "지살" },
+  "tone": "neutral",
+  "title": "지살(地殺) · 분주/현실처리",
+  "bullets": ["집안/현장일 분주", "생활형 업무가 늘어남"],
+  "advice": "현실 처리에 집중하세요. 일정·정리 루틴으로 효율↑.",
+  "flags": { "job": true }
+},
+{
+  "id": "jisal_service_pos",
+  "match": { "shinsal": "지살", "job_group": ["service","sales"] },
+  "tone": "positive",
+  "title": "지살 · 서비스/영업 호조",
+  "bullets": ["현장 대응력↑", "방문/만남이 성과로 연결"],
+  "advice": "동선·체력 관리로 효율을 끌어올리세요.",
+  "flags": { "job": true, "move": true }
+},
+
+{
+  "id": "wolssal_general",
+  "match": { "shinsal": "월살" },
+  "tone": "neutral",
+  "title": "월살(月煞) · 이동/이별감",
+  "bullets": ["장거리 이동·타지 이슈", "고향·가족과 거리감"],
+  "advice": "장거리 일정은 여유있게, 정서적 거리감은 영상통화·기념일로 보완.",
+  "flags": { "move": true }
+},
+{
+  "id": "wolssal_married_cau",
+  "match": { "shinsal": "월살", "marital_status": ["married"] },
+  "tone": "caution",
+  "title": "월살 · 기혼/정서관리",
+  "bullets": ["배우자와 심리적 거리감", "일·가정 균형 점검"],
+  "advice": "정기 데이트·가사 분담 재조정, 작은 선물/메시지로 유대 강화.",
+  "flags": { "move": true, "scandal_risk": "low" }
+},
+  {
+  "id": "jaesal_general_cau",
+  "match": { "shinsal": "재살" },
+  "tone": "caution",
+  "title": "재살(災殺) · 고장/사고 리스크",
+  "bullets": ["장비·차량·가전 고장", "돌발 지출·수리 비용"],
+  "advice": "보험·보증 확인, 전기·가스·타이어 점검. 무리한 일정과 야간운전은 피하세요.",
+  "flags": { "risk": "mid" }
+},
+{
+  "id": "jaesal_youth_move_cau",
+  "match": { "shinsal": "재살", "age_band": ["youth","mid"] },
+  "tone": "caution",
+  "title": "재살 · 이동/레저 주의(청·장년)",
+  "bullets": ["야외활동·운전 리스크↑", "스포츠상해·장거리 피로"],
+  "advice": "보호장비 필수, 장거리 이동은 휴식 루틴을 확보하세요.",
+  "flags": { "move": true, "risk": "mid" }
+},
+{
+  "id": "jaesal_public_finance_cau",
+  "match": { "shinsal": "재살", "job_group": ["public","finance"] },
+  "tone": "caution",
+  "title": "재살 · 공공/재무 관리",
+  "bullets": ["감사·규정 위반 리스크", "증빙·보고 체계 요구"],
+  "advice": "공식 용어·문서형식 준수, 결재라인·증빙 누락 없도록.",
+  "flags": { "risk": "mid", "job": true }
+},
+
+{
+  "id": "mangsin_general_cau",
+  "match": { "shinsal": "망신살" },
+  "tone": "caution",
+  "title": "망신살(亡神) · 평판/체면 관리",
+  "bullets": ["실언·정보유출 주의", "SNS·메신저 관리 필요"],
+  "advice": "공개 발언은 24시간 룰, 사진·문서는 권한 제한과 워터마크.",
+  "flags": { "brand": true, "risk": "mid" }
+},
+{
+  "id": "mangsin_single_neu",
+  "match": { "shinsal": "망신살", "marital_status": ["single","divorced","widowed"] },
+  "tone": "neutral",
+  "title": "망신살 · 싱글/브랜딩 점검",
+  "bullets": ["프로필·이력 업데이트", "구설 포인트 선제 제거"],
+  "advice": "자기소개·링크트리 정비, 과시성 게시물은 지양.",
+  "flags": { "brand": true }
+},
+{
+  "id": "mangsin_married_cau",
+  "match": { "shinsal": "망신살", "marital_status": ["married"] },
+  "tone": "caution",
+  "title": "망신살 · 기혼/오해 차단",
+  "bullets": ["사적 메시지·회식 리스크", "배우자 신뢰 관리"],
+  "advice": "일정·연락 투명 공유, 업무·사적 경계선을 명확히.",
+  "flags": { "scandal_risk": "mid" }
+},
+
+{
+  "id": "wolssal_general_neu",
+  "match": { "shinsal": "월살" },
+  "tone": "neutral",
+  "title": "월살(月煞) · 이동/이별감",
+  "bullets": ["장거리 이동·타지 이슈", "정서적 거리감"],
+  "advice": "일정 여유를 두고, 가족·연인과 정기 영상통화로 유대 보완.",
+  "flags": { "move": true }
+},
+{
+  "id": "wolssal_married_cau",
+  "match": { "shinsal": "월살", "marital_status": ["married"] },
+  "tone": "caution",
+  "title": "월살 · 기혼/관계 케어",
+  "bullets": ["심리적 거리 증가", "가정·일 균형 점검"],
+  "advice": "데이트 루틴·가사 분담 재설계, 작은 선물·메시지로 연결 강화.",
+  "flags": { "move": true, "scandal_risk": "low" }
+},
+{
+  "id": "wolssal_sales_pos",
+  "match": { "shinsal": "월살", "job_group": ["sales","service"] },
+  "tone": "positive",
+  "title": "월살 · 영업/서비스 호조",
+  "bullets": ["방문·만남 증가", "신규 거래처 개척"],
+  "advice": "동선·체력 관리로 성과를 극대화하세요.",
+  "flags": { "move": true, "job": true }
+},
+
+{
+  "id": "jisal_general_neu",
+  "match": { "shinsal": "지살" },
+  "tone": "neutral",
+  "title": "지살(地煞) · 현실 처리",
+  "bullets": ["집안·현장 일 늘어남", "생활형 업무 집중"],
+  "advice": "정리·청소·서류처리로 기반을 다지세요.",
+  "flags": { "job": true }
+},
+{
+  "id": "jisal_service_pos",
+  "match": { "shinsal": "지살", "job_group": ["service","sales"] },
+  "tone": "positive",
+  "title": "지살 · 현장 대응력 상승",
+  "bullets": ["즉시 대응·문제 해결", "현장 신뢰도↑"],
+  "advice": "체크리스트·퀵 리포트로 속도와 품질을 동시에.",
+  "flags": { "job": true, "move": true }
+},
+{
+  "id": "jisal_senior_neu",
+  "match": { "shinsal": "지살", "age_band": ["senior"] },
+  "tone": "neutral",
+  "title": "지살 · 중장년/생활 안정",
+  "bullets": ["주거·건강 관리", "생활비·보험 점검"],
+  "advice": "주거 안정·건강 루틴에 집중, 불필요 구독 정리.",
+  "flags": {}
+},
+
+{
+  "id": "cheonsal_general_cau",
+  "match": { "shinsal": "천살" },
+  "tone": "caution",
+  "title": "천살(天煞) · 변동/거리두기",
+  "bullets": ["예상 밖 변수 유입", "계약·일정 변경"],
+  "advice": "감정적 결정은 보류. 기록·증빙을 남기고 유연한 대안을 준비.",
+  "flags": { "risk": "low" }
+},
+{
+  "id": "cheonsal_creator_neu",
+  "match": { "shinsal": "천살", "job_group": ["creator","research"] },
+  "tone": "neutral",
+  "title": "천살 · 창작/연구 시드",
+  "bullets": ["외부자극→새 아이디어", "관계는 거리두고 몰입"],
+  "advice": "실험·초안 위주로 가볍게 테스트하세요.",
+  "flags": { "brand": true }
+},
+{
+  "id": "cheonsal_public_cau",
+  "match": { "shinsal": "천살", "job_group": ["public"] },
+  "tone": "caution",
+  "title": "천살 · 공공/절차관리",
+  "bullets": ["규정·감사 포인트", "보고·협의의 빈도 증가"],
+  "advice": "공식 절차·용어 사용, 의사결정은 문서화.",
+  "flags": { "risk": "mid", "job": true }
+},
+{
+  "id": "yeokma_base",
+  "match": { "shinsal": "역마살" },
+  "tone": "neutral",
+  "title": "역마살 · 이동/변화",
+  "bullets": ["출장·이동·이사 이슈", "새 인맥/시장 접점"],
+  "advice": "동선·체력관리, 안전수칙 준수. 일정에 여유를 둡니다.",
+  "flags": { "move": true }
+},
+{
+  "id": "banan_base",
+  "match": { "shinsal": "반안살" },
+  "tone": "positive",
+  "title": "반안살 · 해결/정리",
+  "bullets": ["미해결 과제 정리", "문서·처리 진척"],
+  "advice": "체크리스트로 하나씩 끝내기. 공문/증빙은 형식 맞추기.",
+  "flags": { "job": true }
+},
+{
+  "id": "jangseong_base",
+  "match": { "shinsal": "장성살" },
+  "tone": "positive",
+  "title": "장성살 · 존재감/리더십",
+  "bullets": ["발표·주도권 기회", "성과 가시화"],
+  "advice": "메시지 단순화·근거 확보. 표준·규칙 안에서 강하게.",
+  "flags": { "leadership": true, "brand": true }
+},
+{
+  "id": "yangin_base",
+  "match": { "shinsal": "양인살" },
+  "tone": "caution",
+  "title": "양인살 · 강한 추진력/경계",
+  "bullets": ["의지·결단은 강해짐", "직설/충돌 리스크"],
+  "advice": "메시지를 간결하고 정중하게. 규칙·절차 안에서 강하게 밀어붙이세요.",
+  "flags": { "leadership": true, "risk": "low" }
+},
+{
+  "id": "ten_eul_base",
+  "match": { "shinsal": "천을귀인" },
+  "tone": "positive",
+  "title": "천을귀인 · 으뜸 귀인의 보호",
+  "bullets": [
+    "큰 문제를 누그러뜨리는 귀인의 응원",
+    "관재·구설·병고 완화",
+    "좋은 인연·상사의 도움·기회 유입"
+  ],
+  "advice": "도움이 올 때 겸손과 예의를 지키면 복이 커집니다.",
+  "flags": { "brand": true, "job": true }
+},
+{
+  "id": "ten_eul_single_pos",
+  "match": { "shinsal": "천을귀인", "marital_status": ["single","divorced","widowed"] },
+  "tone": "positive",
+  "title": "천을귀인 · 인연운/기회(미혼)",
+  "bullets": ["좋은 인연 소개", "진로·이직 제안", "멘토/스폰서 등장"],
+  "advice": "신뢰할 귀인을 구분하고 약속·시간을 지키세요.",
+  "flags": { "brand": true }
+},
+{
+  "id": "ten_eul_married_pos",
+  "match": { "shinsal": "천을귀인", "marital_status": ["married"] },
+  "tone": "positive",
+  "title": "천을귀인 · 배우자덕/가정운(기혼)",
+  "bullets": ["가정/건강 문제 완화", "배우자·가족의 지원"],
+  "advice": "감사 표현과 배려가 복을 더 크게 만듭니다.",
+  "flags": {}
+},
+
+{"id":"cheonju_base","match":{"shinsal":"천주귀인"},"tone":"positive",
+ "title":"천주귀인 · 귀인의 도움","bullets":["식복·도움·안정"],"advice":"인연의 도움을 받되 예의를 갖추세요."},
+
+{"id":"taeguk_base","match":{"shinsal":"태극귀인"},"tone":"positive",
+ "title":"태극귀인 · 보호/중재","bullets":["문제완화·중재자 등장"],"advice":"갈등을 키우지 말고 중재 포지션을 취하세요."},
+
+{"id":"amlok_base","match":{"shinsal":"암록"},"tone":"neutral",
+ "title":"암록 · 재원/연결","bullets":["숨은 자원 연결","현실적 이익"],"advice":"관계 속 실익을 챙기되 도리를 지키세요."},
+
+{"id":"sangmun_base","match":{"shinsal":"상문살"},"tone":"caution",
+ "title":"상문살 · 정중한 태도","bullets":["예단/조문/격식 이슈"],"advice":"말과 복장·예의를 더 보수적으로."},
+
+{"id":"baekho_base","match":{"shinsal":"백호살"},"tone":"caution",
+ "title":"백호살 · 강한 기세","bullets":["충돌·과속 주의"],"advice":"급한 결정은 점검 2회. 서류·규정 재확인."},
+
+{"id":"geupgak_base","match":{"shinsal":"급각살"},"tone":"caution",
+ "title":"급각살 · 급박/변경","bullets":["급변·일정변경"],"advice":"플랜 B·완충시간 확보."},
+
+{"id":"suok_base","match":{"shinsal":"수옥살"},"tone":"caution",
+ "title":"수옥살 · 제약/지연","bullets":["허가·검토 지연"],"advice":"절차/조건 정밀확인. 우회루트 검토."},
+
+{"id":"jaesal_base","match":{"shinsal":"재살"},"tone":"caution",
+ "title":"재살 · 손실/변동","bullets":["자원 손실 위험","예상치 못한 변동"],"advice":"현금흐름·재고·보안 점검."},
+
+{"id":"mangsin_base","match":{"shinsal":"망신살"},"tone":"caution",
+ "title":"망신살 · 이미지 관리","bullets":["평판 리스크"],"advice":"말/게시물/계약문구 신중히."}
+
+  ]
+}
+

@@ -1,0 +1,610 @@
+{
+  "schema_version": 2,
+  "description": "슬롯별 문장 풀. pools[].trauma_types + lines[]. 선택형 emotion/insight/action 은 slot_intensity_bands.json 밴드 후보와 합류. pools[].intensity(선택)로 밴드 제한 가능. 조건 매칭 후 시드 기반 선택.",
+  "slot_ids": [
+    "cause",
+    "pattern",
+    "emotion",
+    "insight",
+    "action"
+  ],
+  "trauma_type_ids": [
+    "recognition_wound",
+    "abandonment_wound",
+    "over_responsibility",
+    "self_blame",
+    "instability_anxiety",
+    "suppression_anger",
+    "repetition_burnout",
+    "default"
+  ],
+  "registry_ids": {
+    "career": {
+      "cause": {
+        "pools": [
+          {
+            "id": "career_cause_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "역할·평가·보고가 한 묶음으로 몰릴 때, 같은 압박이 다른 사건으로 반복되기 쉽습니다.",
+              "관성·식상 축이 강하게 잡히면 ‘해야 할 일’이 끝없이 늘어나는 느낌이 반복될 수 있습니다.",
+              "용신과 맞지 않는 일정·협업 방식이면, 같은 노력에도 피로만 쌓일 수 있습니다."
+            ]
+          },
+          {
+            "id": "career_cause_pool_recognition_wound",
+            "trauma_types": [
+              "recognition_wound"
+            ],
+            "lines": [
+              "평가·피드백이 민감해지면, 같은 상황에서도 ‘내가 부족한가’가 먼저 떠오르기 쉽습니다."
+            ]
+          },
+          {
+            "id": "career_cause_pool_over_responsibility",
+            "trauma_types": [
+              "over_responsibility"
+            ],
+            "lines": [
+              "내가 책임지는 범위가 넓어질수록, 비슷한 부담이 다른 프로젝트로 다시 옵니다."
+            ]
+          },
+          {
+            "id": "career_cause_pool_repetition_burnout",
+            "trauma_types": [
+              "repetition_burnout"
+            ],
+            "lines": [
+              "같은 방식으로 버티면, 해결보다 ‘버티기’가 반복되는 느낌이 남을 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "pattern": {
+        "pools": [
+          {
+            "id": "career_pattern_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "책임은 커지는데 인정은 늦게 오는 패턴, 혹은 일이 끝나기 전에 새 일이 끼어드는 패턴이 반복될 수 있습니다.",
+              "말로는 괜찮다가 몸으로 먼저 지치거나, 보고 직전에 몰아치는 패턴이 나타나기도 합니다."
+            ]
+          },
+          {
+            "id": "career_pattern_pool_suppression_anger",
+            "trauma_types": [
+              "suppression_anger"
+            ],
+            "lines": [
+              "불편한 말을 삼키다가, 작은 일에 한꺼번에 터지거나 몸으로 신호가 오는 패턴이 생길 수 있습니다."
+            ]
+          },
+          {
+            "id": "career_pattern_pool_instability_anxiety",
+            "trauma_types": [
+              "instability_anxiety"
+            ],
+            "lines": [
+              "일이 잠깐 잘돼도 ‘언제 흔들릴지’부터 떠올리는 패턴이 반복될 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "emotion": {
+        "pools": [
+          {
+            "id": "career_emotion_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "억울함과 무력감이 번갈아 오거나, ‘내가 더 잘해야 하나’라는 자책이 먼저 올라올 수 있습니다.",
+              "피로와 함께 ‘이 일이 나에게 맞나’라는 외로운 질문이 떠오르기도 합니다."
+            ]
+          },
+          {
+            "id": "career_emotion_pool_self_blame",
+            "trauma_types": [
+              "self_blame"
+            ],
+            "lines": [
+              "문제가 생기면 먼저 내 탓을 찾게 되고, 그게 늘 맞는 것 같아 더 위축될 수 있습니다."
+            ]
+          },
+          {
+            "id": "career_emotion_pool_recognition_wound",
+            "trauma_types": [
+              "recognition_wound"
+            ],
+            "lines": [
+              "인정받고 싶은 마음과 ‘아직 부족하다’는 느낌이 동시에 올라올 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "insight": {
+        "pools": [
+          {
+            "id": "career_insight_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "이건 성격 결함이라기보다, 역할·평가·피로가 겹치는 구조에서 반복되는 부담 패턴으로 볼 수 있습니다.",
+              "패턴을 알면 ‘내가 나약해서’가 아니라 ‘어디서 에너지가 새는지’를 먼저 볼 수 있습니다."
+            ]
+          },
+          {
+            "id": "career_insight_pool_over_responsibility",
+            "trauma_types": [
+              "over_responsibility"
+            ],
+            "lines": [
+              "잘해서 버티는 사람일수록, 같은 구조에서 더 많이 짊어지는 쪽이 됩니다. 그건 선택의 실수라기보다 반복되는 습관에 가깝습니다."
+            ]
+          },
+          {
+            "id": "career_insight_pool_repetition_burnout",
+            "trauma_types": [
+              "repetition_burnout"
+            ],
+            "lines": [
+              "노력이 부족해서가 아니라, 같은 방식으로 같은 압박을 맞을 때 소진이 반복됩니다."
+            ]
+          }
+        ]
+      },
+      "action": {
+        "pools": [
+          {
+            "id": "career_action_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "용신 방향에 맞는 ‘업무 한 가지’만 줄이고, 보고·기록·요청을 한 문장씩 짧게 쪼개 보세요.",
+              "주간 목표를 세 개 이하로 두고, 나머지는 ‘보류함’에 두는 것만으로도 회복이 생깁니다."
+            ]
+          },
+          {
+            "id": "career_action_pool_recognition_wound",
+            "trauma_types": [
+              "recognition_wound"
+            ],
+            "lines": [
+              "외부 평가를 기다리기 전에, 하루 끝에 ‘내가 한 일’ 한 줄을 스스로 적어보는 루틴을 추천합니다."
+            ]
+          },
+          {
+            "id": "career_action_pool_instability_anxiety",
+            "trauma_types": [
+              "instability_anxiety"
+            ],
+            "lines": [
+              "미래 전체가 아니라 ‘이번 주 현금·일정·컨디션’만 점검하는 짧은 루틴이 불안을 줄입니다."
+            ]
+          }
+        ]
+      }
+    },
+    "money": {
+      "cause": {
+        "pools": [
+          {
+            "id": "money_cause_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "들어오는 길과 새는 구멍이 동시에 있을 때, 같은 금액대에서 비슷한 스트레스가 반복될 수 있습니다.",
+              "재성·비겁의 흐름이 겹치면 수입과 지출이 감정과 함께 움직이기 쉽습니다."
+            ]
+          },
+          {
+            "id": "money_cause_pool_instability_anxiety",
+            "trauma_types": [
+              "instability_anxiety"
+            ],
+            "lines": [
+              "돈이 조금만 흔들려도 ‘큰일’처럼 느껴지는 반복이 생기기 쉽습니다."
+            ]
+          },
+          {
+            "id": "money_cause_pool_self_blame",
+            "trauma_types": [
+              "self_blame"
+            ],
+            "lines": [
+              "지출 실수를 ‘나의 탓’으로만 묶기 쉬워, 같은 자책이 반복될 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "pattern": {
+        "pools": [
+          {
+            "id": "money_pattern_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "작은 지출이 모여서 크게 느껴지거나, 벌기 전에 쓰는 패턴이 반복될 수 있습니다.",
+              "비상금이 없을 때만 불안이 올라와, 같은 순간에 같은 결정을 하게 되기도 합니다."
+            ]
+          },
+          {
+            "id": "money_pattern_pool_repetition_burnout",
+            "trauma_types": [
+              "repetition_burnout"
+            ],
+            "lines": [
+              "절약을 다짐했다가 지치면, 보상 심리로 비슷한 지출이 다시 오는 패턴이 생길 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "emotion": {
+        "pools": [
+          {
+            "id": "money_emotion_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "불안과 죄책감이 번갈아 오거나, ‘왜 나만 이러지’라는 외로움이 섞일 수 있습니다.",
+              "미래가 아니라 ‘오늘 밤’부터 머릿속이 복잡해질 수 있습니다."
+            ]
+          },
+          {
+            "id": "money_emotion_pool_instability_anxiety",
+            "trauma_types": [
+              "instability_anxiety"
+            ],
+            "lines": [
+              "잠깐만 편해져도 ‘다시 흔들릴 것’ 같은 예감이 먼저 올 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "insight": {
+        "pools": [
+          {
+            "id": "money_insight_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "이건 ‘욕심’이라기보다, 현금흐름과 감정이 붙어 있는 구조에서 반복되는 패턴으로 볼 수 있습니다.",
+              "패턴을 알면 ‘나는 금전 감각이 없다’가 아니라 ‘어디서 새는지’를 먼저 고를 수 있습니다."
+            ]
+          },
+          {
+            "id": "money_insight_pool_over_responsibility",
+            "trauma_types": [
+              "over_responsibility"
+            ],
+            "lines": [
+              "가족·일까지 떠안는 구조에서는, 돈 문제도 혼자 끌어안게 되기 쉽습니다."
+            ]
+          }
+        ]
+      },
+      "action": {
+        "pools": [
+          {
+            "id": "money_action_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "고정비·자동결제·구독을 한 장에 모아 숫자로만 보고, 이번 달 상한을 한 줄로 정해보세요.",
+              "큰 수입보다 ‘새는 구멍’을 먼저 막는 순서가 체감을 바꿉니다."
+            ]
+          },
+          {
+            "id": "money_action_pool_instability_anxiety",
+            "trauma_types": [
+              "instability_anxiety"
+            ],
+            "lines": [
+              "비상금을 ‘완벽한 금액’이 아니라 ‘한 달 치 생활비’처럼 작게라도 고정해 두면 마음이 덜 흔들립니다."
+            ]
+          }
+        ]
+      }
+    },
+    "health": {
+      "cause": {
+        "pools": [
+          {
+            "id": "health_cause_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "오행이 한쪽으로 치우치면, 같은 기운이 반복적으로 소모되거나 민감해질 수 있습니다.",
+              "수면·소화·호흡 같은 기본 신호를 무시하면, 같은 피로가 다른 핑계로 돌아옵니다."
+            ]
+          },
+          {
+            "id": "health_cause_pool_suppression_anger",
+            "trauma_types": [
+              "suppression_anger"
+            ],
+            "lines": [
+              "말로 풀지 못한 답답함이 몸으로 쌓이기 쉬운 흐름일 수 있습니다."
+            ]
+          },
+          {
+            "id": "health_cause_pool_repetition_burnout",
+            "trauma_types": [
+              "repetition_burnout"
+            ],
+            "lines": [
+              "회복 없이 버티면, 같은 ‘한계’에서 다시 쓰러지는 느낌이 반복될 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "pattern": {
+        "pools": [
+          {
+            "id": "health_pattern_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "바쁠수록 잠을 줄이거나, 커피로 때우는 패턴이 반복될 수 있습니다.",
+              "아프기 전까지는 괜찮다가, 한 번 무너지면 길게 가는 패턴도 흔합니다."
+            ]
+          },
+          {
+            "id": "health_pattern_pool_instability_anxiety",
+            "trauma_types": [
+              "instability_anxiety"
+            ],
+            "lines": [
+              "몸 신호를 ‘참는 것’으로 넘기다가, 작은 증상이 큰 불안으로 붙을 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "emotion": {
+        "pools": [
+          {
+            "id": "health_emotion_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "무기력과 초조함이 섞이거나, ‘또 내가 망가지나’라는 두려움이 올라올 수 있습니다.",
+              "피로가 쌓이면 판단이 흔들려 관계·돈 실수로 이어질 수 있습니다."
+            ]
+          },
+          {
+            "id": "health_emotion_pool_self_blame",
+            "trauma_types": [
+              "self_blame"
+            ],
+            "lines": [
+              "컨디션이 안 좋을 때 ‘내가 게으르다’고 먼저 돌리기 쉽습니다."
+            ]
+          }
+        ]
+      },
+      "insight": {
+        "pools": [
+          {
+            "id": "health_insight_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "건강 문제를 단순 의지로만 보기보다, ‘반복되는 소모 구조’로 보면 자책이 줄어듭니다.",
+              "회복 루틴은 사치가 아니라 다음 선택의 질을 지키는 기본값입니다."
+            ]
+          },
+          {
+            "id": "health_insight_pool_repetition_burnout",
+            "trauma_types": [
+              "repetition_burnout"
+            ],
+            "lines": [
+              "같은 방식으로 버티면 몸이 먼저 멈추는 건, 실패가 아니라 신호입니다."
+            ]
+          }
+        ]
+      },
+      "action": {
+        "pools": [
+          {
+            "id": "health_action_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "수면 시간대를 고정하고, 카페인을 한 단계만 줄여보세요.",
+              "가벼운 산책·스트레칭을 ‘매일 10분’ 규칙으로 두면 안전합니다."
+            ]
+          },
+          {
+            "id": "health_action_pool_suppression_anger",
+            "trauma_types": [
+              "suppression_anger"
+            ],
+            "lines": [
+              "몸이 긴장할 때 ‘말 한 문장’이라도 짧게 남기는 연습이 호흡을 돌려줍니다."
+            ]
+          }
+        ]
+      }
+    },
+    "relationship": {
+      "cause": {
+        "pools": [
+          {
+            "id": "relationship_cause_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "기대치·속도·거리감이 어긋날 때, 비슷한 오해가 다른 사람으로 반복될 수 있습니다.",
+              "도화·화개 류 신호가 있으면 만남은 늘어도 마음은 안정되기 어려울 수 있습니다."
+            ]
+          },
+          {
+            "id": "relationship_cause_pool_abandonment_wound",
+            "trauma_types": [
+              "abandonment_wound"
+            ],
+            "lines": [
+              "연락이 늦거나 거리가 생기면, ‘나는 버려질 수 있다’는 불안이 먼저 올라올 수 있습니다."
+            ]
+          },
+          {
+            "id": "relationship_cause_pool_recognition_wound",
+            "trauma_types": [
+              "recognition_wound"
+            ],
+            "lines": [
+              "관계에서도 ‘인정받고 싶은 마음’이 강하면, 작은 반응에도 크게 흔들릴 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "pattern": {
+        "pools": [
+          {
+            "id": "relationship_pattern_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "말은 빠른데 마음은 느릴 때 오해가 생기거나, 확인이 늦어져서 엇갈리는 패턴이 반복될 수 있습니다.",
+              "좋아질수록 조건을 더 많이 걸게 되는 패턴도 흔합니다."
+            ]
+          },
+          {
+            "id": "relationship_pattern_pool_abandonment_wound",
+            "trauma_types": [
+              "abandonment_wound"
+            ],
+            "lines": [
+              "먼저 잡으려 하거나, 반대로 먼저 멀어지는 극단 패턴이 반복될 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "emotion": {
+        "pools": [
+          {
+            "id": "relationship_emotion_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "서운함과 불안이 번갈아 오거나, 혼자 남은 것 같은 외로움이 섞일 수 있습니다.",
+              "분노보다 먼저 ‘내가 싫어진다’는 감정이 올라올 수 있습니다."
+            ]
+          },
+          {
+            "id": "relationship_emotion_pool_abandonment_wound",
+            "trauma_types": [
+              "abandonment_wound"
+            ],
+            "lines": [
+              "상대의 침묵을 ‘거절’로 읽기 쉬워, 마음이 금방 지칠 수 있습니다."
+            ]
+          }
+        ]
+      },
+      "insight": {
+        "pools": [
+          {
+            "id": "relationship_insight_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "관계 문제를 ‘내가 매력이 없어서’로만 보기보다, 거리·속도·기대의 반복 패턴으로 보면 덜 자책할 수 있습니다.",
+              "같은 실수라기보다, 비슷한 취약점이 다른 사람에게 다시 걸리는 흐름일 수 있습니다."
+            ]
+          },
+          {
+            "id": "relationship_insight_pool_self_blame",
+            "trauma_types": [
+              "self_blame"
+            ],
+            "lines": [
+              "상대의 반응까지 전부 내 책임으로 묶지 않아도 됩니다. 관계는 두 사람의 리듬입니다."
+            ]
+          }
+        ]
+      },
+      "action": {
+        "pools": [
+          {
+            "id": "relationship_action_pool_default",
+            "trauma_types": [
+              "default"
+            ],
+            "lines": [
+              "감사·요청·경계를 한 문장씩만 분리해서 말해보세요.",
+              "새 인연은 천천히, 기존 인연은 약속 시간을 지키는 것부터."
+            ]
+          },
+          {
+            "id": "relationship_action_pool_abandonment_wound",
+            "trauma_types": [
+              "abandonment_wound"
+            ],
+            "lines": [
+              "확인 문자를 늘리기보다, ‘내가 괜찮은지’를 먼저 체크하는 루틴이 관계를 가볍게 합니다."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "sentence_set_integration": {
+    "selected_topics_v1": {
+      "career": {
+        "append_fields_to_slot": {
+          "insight": [
+            "summary_pool"
+          ]
+        },
+        "merge_as_trauma": "default",
+        "note": "selected_topics_v1 의 summary_pool 문장을 insight 슬롯 후보에 default 트라우마로 합류."
+      },
+      "money": {
+        "append_fields_to_slot": {
+          "insight": [
+            "summary_pool"
+          ]
+        },
+        "merge_as_trauma": "default"
+      },
+      "health": {
+        "append_fields_to_slot": {
+          "insight": [
+            "summary_pool"
+          ]
+        },
+        "merge_as_trauma": "default"
+      },
+      "relationship": {
+        "append_fields_to_slot": {
+          "insight": [
+            "summary_pool"
+          ]
+        },
+        "merge_as_trauma": "default"
+      }
+    }
+  }
+}

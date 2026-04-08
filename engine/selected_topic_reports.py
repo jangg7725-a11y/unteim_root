@@ -17,6 +17,33 @@ from engine.report_topic_registry import (
     partition_topics,
     registry_id_to_report_key,
 )
+from engine.trauma_profile import build_trauma_profile
+
+PATTERN_REGISTRY_IDS = frozenset({"career", "money", "health", "relationship"})
+INTENSITY_SLOTS = frozenset({"emotion", "insight", "action"})
+
+
+def _as_dict(x: Any) -> Dict[str, Any]:
+    return x if isinstance(x, dict) else {}
+
+
+def _as_list(x: Any) -> List[Any]:
+    return x if isinstance(x, list) else []
+
+
+def _str_list(x: Any) -> List[str]:
+    """JSON 배열 → 문자열 리스트 (Pylance 안전 + _pick 용)."""
+    if not isinstance(x, list):
+        return []
+    out: List[str] = []
+    for i in x:
+        if isinstance(i, str) and i.strip():
+            out.append(i)
+        elif i is not None and not isinstance(i, (dict, list)):
+            s = str(i).strip()
+            if s:
+                out.append(s)
+    return out
 
 
 def _seed(packed: dict) -> str:
@@ -41,6 +68,216 @@ def _load_topic_pool(registry_id: str) -> Dict[str, Any]:
     topics = data.get("topics") or {}
     t = topics.get(registry_id)
     return t if isinstance(t, dict) else {}
+
+
+def _load_slot_pools() -> Dict[str, Any]:
+    d = load_sentences("topic_slot_pools")
+    return d if isinstance(d, dict) else {}
+
+
+def _intensity_band_lines(registry_id: str, slot: str, primary: str, intensity: str) -> List[str]:
+    """slot_intensity_bands.json — emotion/insight/action + primary + low|medium|high."""
+    if slot not in INTENSITY_SLOTS:
+        return []
+    data = load_sentences("slot_intensity_bands")
+    if not isinstance(data, dict):
+        return []
+    reg = _as_dict(_as_dict(data.get("registry_ids")).get(registry_id))
+    slot_obj = _as_dict(reg.get(slot))
+    by_primary = _as_dict(slot_obj.get(primary))
+    raw = _as_list(by_primary.get(intensity))
+    return [str(x).strip() for x in raw if isinstance(x, str) and x.strip()]
+
+
+def _collect_slot_candidate_lines(
+    registry_id: str,
+    slot: str,
+    primary: str,
+    secondary: str,
+    intensity: str,
+    legacy_topic: Dict[str, Any],
+) -> List[str]:
+    """
+    topic_slot_pools.json: pools[].trauma_types 와 primary/secondary/default 교집합이 있으면 lines 합류.
+    emotion/insight/action 은 slot_intensity_bands (primary+intensity) 후보를 먼저 합류.
+    pools[].intensity 가 있으면 현재 intensity 와 일치할 때만 해당 풀 사용.
+    sentence_set_integration: selected_topics_v1 필드(예: summary_pool)를 insight 등 슬롯 후보에 합류.
+    """
+    lines: List[str] = []
+    if slot in INTENSITY_SLOTS:
+        lines.extend(_intensity_band_lines(registry_id, slot, primary, intensity))
+
+    data = _load_slot_pools()
+    reg = _as_dict(_as_dict(data.get("registry_ids")).get(registry_id))
+    slot_obj = _as_dict(reg.get(slot))
+    pool_list = _as_list(slot_obj.get("pools"))
+    active = {primary, secondary, "default"}
+    for pool in pool_list:
+        if not isinstance(pool, dict):
+            continue
+        pint = pool.get("intensity")
+        if pint is not None and str(pint).strip() != "" and slot in INTENSITY_SLOTS:
+            if str(pint).strip().lower() != str(intensity).lower():
+                continue
+        tts = pool.get("trauma_types")
+        if not isinstance(tts, list):
+            continue
+        if not (set(str(t) for t in tts) & active):
+            continue
+        for ln in pool.get("lines") or []:
+            if isinstance(ln, str) and ln.strip():
+                lines.append(ln.strip())
+    if not lines:
+        for pool in pool_list:
+            if not isinstance(pool, dict):
+                continue
+            tts = pool.get("trauma_types")
+            if not isinstance(tts, list) or "default" not in tts:
+                continue
+            for ln in pool.get("lines") or []:
+                if isinstance(ln, str) and ln.strip():
+                    lines.append(ln.strip())
+
+    integ_root = _as_dict(data.get("sentence_set_integration"))
+    stv = _as_dict(integ_root.get("selected_topics_v1"))
+    per = _as_dict(stv.get(registry_id))
+    append_map = _as_dict(per.get("append_fields_to_slot"))
+    field_names = _as_list(append_map.get(slot))
+    for fn in field_names:
+        arr = legacy_topic.get(fn)
+        if not isinstance(arr, list):
+            continue
+        for x in arr:
+            if isinstance(x, str) and x.strip():
+                lines.append(x.strip())
+
+    return lines
+
+
+def _dedupe_lines(lines: List[str]) -> List[str]:
+    seen: set[str] = set()
+    out: List[str] = []
+    for x in lines:
+        t = x.strip()
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        out.append(t)
+    return out
+
+
+def _join_with_inner_slot(registry_id: str, slot: str, seed: str, parts: List[str]) -> str:
+    """한 슬롯 안 2~3문장 — inner_slot_joiners 풀에서 시드로 연결."""
+    if not parts:
+        return ""
+    if len(parts) == 1:
+        return parts[0].strip()
+    data = load_sentences("slot_connectors")
+    if not isinstance(data, dict):
+        data = {}
+    inner = _as_dict(data.get("inner_slot_joiners"))
+    default_pool = _str_list(inner.get("default"))
+    if not default_pool:
+        default_pool = [" "]
+    by_slot = _as_dict(inner.get("by_slot"))
+    slot_pool = _str_list(by_slot.get(slot))
+    pool = slot_pool if slot_pool else default_pool
+    out = parts[0].strip()
+    for j in range(1, len(parts)):
+        sep = _pick(pool, seed, f"inner|{registry_id}|{slot}|{j}")
+        out += sep + parts[j].strip()
+    return out.strip()
+
+
+def _compose_slot_text(
+    registry_id: str,
+    slot: str,
+    seed: str,
+    primary: str,
+    secondary: str,
+    intensity: str,
+    legacy_topic: Dict[str, Any],
+) -> str:
+    merged = _collect_slot_candidate_lines(
+        registry_id, slot, primary, secondary, intensity, legacy_topic
+    )
+    uniq = _dedupe_lines(merged)
+    if not uniq:
+        return ""
+    n = len(uniq)
+    h = int(
+        hashlib.md5(
+            (seed + registry_id + slot + primary + secondary + intensity).encode("utf-8")
+        ).hexdigest(),
+        16,
+    )
+    if n == 1:
+        return uniq[0]
+    if n == 2:
+        return _join_with_inner_slot(registry_id, slot, seed, uniq)
+    want = 2 + (h % 2)
+    want = min(want, n)
+    idx = list(range(n))
+    idx.sort(key=lambda i: hashlib.md5(f"{seed}|{slot}|{i}".encode("utf-8")).hexdigest())
+    parts = [uniq[i] for i in idx[:want]]
+    return _join_with_inner_slot(registry_id, slot, seed, parts)
+
+
+def _bridge_phrase(registry_id: str, primary: str, bridge_key: str, seed: str) -> str:
+    data = load_sentences("slot_connectors")
+    if not isinstance(data, dict):
+        return ""
+    bridges = _as_dict(data.get("bridges"))
+    base_list = _str_list(bridges.get(bridge_key))
+    reg_root = _as_dict(data.get("by_registry"))
+    reg = _as_dict(reg_root.get(registry_id))
+    reg_list = _str_list(reg.get(bridge_key))
+    tr_root = _as_dict(data.get("by_trauma_primary"))
+    tr = _as_dict(tr_root.get(primary))
+    tr_list = _str_list(tr.get(bridge_key))
+    pool = [x for x in base_list + reg_list + tr_list if x.strip()]
+    return _pick(pool, seed, f"bridge|{bridge_key}|{registry_id}") if pool else ""
+
+
+def _build_narrative_flow(
+    registry_id: str,
+    primary: str,
+    seed: str,
+    cause: str,
+    pattern: str,
+    emotion: str,
+    insight: str,
+    action: str,
+) -> str:
+    texts = [cause, pattern, emotion, insight, action]
+    bridge_keys = [
+        "cause_to_pattern",
+        "pattern_to_emotion",
+        "emotion_to_insight",
+        "insight_to_action",
+    ]
+    bridge_between: Dict[tuple[int, int], str] = {
+        (0, 1): bridge_keys[0],
+        (1, 2): bridge_keys[1],
+        (2, 3): bridge_keys[2],
+        (3, 4): bridge_keys[3],
+    }
+    flow = ""
+    prev_i: Optional[int] = None
+    for i, t in enumerate(texts):
+        if not (isinstance(t, str) and t.strip()):
+            continue
+        if prev_i is not None:
+            bk = bridge_between.get((prev_i, i))
+            if bk:
+                br = _bridge_phrase(registry_id, primary, bk, seed + str(prev_i) + str(i))
+                if br:
+                    flow += " " + br + " "
+                else:
+                    flow += " "
+        flow += t.strip()
+        prev_i = i
+    return flow.strip()
 
 
 def _hint_ten_axis(packed: dict) -> Dict[str, float]:
@@ -289,12 +526,51 @@ def _engine_hints(registry_id: str, packed: dict) -> List[str]:
     return extras[:4]
 
 
+def _pick_trigger_message(registry_id: str, seed: str) -> str:
+    data = load_sentences("selected_topic_triggers")
+    if not isinstance(data, dict):
+        return ""
+    base = _str_list(data.get("default_pool"))
+    by_reg = data.get("by_registry")
+    reg = _str_list(by_reg.get(registry_id)) if isinstance(by_reg, dict) else []
+    pool = [x for x in base + reg if x.strip()]
+    return _pick(pool, seed, f"trigger|{registry_id}") if pool else ""
+
+
+def _pick_cta_message(registry_id: str, seed: str) -> str:
+    data = load_sentences("selected_topic_cta")
+    if not isinstance(data, dict):
+        return ""
+    base = _str_list(data.get("default_pool"))
+    by_reg = data.get("by_registry")
+    reg = _str_list(by_reg.get(registry_id)) if isinstance(by_reg, dict) else []
+    pool = [x for x in base + reg if x.strip()]
+    return _pick(pool, seed, f"cta|{registry_id}") if pool else ""
+
+
+def _emotion_excerpt(text: str, limit: int = 160) -> str:
+    """무료 구역용 감정 슬롯 일부 (고정문 아님, 길이 기준 발췌)."""
+    t = (text or "").strip()
+    if not t:
+        return ""
+    if len(t) <= limit:
+        return t
+    cut = t[:limit]
+    for sep in (" ", "，", ",", "·", "\n"):
+        idx = cut.rfind(sep)
+        if idx > limit // 3:
+            return t[:idx].strip() + "…"
+    return cut.strip() + "…"
+
+
 def _build_extend_block(registry_id: str, packed: dict, report_key: str) -> Dict[str, Any]:
+    if registry_id in PATTERN_REGISTRY_IDS:
+        return _build_pattern_block(registry_id, packed, report_key)
     seed = _seed(packed)
     pool = _load_topic_pool(registry_id)
     title = pool.get("title") or TOPIC_DEFS.get(registry_id, ("", "extend"))[0]
-    summaries = pool.get("summary_pool") or []
-    bullets = [str(b) for b in (pool.get("bullets_pool") or []) if str(b).strip()]
+    summaries = _str_list(pool.get("summary_pool"))
+    bullets = [str(b) for b in _as_list(pool.get("bullets_pool")) if str(b).strip()]
     summary = _pick(summaries, seed, registry_id + "|s")
     bl: List[str] = []
     for i, b in enumerate(bullets[:8]):
@@ -304,13 +580,108 @@ def _build_extend_block(registry_id: str, packed: dict, report_key: str) -> Dict
         if e and e not in bl:
             bl.insert(0, e)
 
+    trig = _pick_trigger_message(registry_id, seed)
+    cta = _pick_cta_message(registry_id, seed)
     return {
         "id": report_key,
         "registry_id": registry_id,
         "title": title,
         "summary": summary,
         "bullets": bl[:10],
+        "trigger_message": trig,
+        "cta_message": cta,
+        "free_version": {
+            "summary": summary,
+            "emotion": "",
+        },
+        "premium_version": {
+            "summary": summary,
+            "bullets": bl[:10],
+        },
         "source": "narrative_v1+engine_hints",
+        "tier": "extend",
+    }
+
+
+def _build_pattern_block(registry_id: str, packed: dict, report_key: str) -> Dict[str, Any]:
+    seed = _seed(packed)
+    pool = _load_topic_pool(registry_id)
+    title = pool.get("title") or TOPIC_DEFS.get(registry_id, ("", "extend"))[0]
+    legacy_summary = [str(x) for x in _as_list(pool.get("summary_pool")) if str(x).strip()]
+    legacy_bullets = [str(b) for b in _as_list(pool.get("bullets_pool")) if str(b).strip()]
+
+    tp = build_trauma_profile(packed, registry_id, seed)
+    primary = str(tp.get("primary_type") or "")
+    secondary = str(tp.get("secondary_type") or "")
+    intensity = str(tp.get("intensity") or "medium")
+
+    cause = _compose_slot_text(registry_id, "cause", seed, primary, secondary, intensity, pool)
+    pattern = _compose_slot_text(registry_id, "pattern", seed, primary, secondary, intensity, pool)
+    emotion = _compose_slot_text(registry_id, "emotion", seed, primary, secondary, intensity, pool)
+    insight = _compose_slot_text(registry_id, "insight", seed, primary, secondary, intensity, pool)
+    action = _compose_slot_text(registry_id, "action", seed, primary, secondary, intensity, pool)
+
+    narrative_flow = _build_narrative_flow(
+        registry_id, primary, seed, cause, pattern, emotion, insight, action
+    )
+
+    summary = _pick([insight, narrative_flow] + legacy_summary, seed, registry_id + "|summary_mix") if (
+        insight or narrative_flow or legacy_summary
+    ) else ""
+
+    bl: List[str] = []
+    for slot_txt, label in (
+        (cause, "원인"),
+        (pattern, "반복"),
+        (emotion, "느낌"),
+        (insight, "이해"),
+        (action, "방향"),
+    ):
+        if slot_txt:
+            bl.append(f"{label}: {slot_txt}")
+    for e in _engine_hints(registry_id, packed):
+        if e and e not in bl:
+            bl.insert(0, e)
+    for i, b in enumerate(legacy_bullets[:6]):
+        bl.append(_pick([b], seed, registry_id + "|lb" + str(i)))
+
+    em_ex = _emotion_excerpt(emotion)
+    free_version = {
+        "summary": summary,
+        "emotion": em_ex,
+    }
+    premium_version = {
+        "cause": cause,
+        "pattern": pattern,
+        "emotion": emotion,
+        "insight": insight,
+        "action": action,
+        "trauma_profile": tp,
+        "narrative_flow": narrative_flow,
+        "bullets": bl[:14],
+    }
+
+    trig = _pick_trigger_message(registry_id, seed)
+    cta = _pick_cta_message(registry_id, seed)
+
+    return {
+        "id": report_key,
+        "registry_id": registry_id,
+        "title": title,
+        "summary": summary,
+        "bullets": bl[:14],
+        "cause": cause,
+        "pattern": pattern,
+        "emotion": emotion,
+        "insight": insight,
+        "action": action,
+        "narrative_flow": narrative_flow,
+        "trauma_profile": tp,
+        "trigger_message": trig,
+        "cta_message": cta,
+        "free_version": free_version,
+        "premium_version": premium_version,
+        "source": "pattern_slots+trauma_profile+narrative_v1",
         "tier": "extend",
     }
 

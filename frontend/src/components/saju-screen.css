@@ -1,0 +1,136 @@
+.saju-screen {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.saju-screen__hero {
+  margin-bottom: 2rem;
+}
+
+.saju-screen__eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.saju-screen__title {
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 0.75rem;
+  color: var(--text);
+}
+
+.saju-screen__lead {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+.saju-screen__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.flow-step {
+  animation: fadeIn 0.35s ease;
+}
+
+.flow-step--expand {
+  animation: expandIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 40rem;
+  }
+}
+
+.flow-step__heading {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+
+.flow-step__heading--sub {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.saju-screen__grid2 {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 480px) {
+  .saju-screen__grid2 {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.saju-screen__actions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.saju-screen__submit {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0.9rem 1.25rem;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: var(--shadow-soft), 0 8px 24px rgba(99, 102, 241, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s;
+}
+
+.saju-screen__submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft), 0 12px 28px rgba(99, 102, 241, 0.35);
+}
+
+.saju-screen__submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.saju-screen__hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}

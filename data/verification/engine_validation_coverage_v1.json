@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "goal": "사주 계산 정확도 검증 우선순위 커버리지 맵",
+  "coverage": [
+    {"priority": 1, "name": "원국 계산(년/월/일/시)", "status": "covered", "evidence": ["tests/test_saju_accuracy_samples.py", "tests/test_edge_cases.py"]},
+    {"priority": 2, "name": "절입일 경계", "status": "covered", "evidence": ["tests/test_saju_accuracy_samples.py", "tests/test_edge_cases.py"]},
+    {"priority": 3, "name": "양력/음력/윤달 처리", "status": "partially_covered", "evidence": ["tests/test_saju_lunar_conversion.py"], "note": "KASI 외부 응답 의존"},
+    {"priority": 4, "name": "오행 산출", "status": "partially_covered", "evidence": ["tests/test_saju_accuracy_samples.py"], "note": "현재는 known-value 1건 + 불변식 검증"},
+    {"priority": 5, "name": "십신 매핑", "status": "partially_covered", "evidence": ["tests/test_saju_accuracy_samples.py"], "note": "포괄 기준 데이터 부족"},
+    {"priority": 6, "name": "12운성", "status": "partially_covered", "evidence": ["tests/test_saju_accuracy_samples.py"], "note": "문자 포함 검증 중심"},
+    {"priority": 7, "name": "신살", "status": "partially_covered", "evidence": ["tests/test_saju_accuracy_samples.py", "tests/test_shinsal_detector.py"], "note": "정밀 골든셋 확대 필요"},
+    {"priority": 8, "name": "공망", "status": "insufficient_baseline", "evidence": ["tests/test_saju_accuracy_samples.py"], "note": "공식 기준표 기반 샘플 미흡"},
+    {"priority": 9, "name": "용신/희신/기신", "status": "insufficient_baseline", "evidence": ["tests/test_saju_accuracy_samples.py"], "note": "외부 기준 답안 셋 필요"},
+    {"priority": 10, "name": "대운/sewun/월운", "status": "partially_covered", "evidence": ["tests/test_saju_accuracy_samples.py", "tests/test_output_schema.py"], "note": "구조/연속성 위주, 기준값 확장 필요"}
+  ]
+}

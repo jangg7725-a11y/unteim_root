@@ -1,0 +1,97 @@
+.today-fortune {
+  margin-bottom: 0.9rem;
+  border-radius: 16px;
+  padding: 0.95rem 1rem;
+  background: linear-gradient(165deg, rgba(245, 238, 255, 0.95), rgba(248, 242, 231, 0.9));
+  border: 1px solid rgba(139, 92, 246, 0.16);
+  box-shadow: 0 6px 18px rgba(76, 54, 120, 0.08);
+}
+
+.today-fortune__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.today-fortune__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #3f2f63;
+}
+
+.today-fortune__stars {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: #7c3aed;
+}
+
+.today-fortune__flow {
+  margin: 0.45rem 0 0.6rem;
+  font-size: 0.83rem;
+  line-height: 1.55;
+  color: #4b3f63;
+}
+
+.today-fortune__block {
+  margin-bottom: 0.5rem;
+}
+
+.today-fortune__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6d28d9;
+}
+
+.today-fortune__text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #4b3f63;
+}
+
+.today-fortune__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.today-fortune__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.11);
+  color: #5b21b6;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.today-fortune__coach {
+  margin-top: 0.55rem;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 255, 255, 0.62);
+  color: #4b3f63;
+}
+
+.today-fortune__coach strong {
+  font-size: 0.74rem;
+  color: #6d28d9;
+}
+
+.today-fortune__coach p {
+  margin: 0.25rem 0 0;
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .today-fortune {
+    padding: 0.85rem 0.85rem;
+  }
+}
+

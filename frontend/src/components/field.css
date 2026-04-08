@@ -1,0 +1,132 @@
+.field--soft {
+  margin-bottom: 0;
+}
+
+.field__label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+  letter-spacing: 0.02em;
+}
+
+.field__input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-inset);
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.field__input:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.field__input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.field__input--date,
+.field__input--time {
+  min-height: 2.75rem;
+}
+
+.segment {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset);
+}
+
+.segment--gender,
+.segment--calendar,
+.segment--leap {
+  width: 100%;
+}
+
+.segment--narrow {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+}
+
+.segment__btn {
+  flex: 1;
+  border: none;
+  border-radius: calc(var(--radius) - 4px);
+  padding: 0.65rem 0.85rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.segment__btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.segment__btn--active {
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.segment__btn:active {
+  transform: scale(0.98);
+}
+
+.leap-panel {
+  margin-top: 1rem;
+  padding: 1.1rem 1rem 1rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, var(--accent-weak), var(--surface-2));
+  border: 1px solid var(--border);
+}
+
+.leap-panel__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+.leap-panel__hint {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.leap-panel__auto {
+  padding: 0.5rem 0 0;
+}
+
+.leap-panel__pending,
+.leap-panel__resolved {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.leap-panel__resolved {
+  color: var(--text);
+}

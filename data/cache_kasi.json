@@ -1,0 +1,17 @@
+{
+  "1966-11-04": {
+    "term_name": "입동",
+    "term_datetime": "1966-11-07T05:31:00+09:00",
+    "is_leap_month": false
+  },
+  "1966-12-22": {
+    "term_name": "동지",
+    "term_datetime": "1966-12-22T00:16:00+09:00",
+    "is_leap_month": false
+  },
+  "1967-01-05": {
+    "term_name": "소한",
+    "term_datetime": "1967-01-05T00:00:00+09:00",
+    "is_leap_month": false
+  }
+}

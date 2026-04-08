@@ -1,0 +1,187 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-04",
+    "notes": "운트임 신살 확장 메타데이터. conditions는 판정 규칙 연결 자리(차기 버전에서 채움)."
+  },
+
+  "천덕귀인": {
+    "aka": ["Cheondeok", "Heavenly Virtue"],
+    "element": "토",
+    "polarity": "양",
+    "themes": ["보호", "귀인도움", "복덕"],
+    "description": "천덕귀인은 어려움 속에서도 보호막처럼 작용하는 길신입니다. 주변의 도움, 예상치 못한 행운, 위기 회복력을 부여합니다.",
+    "advice": "겸손과 베풂의 태도를 유지하면 귀인의 도움이 강화됩니다.",
+    "lucky_color": ["베이지", "아이보리", "옐로우"],
+    "lucky_direction": ["중앙", "남서"],
+    "lucky_items": ["토기 소품", "원목+돌 조합 인테리어"],
+    "avoid": ["성급한 결정", "타인 공로 가로채기"],
+    "affirmation": "나는 도움과 복을 자연스럽게 끌어당긴다.",
+    "conditions": [{"type": "by_pillar", "pillar": ["year","month","day","hour"], "rule_ref": "CHEONDEOK_V1_TBD"}]
+  },
+
+  "월덕귀인": {
+    "aka": ["Woldeok", "Monthly Virtue"],
+    "element": "토",
+    "polarity": "음",
+    "themes": ["인덕", "관계운", "화합"],
+    "description": "월덕귀인은 인간관계의 갈등을 완화하고 협력적 분위기를 이끕니다.",
+    "advice": "감사의 표현과 작은 선물 교환이 운을 돋웁니다.",
+    "lucky_color": ["크림", "라이트브라운"],
+    "lucky_direction": ["남서"],
+    "lucky_items": ["세라믹 컵", "도자기 플레이트"],
+    "avoid": ["뒤늦은 사과 미루기"],
+    "affirmation": "관계 속에서 나는 든든한 동반자를 얻는다.",
+    "conditions": [{"type": "by_pillar", "pillar": ["month","day"], "rule_ref": "WOLDEOK_V1_TBD"}]
+  },
+
+  "문창귀인": {
+    "aka": ["Munchang", "Literary Talent"],
+    "element": "목",
+    "polarity": "양",
+    "themes": ["학문", "창의성", "명예"],
+    "description": "문창귀인은 학습 집중력과 표현력을 높여 학업·연구·크리에이티브 성과에 유리합니다.",
+    "advice": "아침 공부 루틴과 필사 습관을 권장합니다.",
+    "lucky_color": ["그린", "민트"],
+    "lucky_direction": ["동", "동남"],
+    "lucky_items": ["그린 북커버", "관엽식물", "만년필"],
+    "avoid": ["즉흥적 밤샘"],
+    "affirmation": "내 지식은 자연스럽게 자라고 세상에 기여한다.",
+    "conditions": [{"type": "by_pillar", "pillar": ["day","hour"], "rule_ref": "MUNCHANG_V1_TBD"}]
+  },
+
+  "천을귀인": {
+    "aka": ["Cheoneul", "Heavenly Grace"],
+    "element": "수",
+    "polarity": "음",
+    "themes": ["복덕", "기회", "구원"],
+    "description": "천을귀인은 막힌 흐름을 여는 구원의 손길로 작용해 뜻밖의 해결책을 제공합니다.",
+    "advice": "곤란을 혼자 묻어두지 말고 도움을 청하세요.",
+    "lucky_color": ["네이비", "블루"],
+    "lucky_direction": ["북", "북서"],
+    "lucky_items": ["물결 무늬 소품", "청색 노트"],
+    "avoid": ["폐쇄적 태도"],
+    "affirmation": "나는 언제든 새로운 길을 만난다.",
+    "conditions": [{"type": "by_pillar", "pillar": ["year","day"], "rule_ref": "CHEONEUL_V1_TBD"}]
+  },
+
+  "홍염살": {
+    "aka": ["Hongyeom", "Red Charm"],
+    "element": "화",
+    "polarity": "양",
+    "themes": ["매력", "인기", "관계 변화"],
+    "description": "홍염살은 대인관계에서 매력을 상승시키나 감정 기복도 커질 수 있습니다.",
+    "advice": "과열되지 않게 일정·수면 리듬 관리가 핵심입니다.",
+    "lucky_color": ["레드", "코랄"],
+    "lucky_direction": ["남", "남동"],
+    "lucky_items": ["립컬러", "레드 액세서리"],
+    "avoid": ["감정적 소비"],
+    "affirmation": "나의 매력은 건강하고 따뜻하게 빛난다.",
+    "conditions": [{"type": "by_branch_set", "set_ref": "PEACHBLOSSOM_V1_TBD"}]
+  },
+
+  "역마살": {
+    "aka": ["Yeokma", "Travel/Movement"],
+    "element": "목",
+    "polarity": "양",
+    "themes": ["이동", "변화", "이사·여행"],
+    "description": "역마살은 이동·출장·전직 등 삶의 궤도를 바꾸는 동력을 줍니다.",
+    "advice": "이동을 ‘기회 확장’에 맞춰 계획하면 행운으로 전환됩니다.",
+    "lucky_color": ["포레스트그린", "카키"],
+    "lucky_direction": ["동", "동남"],
+    "lucky_items": ["여행파우치", "가벼운 스니커즈"],
+    "avoid": ["충동적 계약"],
+    "affirmation": "변화는 나를 더 넓은 세상으로 이끈다.",
+    "conditions": [{"type": "by_pillar", "pillar": ["year","day"], "rule_ref": "YEOKMA_V1_TBD"}]
+  },
+
+  "괴강살": {
+    "aka": ["Gwaegang", "Steel Will"],
+    "element": "금",
+    "polarity": "양",
+    "themes": ["의지", "권위", "돌파"],
+    "description": "괴강살은 강한 추진력과 리더십을 주지만, 각진 소통은 마찰을 낳을 수 있습니다.",
+    "advice": "정의·원칙에 공감·경청을 더하세요.",
+    "lucky_color": ["화이트", "실버"],
+    "lucky_direction": ["서", "서북"],
+    "lucky_items": ["메탈 워치", "스틸 펜"],
+    "avoid": ["독선·독주"],
+    "affirmation": "강인함과 배려를 함께 선택한다.",
+    "conditions": [{"type": "by_stem_branch_combo", "rule_ref": "GWAEGANG_V1_TBD"}]
+  },
+
+  "혈인살": {
+    "aka": ["Hyeolin", "Blood Sign"],
+    "element": "수",
+    "polarity": "음",
+    "themes": ["건강·수술", "안전관리"],
+    "description": "혈인살은 체력 저하·혈액·염증 이슈에 주의가 필요함을 알립니다.",
+    "advice": "수면·영양·정기검진 루틴을 강화하세요.",
+    "lucky_color": ["다크블루", "인디고"],
+    "lucky_direction": ["북"],
+    "lucky_items": ["물병", "블루 라이트 차단"],
+    "avoid": ["과로·탈수"],
+    "affirmation": "나는 몸의 신호를 섬세히 듣고 회복한다.",
+    "conditions": [{"type": "by_pillar", "pillar": ["day","hour"], "rule_ref": "HYEOLIN_V1_TBD"}]
+  },
+
+  "천라지망": {
+    "aka": ["Heaven Net, Earth Snare"],
+    "element": "토",
+    "polarity": "음",
+    "themes": ["구속", "스트레스", "관계·규정 얽힘"],
+    "description": "천라지망은 심리적 억압·관계의 올가미를 상징합니다.",
+    "advice": "경계 설정과 규정 재점검이 답입니다.",
+    "lucky_color": ["샌드", "머스타드"],
+    "lucky_direction": ["남서"],
+    "lucky_items": ["메모패드(경계선 선언문)", "규정 체크리스트"],
+    "avoid": ["방치·미루기"],
+    "affirmation": "나는 건강한 경계를 세우고 자유를 선택한다.",
+    "conditions": [{"type": "by_conflict_pattern", "rule_ref": "CHEONRA_V1_TBD"}]
+  },
+
+  "귀문관살": {
+    "aka": ["Gwinmungwan", "Spirit Gate"],
+    "element": "수",
+    "polarity": "양",
+    "themes": ["예지·통찰", "고독", "예민성"],
+    "description": "귀문관살은 예민한 감수성과 직관을 주지만, 과몰입시 불면·불안이 동반될 수 있습니다.",
+    "advice": "밤 루틴 안정화·명상·자연 산책이 도움됩니다.",
+    "lucky_color": ["보라", "네이비"],
+    "lucky_direction": ["북", "북서"],
+    "lucky_items": ["아메시스트", "라벤더 오일"],
+    "avoid": ["과한 자극물·카페인"],
+    "affirmation": "나의 예감은 나를 안전하고 현명한 선택으로 이끈다.",
+    "conditions": [{"type": "by_branch_matrix", "rule_ref": "GWIMUN_V1_TBD"}]
+  },
+
+  "백호살": {
+    "aka": ["Baekho", "White Tiger"],
+    "element": "금",
+    "polarity": "음",
+    "themes": ["사고·상해", "강한 기세"],
+    "description": "백호살은 날이 선 기운으로 안전 관리·법규 준수에 각별히 유의해야 합니다.",
+    "advice": "날짜·계약·장비점검 체크리스트를 습관화하세요.",
+    "lucky_color": ["화이트", "그레이"],
+    "lucky_direction": ["서"],
+    "lucky_items": ["보호 케이스", "안전화/헬멧"],
+    "avoid": ["무리한 스케줄"],
+    "affirmation": "나는 안전을 최우선으로 택한다.",
+    "conditions": [{"type": "by_branch_strike", "rule_ref": "BAEKHO_V1_TBD"}]
+  },
+
+  "도화살": {
+    "aka": ["Peach Blossom", "Tohwa"],
+    "element": "목",
+    "polarity": "음",
+    "themes": ["인기", "연애", "대외 주목"],
+    "description": "도화살은 대외 매력과 주목을 끌지만, 관계 경계가 약해질 수 있습니다.",
+    "advice": "‘좋은 관심’만 남기도록 경계를 선명히 하세요.",
+    "lucky_color": ["핑크", "살몬"],
+    "lucky_direction": ["동남"],
+    "lucky_items": ["플라워 액세서리", "라이트 핑크 소품"],
+    "avoid": ["관계 과열"],
+    "affirmation": "나는 건강한 매력으로 좋은 인연을 끌어당긴다.",
+    "conditions": [{"type": "by_peach_rule", "rule_ref": "TOHWA_V1_TBD"}]
+  }
+}
