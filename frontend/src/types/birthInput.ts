@@ -2,9 +2,9 @@
  * 사주 입력 화면 상태 · API 전송용 페이로드.
  *
  * 백엔드(`AnalyzeRequest`)와 맞추기:
- * - `calendar`: "solar" | "lunar" | "lunar_leap" (기존 필드명 유지)
- * - KASI API로 윤달 자동 판단 시: `leapResolutionSource` 를 "kasi_auto" 로 두고
- *   서버에서 음력→양력 변환 후 동일 필드로 통일하면 됨.
+ * - `calendar`: "solar" | "lunar" | "lunar_leap"
+ * - 음력일 때: 서버 `normalize_birth_string`(korean-lunar-calendar)으로 양력일+동일 시각(KST)으로 바꾼 뒤
+ *   절기·월주·대운 등 전부 그 양력 시각을 사용한다. 양력이면 date/time을 그대로 사용한다.
  */
 
 export type CalendarKind = "solar" | "lunar";

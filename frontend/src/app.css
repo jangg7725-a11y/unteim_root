@@ -50,10 +50,58 @@ body {
   z-index: 0;
 }
 
+.app-shell__header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem 0.35rem;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.app-shell__brand {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.app-shell__hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-shell__hamburger:hover {
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+}
+
+.app-shell__hamburger-line {
+  display: block;
+  height: 2px;
+  width: 1.1rem;
+  margin: 0 auto;
+  border-radius: 1px;
+  background: var(--text);
+}
+
 .app-shell__nav {
   position: relative;
   z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 1rem 0;

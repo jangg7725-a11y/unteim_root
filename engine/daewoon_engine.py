@@ -3,10 +3,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, Any, Literal, Optional
+from typing import List, Dict, Any, Literal, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from .solar_terms_loader import SolarTermsLoader
+from .kasi_client import (
+    MONTH_BOUNDARY_TERMS,
+    get_next_month_boundary_after,
+    get_prev_month_boundary_on_or_before,
+)
 from .month_branch_resolver import TERM_TO_BRANCH
 from .month_stem_resolver import MonthStemResolver
 from .saju_pillar_adapter import get_year_pillar  # GanJi(gan='甲' or int, ji='子' or int)
@@ -122,43 +127,50 @@ class DaewoonEngine:
             return "forward" if is_yang else "backward"
         return "backward" if is_yang else "forward"
 
-    def _next_term_datetime(self, dt_kst: datetime) -> datetime:
+    def _iso_to_kst(self, iso: str) -> datetime:
+        t = datetime.fromisoformat(iso)
+        if t.tzinfo is None:
+            return t.replace(tzinfo=KST)
+        return t.astimezone(KST)
+
+    def _month_boundary_events(self, dt_kst: datetime) -> List[Tuple[datetime, str]]:
+        """입춘~소한(12절)만 모아 시각순 정렬."""
+        if dt_kst.tzinfo is None:
+            dt_kst = dt_kst.replace(tzinfo=KST)
+        else:
+            dt_kst = dt_kst.astimezone(KST)
         y = dt_kst.year
-        raw = self.loader.get_year_terms(y)
-        raw_next = self.loader.get_year_terms(y + 1)
+        pairs: List[Tuple[datetime, str]] = []
+        for yy in (y - 1, y, y + 1):
+            raw = self.loader.get_year_terms(yy)
+            for name in MONTH_BOUNDARY_TERMS:
+                if name not in raw:
+                    continue
+                pairs.append((self._iso_to_kst(raw[name]), name))
+        pairs.sort(key=lambda x: x[0])
+        return pairs
 
-        all_terms: List[datetime] = []
-        for iso in list(raw.values()) + list(raw_next.values()):
-            all_terms.append(datetime.fromisoformat(iso).astimezone(KST))
-
-        all_terms.sort()
-        for t in all_terms:
-            if t > dt_kst:
-                return t
-        return all_terms[-1]
-
-    def _start_age(self, dt_kst: datetime) -> float:
-        nxt = self._next_term_datetime(dt_kst)
-        delta_days = (nxt - dt_kst).total_seconds() / (24 * 3600)
+    def _start_age(self, dt_kst: datetime, direction: Direction) -> float:
+        """
+        순행: 생일~다음 12절까지 일수/3, 역행: 직전 12절~생일 일수/3 (전통 관행).
+        """
+        if direction == "forward":
+            nxt = get_next_month_boundary_after(dt_kst).timestamp_kst
+            delta_days = (nxt - dt_kst).total_seconds() / (24 * 3600)
+        else:
+            prev = get_prev_month_boundary_on_or_before(dt_kst).timestamp_kst
+            delta_days = (dt_kst - prev).total_seconds() / (24 * 3600)
         return delta_days / 3.0
 
     def _first_daewoon_pillar(self, dt_kst: datetime, direction: Direction) -> str:
-        y = dt_kst.year
-        terms = self.loader.get_year_terms(y)
-        term_list = [(name, datetime.fromisoformat(iso).astimezone(KST)) for name, iso in terms.items()]
-        term_list.sort(key=lambda x: x[1])
-
-        last_name = None
-        for name, t in term_list:
-            if t <= dt_kst:
+        last_name: Optional[str] = None
+        for _t, name in self._month_boundary_events(dt_kst):
+            if _t <= dt_kst:
                 last_name = name
             else:
                 break
         if last_name is None:
-            prev = self.loader.get_year_terms(y - 1)
-            prev_list = [(n, datetime.fromisoformat(i).astimezone(KST)) for n, i in prev.items()]
-            prev_list.sort(key=lambda x: x[1])
-            last_name = prev_list[-1][0]
+            raise RuntimeError("could not find month boundary on/before birth time")
 
         month_branch_raw = TERM_TO_BRANCH.get(last_name)
         if not month_branch_raw:
@@ -191,7 +203,7 @@ class DaewoonEngine:
         year_gan_char = _normalize_stem(yg.gan) or "甲"
         direction = self._direction(year_gan_char, gender)
 
-        start_age = self._start_age(dt_kst)
+        start_age = self._start_age(dt_kst, direction)
         pillar = self._first_daewoon_pillar(dt_kst, direction)
 
         items: List[DaewoonItem] = []

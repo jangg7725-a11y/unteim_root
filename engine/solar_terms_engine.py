@@ -117,6 +117,11 @@ def angle_diff_signed(lon: float, target: float) -> float:
     return (lon - target + 180.0) % 360.0 - 180.0
 
 
+def angular_distance_deg(lon: float, target: float) -> float:
+    """Shortest circular distance |lon - target| on the ecliptic, in [0, 180]."""
+    return abs(angle_diff_signed(lon, target))
+
+
 # -----------------------------
 # 2) Bracket 찾기 (근 포함 구간)
 # -----------------------------
@@ -218,15 +223,55 @@ def refine_time_bisection(
 def find_term_time_utc(
     year: int,
     target_deg: float,
-    scan_step_hours: float = 6.0,
+    scan_step_hours: float = 24.0,
     tol_sec: float = 1.0,
 ) -> Time:
     """
     한 해(year)에서 target_deg 절기 시각(UTC)을 찾는다.
-    - bracket -> bisection
+
+    참고: 과거 구현은 '첫 부호 변화'만 잡아 목표 황경과 다른 근(예: 105° 요청에 285° 근)을
+    선택하는 경우가 있었다. 여기서는 1년 구간에서 각도 거리가 최소가 되는 시각을 찾은 뒤
+    그 주변을 이분법으로 좁힌다.
     """
-    tL, tR = bracket_root_by_scan(year, target_deg, step_hours=scan_step_hours)
+    t0 = Time(f"{year}-01-01 00:00:00", scale="utc")
+    t1 = Time(f"{year+1}-01-01 00:00:00", scale="utc")
+    t0_a: Any = cast(Any, t0)
+    t1_a: Any = cast(Any, t1)
+    total_hours = _td_hours(t1_a - t0_a)
+    n = int(total_hours // scan_step_hours) + 1
+    step_q: Any = (np.arange(n) * scan_step_hours) * u.hour
+    ts: Any = t0_a + step_q
+    ts_arr = cast(Any, ts)
+
+    best_i = 0
+    best_dist = 1e9
+    for i in range(len(ts_arr)):
+        cur_t = cast(Time, ts_arr[i])
+        lon = sun_lon_deg(_tt(cur_t))
+        dist = angular_distance_deg(lon, target_deg)
+        if dist < best_dist:
+            best_dist = dist
+            best_i = i
+
+    t_best = cast(Time, ts_arr[best_i])
+    t_left_any: Any = cast(Any, t_best) - scan_step_hours * u.hour
+    t_right_any: Any = cast(Any, t_best) + scan_step_hours * u.hour
+    tL = cast(Time, t_left_any)
+    tR = cast(Time, t_right_any)
+
+    fL = angle_diff_signed(sun_lon_deg(_tt(tL)), target_deg)
+    fR = angle_diff_signed(sun_lon_deg(_tt(tR)), target_deg)
+    if fL * fR > 0:
+        # 한 칸 더 넓혀 근 포함 구간 확보
+        tL = cast(Time, cast(Any, t_best) - 2 * scan_step_hours * u.hour)
+        tR = cast(Time, cast(Any, t_best) + 2 * scan_step_hours * u.hour)
+
     t_sol = refine_time_bisection(tL, tR, target_deg, tol_sec=tol_sec)
+    lon_ok = sun_lon_deg(_tt(t_sol))
+    if angular_distance_deg(lon_ok, target_deg) > 0.05:
+        raise RuntimeError(
+            f"[TERM_SOLVE_FAIL] year={year} target={target_deg} got_lon={lon_ok}"
+        )
     return cast(Time, t_sol.utc)
 
 
@@ -253,7 +298,7 @@ def to_iso_kst(t_utc: Time) -> str:
 # -----------------------------
 def compute_year_terms(
     year: int,
-    scan_step_hours: float = 6.0,
+    scan_step_hours: float = 24.0,
     tol_sec: float = 1.0,
 ) -> List[TermResult]:
     results: List[TermResult] = []
@@ -283,7 +328,7 @@ def compute_range_terms(
     end_year: int,
     out_json: str = DEFAULT_OUT_JSON,
     out_csv: str = DEFAULT_OUT_CSV,
-    scan_step_hours: float = 6.0,
+    scan_step_hours: float = 24.0,
     tol_sec: float = 1.0,
     resume: bool = True,
 ) -> List[TermResult]:
@@ -358,7 +403,7 @@ if __name__ == "__main__":
         END_YEAR,
         out_json=DEFAULT_OUT_JSON,
         out_csv=DEFAULT_OUT_CSV,
-        scan_step_hours=6.0,
+        scan_step_hours=24.0,
         tol_sec=1.0,
         resume=True,
     )

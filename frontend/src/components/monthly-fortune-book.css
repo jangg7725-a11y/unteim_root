@@ -54,6 +54,48 @@
   color: #c2410c;
 }
 
+.mfb__single-banner {
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius, 14px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.mfb__single-banner-text {
+  margin: 0 0 0.55rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #4b3d6a;
+}
+
+.mfb__full-year-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(129, 140, 248, 0.2));
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #4338ca;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mfb__full-year-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(129, 140, 248, 0.28));
+  border-color: rgba(79, 70, 229, 0.55);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.mfb--single-month .mfb__progress {
+  justify-content: flex-start;
+}
+
 /* 책 영역 */
 .mfb__book-wrap {
   position: relative;
@@ -208,6 +250,34 @@
 .mfb__signals dd {
   margin: 0;
   color: #3f3260;
+}
+
+.mfb__friendly {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+}
+
+.mfb__section-title--friendly {
+  margin-top: 0;
+}
+
+.mfb__friendly-text {
+  margin: 0 0 0.55rem;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: #3a2f55;
+}
+
+.mfb__friendly-text:last-child {
+  margin-bottom: 0;
+}
+
+.mfb__friendly-text strong {
+  color: #433864;
+  font-weight: 700;
 }
 
 .mfb__section-title {

@@ -9,6 +9,7 @@ import { CharacterStageConnected } from "@/components/character/CharacterStageCo
 import { postCounsel } from "@/services/counselApi";
 import type { CounselSessionCardPayload } from "@/types/counsel";
 import { COUNSEL_LAYOUT } from "@/config/counselLayout";
+import { formatDualCalendarSegment } from "@/utils/calendarDualLabel";
 import "./counsel-corner.css";
 
 type InnerProps = {
@@ -194,8 +195,7 @@ export function CounselCorner() {
 
         {birth && (
           <p className="counsel-corner__meta" aria-live="polite">
-            상담 기준: {birth.date} {birth.time} · {birth.calendarApi === "solar" ? "양력" : "음력"}
-            {birth.calendarApi === "lunar_leap" ? " · 윤달" : ""}
+            상담 기준: {formatDualCalendarSegment(birth)}
             {analysisSummary ? " · 분석 요약 로드됨" : ""}
           </p>
         )}

@@ -59,6 +59,53 @@ class TermRow:
 
 
 _TERMS_BY_YEAR: Optional[Dict[int, List[TermRow]]] = None
+_ENGINE_YEAR_ROWS: Dict[int, List[TermRow]] = {}
+
+
+def _year_rows_look_complete(rows: List[TermRow]) -> bool:
+    """CSV가 하반기 절기를 빠뜨리는 등 불완전할 때 재계산한다."""
+    if len(rows) < 24:
+        return False
+    max_dt = max(r.time_kst for r in rows)
+    if max_dt.month < 7:
+        return False
+    return True
+
+
+def _rows_for_year(year: int) -> List[TermRow]:
+    """CSV 우선; 불완전하면 astropy 기반 엔진으로 해당 연도만 채운다(세션 캐시)."""
+    if year in _ENGINE_YEAR_ROWS:
+        return _ENGINE_YEAR_ROWS[year]
+
+    db = _ensure_cache()
+    rows = db.get(year, [])
+    if _year_rows_look_complete(rows):
+        return rows
+
+    from .solar_terms_engine import compute_year_terms
+
+    computed = compute_year_terms(year)
+    filled: List[TermRow] = []
+    for r in computed:
+        dt_kst = datetime.strptime(r.time_kst, "%Y-%m-%d %H:%M:%S")
+        dt_utc = datetime.strptime(r.time_utc, "%Y-%m-%d %H:%M:%S")
+        if KST is not None:
+            dt_kst = dt_kst.replace(tzinfo=KST)
+        else:
+            dt_kst = dt_kst.replace(tzinfo=timezone.utc)
+        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+        filled.append(
+            TermRow(
+                year=year,
+                name=r.name,
+                degree=int(r.angle_deg),
+                time_kst=dt_kst,
+                time_utc=dt_utc,
+            )
+        )
+    filled.sort(key=lambda x: x.time_utc)
+    _ENGINE_YEAR_ROWS[year] = filled
+    return filled
 
 
 def _load_all_terms() -> Dict[int, List[TermRow]]:
@@ -129,8 +176,7 @@ def find_term_times(year: int) -> List[Dict[str, str]]:
     반환 포맷은 기존 compute/fixed 스타일과 최대한 맞춤:
       [{"degree":"315","time_utc":"...Z","name":"입춘", "time_kst":"..."}]
     """
-    db = _ensure_cache()
-    rows = db.get(year, [])
+    rows = _rows_for_year(year)
     if not rows:
         raise RuntimeError(f"[solar_terms] no terms for year={year} in CSV cache")
 

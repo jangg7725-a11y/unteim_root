@@ -19,6 +19,9 @@ type Props = {
   error: string | null;
   onRetry: () => void;
   onGoCounsel: () => void;
+  /** 피드 등에서 지정한 달만 월운 먼저 표시 — null이면 12개월 넘기기 */
+  monthFocus: number | null;
+  onClearMonthFocus: () => void;
 };
 
 type SectionProps = {
@@ -36,7 +39,16 @@ function ReportSection({ title, body }: SectionProps) {
 }
 
 
-export function ReportPage({ birth, report, loading, error, onRetry, onGoCounsel }: Props) {
+export function ReportPage({
+  birth,
+  report,
+  loading,
+  error,
+  onRetry,
+  onGoCounsel,
+  monthFocus,
+  onClearMonthFocus,
+}: Props) {
   const [pairOpen, setPairOpen] = useState(false);
   const [compatibilityLoading, setCompatibilityLoading] = useState(false);
   const [compatibilityError, setCompatibilityError] = useState<string | null>(null);
@@ -103,7 +115,12 @@ export function ReportPage({ birth, report, loading, error, onRetry, onGoCounsel
       {!loading && !error && report && (
         <>
           {report.monthlyFortune && report.monthlyFortune.months.length > 0 && !report.monthlyFortune.error ? (
-            <MonthlyFortuneEngine data={report.monthlyFortune} onGoCounsel={onGoCounsel} />
+            <MonthlyFortuneEngine
+              data={report.monthlyFortune}
+              onGoCounsel={onGoCounsel}
+              monthFocus={monthFocus}
+              onShowFullYear={onClearMonthFocus}
+            />
           ) : (
             <MonthlyFortunePremium onGoCounsel={onGoCounsel} />
           )}

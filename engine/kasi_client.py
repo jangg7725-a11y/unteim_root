@@ -86,6 +86,44 @@ def get_next_solar_term_after(dt_kst: datetime) -> NextSolarTerm:
     raise RuntimeError("get_next_solar_term_after: no term after dt_kst")
 
 
+def _month_boundary_pairs(dt_kst: datetime) -> List[Tuple[datetime, str]]:
+    """월주 경계에 쓰는 12절(節)만 모은 뒤 시각순 정렬."""
+    if dt_kst.tzinfo is None:
+        dt_kst = dt_kst.replace(tzinfo=KST)
+    else:
+        dt_kst = dt_kst.astimezone(KST)
+    y = dt_kst.year
+    pairs: List[Tuple[datetime, str]] = []
+    # 12절만 필요; 생일 연도 ±1이면 충분(y+2는 미보강 연도에서 불필요한 astropy 재계산을 유발)
+    for yy in (y - 1, y, y + 1):
+        for item in _solar_loader.get_terms_for_year(yy).values():
+            if item.name in MONTH_BOUNDARY_TERMS:
+                pairs.append((item.dt_kst, item.name))
+    pairs.sort(key=lambda x: x[0])
+    return pairs
+
+
+def get_next_month_boundary_after(dt_kst: datetime) -> NextSolarTerm:
+    """대운 起運(순행): 생시 이후 첫 12절(월의 절) 시각."""
+    for t, _name in _month_boundary_pairs(dt_kst):
+        if t > dt_kst:
+            return NextSolarTerm(timestamp_kst=t)
+    raise RuntimeError("get_next_month_boundary_after: no month boundary after dt_kst")
+
+
+def get_prev_month_boundary_on_or_before(dt_kst: datetime) -> NextSolarTerm:
+    """대운 起運(역행): 생시 이전(또는 동시) 마지막 12절 시각."""
+    last: Optional[datetime] = None
+    for t, _name in _month_boundary_pairs(dt_kst):
+        if t <= dt_kst:
+            last = t
+        else:
+            break
+    if last is None:
+        raise RuntimeError("get_prev_month_boundary_on_or_before: no month boundary on/before dt_kst")
+    return NextSolarTerm(timestamp_kst=last)
+
+
 @dataclass(frozen=True)
 class LunarDate:
     """

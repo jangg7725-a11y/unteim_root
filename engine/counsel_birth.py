@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""상담용 생년월일 문자열 정규화 — 엔진은 KST 기준 'YYYY-MM-DD HH:MM'."""
+"""
+상담용 생년월일 문자열 정규화 — 엔진은 KST 기준 'YYYY-MM-DD HH:MM'.
+
+- 양력(solar): 입력 날짜·시각 그대로.
+- 음력(lunar / lunar_leap): korean-lunar-calendar로 양력 날짜로 바꾼 뒤, 시·분은 그대로 붙인다.
+  사주·절기·대운은 이 변환된 양력 시각만 사용한다.
+"""
 
 from __future__ import annotations
 

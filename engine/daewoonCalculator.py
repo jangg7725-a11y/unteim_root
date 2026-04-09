@@ -10,7 +10,8 @@ from typing import List, Dict, Literal, Tuple
 from datetime import datetime
 
 from .kasi_client import (
-    get_next_solar_term_after,
+    get_next_month_boundary_after,
+    get_prev_month_boundary_on_or_before,
     get_solar_terms_for_year,
     SOLAR_TERM_TO_BRANCH,
     MONTH_BOUNDARY_TERMS,
@@ -43,9 +44,16 @@ def year_stem_index(year: int) -> int:
 def _direction_by_gender_yinyang(gender: Gender, yin_yang: YinYang) -> int:
     return +1 if (gender=="남" and yin_yang=="양") or (gender=="여" and yin_yang=="음") else -1
 
-def compute_start_age_from_solar_term(birth_dt_kst: datetime) -> Tuple[int,int,float]:
-    next_term_dt = get_next_solar_term_after(birth_dt_kst).timestamp_kst
-    diff = next_term_dt - birth_dt_kst
+def compute_start_age_from_solar_term(birth_dt_kst: datetime, direction: int) -> Tuple[int,int,float]:
+    """
+    direction: +1 순행(생일→다음 12절), -1 역행(직전 12절→생일)
+    """
+    if direction == 1:
+        boundary_dt = get_next_month_boundary_after(birth_dt_kst).timestamp_kst
+        diff = boundary_dt - birth_dt_kst
+    else:
+        boundary_dt = get_prev_month_boundary_on_or_before(birth_dt_kst).timestamp_kst
+        diff = birth_dt_kst - boundary_dt
     total_days = diff.total_seconds()/86400.0
     yf = total_days/3.0
     y = int(yf); m = int((yf-y)*12.0 + 1e-9)
@@ -135,7 +143,7 @@ def calculate_daewoon(
           birth_hour is not None and birth_minute is not None):
         bm,bd,bh,bmin = int(birth_month),int(birth_day),int(birth_hour),int(birth_minute)
         birth_dt = datetime(birth_year,bm,bd,bh,bmin,tzinfo=KST)
-        y,m,yf = compute_start_age_from_solar_term(birth_dt)
+        y,m,yf = compute_start_age_from_solar_term(birth_dt, direction)
         start_age = max(1,y)
         start_age_detail = {"mode":"solar_term","years":y,"months":m,"years_float":round(yf,3)}
         birth_dt_for_month = birth_dt

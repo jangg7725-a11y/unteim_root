@@ -1,5 +1,6 @@
 import type { BirthInputPayload } from "@/types/birthInput";
 import type { SajuReportData } from "@/types/report";
+import { formatDualCalendarBirthLine } from "@/utils/calendarDualLabel";
 
 type Props = {
   birth: BirthInputPayload | null;
@@ -38,6 +39,66 @@ const BRANCH_META: Record<string, { element: string; sign: "+" | "-"; hidden: st
 
 const STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
 const BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+
+/** 12운성: 한자·변형 표기 → 한글 표준명 */
+const TWELVE_STAGE_TO_HANGUL: Record<string, string> = {
+  장생: "장생",
+  목욕: "목욕",
+  관대: "관대",
+  임관: "임관",
+  제왕: "제왕",
+  쇠: "쇠",
+  병: "병",
+  사: "사",
+  묘: "묘",
+  절: "절",
+  태: "태",
+  양: "양",
+  长生: "장생",
+  沐浴: "목욕",
+  冠带: "관대",
+  臨官: "임관",
+  临官: "임관",
+  帝旺: "제왕",
+  衰: "쇠",
+  病: "병",
+  死: "사",
+  墓: "묘",
+  绝: "절",
+  絕: "절",
+  胎: "태",
+  养: "양",
+  養: "양",
+};
+
+const KO_TWELVE_STAGES = new Set([
+  "장생",
+  "목욕",
+  "관대",
+  "임관",
+  "제왕",
+  "쇠",
+  "병",
+  "사",
+  "묘",
+  "절",
+  "태",
+  "양",
+]);
+
+function formatTwelveStage(raw: string): string {
+  let s = String(raw ?? "").trim();
+  if (!s || s === "—") return "—";
+  s = s.replace(/^12운성[:：]?\s*/i, "").trim();
+  if (!s) return "—";
+  if (KO_TWELVE_STAGES.has(s)) return s;
+  if (TWELVE_STAGE_TO_HANGUL[s]) return TWELVE_STAGE_TO_HANGUL[s];
+  const parts = s.split(/[\s·/]+/).filter(Boolean);
+  if (parts.length > 1) {
+    return parts.map((p) => formatTwelveStage(p)).join(" · ");
+  }
+  return s;
+}
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" ? (v as Record<string, unknown>) : null;
@@ -140,13 +201,6 @@ function OhaengChips({ counts }: { counts: Record<string, number> }) {
   );
 }
 
-function birthLabel(birth: BirthInputPayload | null): string {
-  if (!birth) return "사주 입력값을 저장하면 요약이 여기에 표시됩니다.";
-  const cal = birth.calendarApi === "solar" ? "양력" : birth.calendarApi === "lunar_leap" ? "음력(윤달)" : "음력";
-  const gender = birth.gender === "male" ? "남성" : "여성";
-  return `${birth.date} ${birth.time} · ${gender} · ${cal}`;
-}
-
 export function SajuSummaryDashboard({ birth, report }: Props) {
   const ov = report?.sajuOverview ?? null;
   const raw = asRecord(report?.raw) ?? {};
@@ -161,14 +215,14 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
   const sipsin = pickSipsin(raw);
   const ohaeng = ov?.fiveElements?.counts ?? getOhaengCounts(raw);
   const yinYangCounts = ov?.fiveElements?.yinYangCounts ?? {};
-  const twelve = pickFirst(raw.twelve_states ?? asRecord(raw.analysis)?.twelve_states);
   const gongmang = pickFirst(raw.gongmang ?? asRecord(raw.analysis)?.gongmang);
   const dayStem = String((p.day as Record<string, unknown> | null)?.gan ?? "").trim();
+  /** 표시 순서: 년주 → 월주 → 일주 → 시주 (만세력 읽는 순서와 동일) */
   const cardKeys: Array<{ key: PillarKey; title: string; pillar: Record<string, unknown> | null }> = [
-    { key: "hour", title: "시주", pillar: p.hour as Record<string, unknown> | null },
-    { key: "day", title: "일주", pillar: p.day as Record<string, unknown> | null },
-    { key: "month", title: "월주", pillar: p.month as Record<string, unknown> | null },
     { key: "year", title: "년주", pillar: p.year as Record<string, unknown> | null },
+    { key: "month", title: "월주", pillar: p.month as Record<string, unknown> | null },
+    { key: "day", title: "일주", pillar: p.day as Record<string, unknown> | null },
+    { key: "hour", title: "시주", pillar: p.hour as Record<string, unknown> | null },
   ];
   const daewoon = ov?.daewoon ?? (((raw.daewoon as unknown[]) ?? (asRecord(raw.analysis)?.daewoon as unknown[]) ?? []).filter((x) => asRecord(x)).slice(0, 8) as any[]);
   const dayVoid =
@@ -182,15 +236,15 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
     <section className="saju-dash" aria-label="입력 페이지 사주 요약">
       <div className="saju-dash__head">
         <h2 className="saju-dash__title">입력값 기반 사주 요약</h2>
-        <p className="saju-dash__meta">{birthLabel(birth)}</p>
+        <p className="saju-dash__meta">{formatDualCalendarBirthLine(birth)}</p>
       </div>
 
       <div className="saju-dash__grid8">
         <div className="saju-dash__grid-head"> </div>
-        <div className="saju-dash__grid-head">시주</div>
-        <div className="saju-dash__grid-head">일주</div>
-        <div className="saju-dash__grid-head">월주</div>
         <div className="saju-dash__grid-head">년주</div>
+        <div className="saju-dash__grid-head">월주</div>
+        <div className="saju-dash__grid-head">일주</div>
+        <div className="saju-dash__grid-head">시주</div>
         <div className="saju-dash__grid-label">천간</div>
         {cardKeys.map((c) => (
           <div key={`g-${c.key}`} className="saju-dash__grid-cell saju-dash__grid-cell--gan">
@@ -240,7 +294,9 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
               <div className="saju-dash__mini">
                 <span className="saju-dash__mini-label">12운성</span>
                 <span className="saju-dash__mini-value">
-                  {String((c.pillar?.twelve as string | undefined) ?? byWhereTwelve(raw, c.key))}
+                  {formatTwelveStage(
+                    String((c.pillar?.twelve as string | undefined) ?? byWhereTwelve(raw, c.key))
+                  )}
                 </span>
               </div>
               <div className="saju-dash__mini">
@@ -325,12 +381,21 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
               );
             })}
           </div>
-          <div className="saju-dash__chips" style={{ marginTop: "0.5rem" }}>
-            {twelve.split(" · ").slice(0, 5).map((x, i) => (
-              <span key={`t-${i}`} className="saju-dash__chip saju-dash__chip--state">
-                12운성 {x}
-              </span>
-            ))}
+          <p className="saju-dash__block-title" style={{ marginTop: "0.65rem" }}>
+            12운성 (기둥별)
+          </p>
+          <div className="saju-dash__shinsal-grid">
+            {cardKeys.map((c) => {
+              const rawTw = String((c.pillar?.twelve as string | undefined) ?? byWhereTwelve(raw, c.key));
+              return (
+                <div key={`twelve-${c.key}`} className="saju-dash__shinsal-col">
+                  <p className="saju-dash__shinsal-head">{c.title} 기준</p>
+                  <div className="saju-dash__chips">
+                    <span className="saju-dash__chip saju-dash__chip--state">{formatTwelveStage(rawTw)}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       </div>

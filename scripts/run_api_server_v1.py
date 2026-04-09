@@ -198,7 +198,10 @@ class AnalyzeRequest(BaseModel):
     name: str = Field(default="Unknown", description="사용자 이름")
     sex: str = Field(default="", description="남자/여자 등")
     birth: str = Field(..., description="YYYY-MM-DD HH:MM (예: 1990-01-01 09:30)")
-    calendar: str = Field(default="solar", description="solar | lunar | lunar_leap (현재는 참고용)")
+    calendar: str = Field(
+        default="solar",
+        description="solar=날짜·시각을 양력 그대로 사용 | lunar / lunar_leap=날짜를 음력으로 보고 korean-lunar-calendar로 양력 변환 후 동일 시각 부착",
+    )
 
 
 class AnalyzeMetaResponse(BaseModel):
@@ -536,6 +539,7 @@ def analyze(req: AnalyzeRequest):
         result["request"] = {
             "name": req.name,
             "sex": req.sex,
+            # 엔진·절기·대운에 쓰인 최종 생시(KST 문자열). calendar가 lunar/lunar_leap이면 음력→양력 변환 후 값.
             "birth": birth,
             "calendar": req.calendar,
         }
