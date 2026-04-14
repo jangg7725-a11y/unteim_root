@@ -46,6 +46,17 @@
   color: #6b6578;
 }
 
+.partner-modal__error {
+  margin: 0 0 0.65rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #7f1d1d;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
 .partner-modal__form {
   display: grid;
   gap: 0.55rem;

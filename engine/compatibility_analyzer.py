@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Tuple
 
-from engine.full_analyzer import analyze_full
 from engine.sajuCalculator import calculate_saju
 
 STEM_TO_ELEMENT: Dict[str, str] = {
@@ -116,11 +115,11 @@ def _score_to_star(score_100: float) -> int:
 
 
 def _safe_report(pillars: Any, birth: str) -> Dict[str, Any]:
-    try:
-        r = analyze_full(pillars, birth_str=birth)
-        return r if isinstance(r, dict) else {}
-    except Exception:
-        return {}
+    """궁합 점수는 원국·지지 관계만으로도 계산 가능합니다.
+    analyze_full()를 두 번 돌리면 응답이 수십 초 걸려 UX상 멈춘 것처럼 보이므로 생략합니다.
+    (용신 겹침 가중치는 0에 가깝게 반영됩니다.)
+    """
+    return {}
 
 
 def _extract_yongshin_elements(report: Dict[str, Any]) -> List[str]:

@@ -27,6 +27,10 @@ export type UserMemoryPayload = {
   analysisSummary: string | null;
   reportData?: SajuReportData | null;
   recentMessages: StoredCounselMessage[];
+  /** 로그인된 계정 이메일(로컬 데모) */
+  sessionEmail?: string | null;
+  /** 로그인 후 본인 인증 완료 시 탐색 등에서 저장 사주로 바로 이용 */
+  identityVerified?: boolean;
 };
 
 const MAX_STORED_MESSAGES = 40;
@@ -73,6 +77,8 @@ export function saveUserMemory(payload: Omit<UserMemoryPayload, "version" | "use
     analysisSummary: payload.analysisSummary,
     reportData: payload.reportData ?? null,
     recentMessages: payload.recentMessages.slice(-MAX_STORED_MESSAGES),
+    sessionEmail: payload.sessionEmail ?? null,
+    identityVerified: payload.identityVerified ?? false,
   };
   try {
     window.localStorage.setItem(STORAGE_MEMORY, JSON.stringify(data));

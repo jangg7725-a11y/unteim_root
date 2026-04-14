@@ -83,6 +83,38 @@
   word-break: break-all;
 }
 
+.app-drawer__profile-sub--email {
+  font-size: 0.76rem;
+  color: var(--primary-dark, #4f46e5);
+  font-weight: 600;
+}
+
+.app-drawer__profile-sub--tel {
+  font-size: 0.74rem;
+  color: var(--muted, #6b6578);
+}
+
+.app-drawer__auth-row {
+  margin-top: 0.65rem;
+}
+
+.app-drawer__ghost {
+  width: 100%;
+  border: 1px solid var(--border, rgba(110, 90, 140, 0.2));
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text, #1e1b2e);
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.app-drawer__ghost:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
 .app-drawer__profile-hint {
   margin: 0 0 0.65rem;
   font-size: 0.78rem;

@@ -5,7 +5,8 @@ import { SajuInputScreen } from "./components/SajuInputScreen";
 import { ReportPage } from "./components/ReportPage";
 import { CounselCorner } from "./counsel/CounselCorner";
 import { AppShellDrawer } from "./components/AppShellDrawer";
-import { ContentFeedPage } from "./components/feed/ContentFeedPage";
+import { AuthModal } from "./components/auth/AuthModal";
+import { ExploreHubPage } from "./components/explore/ExploreHubPage";
 import { hasStoredBirth } from "./services/userMemoryStorage";
 import { fetchSajuReport } from "./services/reportApi";
 import type { FeedNavigateMeta, FeedTabTarget } from "./types/contentFeed";
@@ -18,16 +19,20 @@ function AppShell() {
   );
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
-  /** 피드 카드의 focusMonth — 있으면 월운을 해당 달만 먼저 표시 */
+  /** 피드·탐색의 focusMonth — 있으면 월운을 해당 달만 먼저 표시 */
   const [reportMonthFocus, setReportMonthFocus] = useState<number | null>(null);
+  /** 리포트 탭에서 스크롤할 섹션 id */
+  const [reportScrollAnchor, setReportScrollAnchor] = useState<string | null>(null);
   const feedMonthPendingRef = useRef<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const selectTabFromMenu = (t: "explore" | "input" | "report" | "counsel") => {
     if (t === "input") feedMonthPendingRef.current = null;
     if (t === "report") {
       feedMonthPendingRef.current = null;
       setReportMonthFocus(null);
+      setReportScrollAnchor(null);
     }
     setTab(t);
   };
@@ -101,6 +106,7 @@ function AppShell() {
           onClick={() => {
             feedMonthPendingRef.current = null;
             setReportMonthFocus(null);
+            setReportScrollAnchor(null);
             setTab("report");
           }}
           disabled={!birth}
@@ -118,9 +124,41 @@ function AppShell() {
       </nav>
       <main className="app-shell__main">
         {tab === "explore" ? (
-          <ContentFeedPage
+          <ExploreHubPage
             hasBirth={!!birth}
             hasReport={!!reportData}
+            onOpenSajuInput={() => {
+              feedMonthPendingRef.current = null;
+              setTab("input");
+            }}
+            onOpenSavedReportFlow={async (meta) => {
+              feedMonthPendingRef.current = null;
+              const fm = meta?.focusMonth;
+              if (typeof fm === "number" && fm >= 1 && fm <= 12) {
+                setReportMonthFocus(fm);
+              } else {
+                setReportMonthFocus(null);
+              }
+              if (meta?.reportAnchor) {
+                setReportScrollAnchor(meta.reportAnchor);
+              } else {
+                setReportScrollAnchor(null);
+              }
+              if (birth && !reportData) {
+                try {
+                  setReportLoading(true);
+                  setReportError(null);
+                  const data = await fetchSajuReport(birth);
+                  setReportData(data);
+                } catch (err) {
+                  setReportError(err instanceof Error ? err.message : "리포트 생성 중 오류가 발생했습니다.");
+                } finally {
+                  setReportLoading(false);
+                }
+              }
+              setTab("report");
+            }}
+            onOpenAuth={() => setAuthOpen(true)}
             onNavigateTab={(target: FeedTabTarget, meta?: FeedNavigateMeta) => {
               const fm = meta?.focusMonth;
               if (target === "input") {
@@ -137,6 +175,11 @@ function AppShell() {
                   setReportMonthFocus(fm);
                 } else {
                   setReportMonthFocus(null);
+                }
+                if (meta?.reportAnchor) {
+                  setReportScrollAnchor(meta.reportAnchor);
+                } else {
+                  setReportScrollAnchor(null);
                 }
                 setTab("report");
               }
@@ -182,6 +225,8 @@ function AppShell() {
             onGoCounsel={() => setTab("counsel")}
             monthFocus={reportMonthFocus}
             onClearMonthFocus={() => setReportMonthFocus(null)}
+            scrollAnchor={reportScrollAnchor}
+            onConsumedScrollAnchor={() => setReportScrollAnchor(null)}
           />
         ) : (
           <CounselCorner />
@@ -192,7 +237,9 @@ function AppShell() {
         onClose={() => setDrawerOpen(false)}
         tab={tab}
         onSelectTab={selectTabFromMenu}
+        onOpenAuth={() => setAuthOpen(true)}
       />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }

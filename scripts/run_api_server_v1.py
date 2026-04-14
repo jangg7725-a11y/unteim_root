@@ -30,6 +30,7 @@ from engine.sajuCalculator import calculate_saju
 from engine.full_analyzer import analyze_full
 from engine.counsel_service import run_counsel_turn
 from engine.compatibility_analyzer import analyze_compatibility
+from engine.solo_love_insight import build_solo_love_insight
 from engine.hidden_stems import compute_hidden_stems
 from engine.sipsin import ten_god_stem
 from reports.monthly_report import build_monthly_report_pdf
@@ -250,6 +251,20 @@ class CompatibilityRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
     birth1: CompatibilityPerson
     birth2: CompatibilityPerson
+
+
+class SoloLoveInsightRequest(BaseModel):
+    """상대 사주 없이 본인 원국 기반 인연·썸 참고 문장."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+    date: str = Field(..., description="YYYY-MM-DD")
+    time: str = Field(..., description="HH:MM")
+    gender: str = Field(..., description="male | female")
+    calendarApi: str = Field("solar", alias="calendarApi")
+    topic: str = Field(
+        "general",
+        description="general | sseom | timing | emotion",
+    )
 
 
 # -------------------------
@@ -491,6 +506,27 @@ def compatibility(req: CompatibilityRequest):
         raise HTTPException(
             status_code=500,
             detail=f"궁합 분석 중 오류: {type(e).__name__}: {e}",
+        ) from e
+
+
+@app.post("/api/solo-love-insight")
+def solo_love_insight(req: SoloLoveInsightRequest):
+    """상대 생년 없이 본인 사주만으로 인연·썸 흐름 참고 텍스트."""
+    from engine.counsel_birth import normalize_birth_string
+
+    try:
+        birth = normalize_birth_string(req.date, req.time, req.calendarApi)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    try:
+        out = build_solo_love_insight(birth, req.gender, req.topic)
+        return JSONResponse(content=out)
+    except Exception as e:
+        tb = traceback.format_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"solo love insight failed: {type(e).__name__}: {e}\n{tb}",
         ) from e
 
 

@@ -22,6 +22,13 @@
   color: var(--muted, #6b6578);
 }
 
+.report-page__output-date {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text, #1e1b2e);
+}
+
 .saju-overview {
   margin: 0 0 1rem;
   padding: 0.95rem;
@@ -192,6 +199,35 @@
   color: #4338ca;
 }
 
+.report-page__fortune-aside {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+}
+
+.report-page__fortune-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #6366f1;
+  text-transform: none;
+}
+
+.report-page__fortune-text {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #3f3a50;
+}
+
+.report-page__fortune-aside--block {
+  margin-bottom: 0.75rem;
+}
+
 .report-page__card-text {
   margin: 0;
   font-size: 0.8rem;
@@ -240,11 +276,122 @@
   color: #4c1d95;
 }
 
+.report-page__compat-scores {
+  margin: 0 0 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(124, 58, 237, 0.12);
+}
+
+.report-page__compat-score-line {
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #4b465c;
+}
+
+.report-page__compat-score-line:last-of-type {
+  margin-bottom: 0.35rem;
+}
+
+.report-page__compat-dim {
+  font-weight: 400;
+  color: #6b6578;
+  font-size: 0.76rem;
+}
+
+.report-page__compat-band {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #5b5766;
+}
+
+.report-page__compat-details {
+  margin: 0 0 0.65rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  background: rgba(79, 70, 229, 0.06);
+  border: 1px dashed rgba(79, 70, 229, 0.22);
+}
+
+.report-page__compat-summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4338ca;
+}
+
+.report-page__compat-legend-body {
+  margin: 0.45rem 0 0.1rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(79, 70, 229, 0.12);
+}
+
+.report-page__compat-legend-body p {
+  margin: 0 0 0.4rem;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: #4b465c;
+}
+
+.report-page__compat-legend-rule {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: #5b5766;
+}
+
 .report-page__compat-line {
   margin: 0 0 0.35rem;
   font-size: 0.78rem;
   line-height: 1.5;
   color: #4b465c;
+}
+
+.report-page__overview-mini {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0.5rem;
+}
+
+.report-page__overview-mini th {
+  text-align: left;
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  color: var(--muted, #6b6578);
+  font-weight: 600;
+  width: 3rem;
+}
+
+.report-page__overview-mini td {
+  padding: 0.35rem 0.4rem;
+  color: var(--text, #1e1b2e);
+}
+
+.report-page__overview-fe {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted, #6b6578);
+}
+
+.report-page__daewoon-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text, #1e1b2e);
+}
+
+.report-page__daewoon-age {
+  color: var(--muted, #6b6578);
+  font-weight: 400;
+}
+
+.report-page__daewoon-now {
+  color: #4f46e5;
+  font-weight: 600;
 }
 
 @media (max-width: 720px) {

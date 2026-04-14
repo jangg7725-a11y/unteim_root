@@ -5,6 +5,8 @@ import "./partner-input-modal.css";
 type Props = {
   open: boolean;
   loading?: boolean;
+  /** API 오류 시 모달 안에 표시 */
+  error?: string | null;
   onClose: () => void;
   onSubmit: (partnerBirth: BirthInputPayload) => Promise<void> | void;
 };
@@ -21,7 +23,7 @@ const INITIAL: FormState = {
   gender: "",
 };
 
-export function PartnerInputModal({ open, loading = false, onClose, onSubmit }: Props) {
+export function PartnerInputModal({ open, loading = false, error = null, onClose, onSubmit }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL);
 
   const canSubmit = useMemo(() => Boolean(form.date && form.gender), [form.date, form.gender]);
@@ -94,6 +96,12 @@ export function PartnerInputModal({ open, loading = false, onClose, onSubmit }: 
               여성
             </label>
           </fieldset>
+
+          {error ? (
+            <p className="partner-modal__error" role="alert">
+              {error}
+            </p>
+          ) : null}
 
           <div className="partner-modal__actions">
             <button type="button" className="partner-modal__cancel" onClick={onClose}>

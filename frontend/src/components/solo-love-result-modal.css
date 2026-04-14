@@ -1,0 +1,155 @@
+.solo-love__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.solo-love__clickout {
+  position: fixed;
+  inset: 0;
+  border: none;
+  margin: 0;
+  background: rgba(20, 16, 35, 0.45);
+  cursor: pointer;
+}
+
+.solo-love {
+  position: relative;
+  z-index: 1;
+  width: min(28rem, 100%);
+  margin: 0.5rem 0 1.5rem;
+  border-radius: 16px;
+  padding: 0.95rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 242, 255, 0.96));
+  box-shadow: 0 10px 28px rgba(28, 20, 52, 0.22);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+}
+
+.solo-love__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.solo-love__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #3f2f63;
+}
+
+.solo-love__close {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #5b21b6;
+}
+
+.solo-love__state {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  color: #5b21b6;
+}
+
+.solo-love__err {
+  margin: 0.5rem 0;
+  font-size: 0.78rem;
+  color: #991b1b;
+}
+
+.solo-love__body {
+  max-height: min(60vh, 28rem);
+  overflow-y: auto;
+  margin: 0.35rem 0 0.65rem;
+  padding-right: 0.2rem;
+}
+
+.solo-love__summary {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #312e81;
+}
+
+.solo-love__block {
+  margin: 0 0 0.5rem;
+}
+
+.solo-love__block--muted {
+  opacity: 0.95;
+}
+
+.solo-love__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #6d28d9;
+}
+
+.solo-love__block p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: #4b465c;
+}
+
+.solo-love__disclaimer {
+  margin: 0.45rem 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: #7c6f92;
+}
+
+.solo-love__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.solo-love__ghost {
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4b465c;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(110, 90, 140, 0.2);
+  cursor: pointer;
+}
+
+.solo-love__secondary {
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4338ca;
+  background: rgba(238, 242, 255, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  cursor: pointer;
+}
+
+.solo-love__primary {
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7c3aed, #4c1d95);
+  box-shadow: 0 4px 14px rgba(76, 29, 149, 0.28);
+}

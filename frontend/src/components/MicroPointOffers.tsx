@@ -9,7 +9,7 @@ type Props = {
 
 export function MicroPointOffers({ onSelectSingle, onSelectPair }: Props) {
   return (
-    <section className="micro-point-offers" aria-label="소액 포인트 질문">
+    <section id="report-anchor-compatibility" className="micro-point-offers" aria-label="소액 포인트 질문">
       <header className="micro-point-offers__head">
         <h2 className="micro-point-offers__title">소액 포인트 질문</h2>
         <p className="micro-point-offers__sub">지금 가장 궁금한 질문을 바로 눌러 확인해 보세요.</p>

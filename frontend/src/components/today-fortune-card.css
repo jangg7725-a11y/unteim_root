@@ -9,9 +9,13 @@
 
 .today-fortune__head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.6rem;
+}
+
+.today-fortune__title-wrap {
+  min-width: 0;
 }
 
 .today-fortune__title {
@@ -21,11 +25,42 @@
   color: #3f2f63;
 }
 
+.today-fortune__date {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b6578;
+  letter-spacing: -0.01em;
+}
+
 .today-fortune__stars {
   margin: 0;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   color: #7c3aed;
+}
+
+.today-fortune__supplementary {
+  margin: 0.35rem 0 0.45rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.09);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.today-fortune__supplementary-label {
+  display: block;
+  margin-bottom: 0.18rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.today-fortune__supplementary-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #4b3f63;
 }
 
 .today-fortune__flow {

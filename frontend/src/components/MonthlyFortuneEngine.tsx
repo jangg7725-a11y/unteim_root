@@ -19,6 +19,8 @@ type Props = {
   monthFocus: number | null;
   /** 해당 연도 12개월 전체 보기로 전환 */
   onShowFullYear?: () => void;
+  /** 엔진 요약 위에 표시하는 참고 문장(문장 DB, 본문과 별개) */
+  supplementaryIntroLine?: string | null;
 };
 
 function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
@@ -26,7 +28,13 @@ function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
   return <span className="mfb__stars">{filled}</span>;
 }
 
-export function MonthlyFortuneEngine({ data, onGoCounsel, monthFocus, onShowFullYear }: Props) {
+export function MonthlyFortuneEngine({
+  data,
+  onGoCounsel,
+  monthFocus,
+  onShowFullYear,
+  supplementaryIntroLine,
+}: Props) {
   const monthsSorted = useMemo(
     () => [...data.months].sort((a, b) => a.month - b.month),
     [data.months]
@@ -95,6 +103,12 @@ export function MonthlyFortuneEngine({ data, onGoCounsel, monthFocus, onShowFull
         <h2 id="mfb-title" className="mfb__title">
           {singleMonthView ? `${monthFocus}월의 흐름 (${data.year}년)` : `월별 운세 리포트 (${data.year}년)`}
         </h2>
+        {supplementaryIntroLine ? (
+          <div className="mfb__supplementary" role="note">
+            <span className="mfb__supplementary-label">참고 한 줄</span>
+            <p className="mfb__supplementary-text">{supplementaryIntroLine}</p>
+          </div>
+        ) : null}
         <p className="mfb__year-sum">{data.yearSummary}</p>
         {singleMonthView ? (
           <div className="mfb__single-banner">

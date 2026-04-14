@@ -39,55 +39,136 @@ function pickDominantTenGod(analysis: Record<string, unknown>): string {
   return cand || "기본";
 }
 
-function healingToneByTenGod(tenGod: string): { reason: string; acknowledge: string; action: string } {
+type ReportSectionKey = "total" | "personality" | "work" | "money" | "health";
+
+function sectionReason(section: ReportSectionKey, tenGod: string): string {
+  const t = String(tenGod || "").trim();
+  if (section === "total") {
+    if (t.includes("관")) return "전체 흐름에서는 기준을 높게 잡아 스스로 긴장을 키우는 패턴이 반복되기 쉽습니다.";
+    if (t.includes("재")) return "전체 흐름에서는 불안할수록 통제 강도를 높이는 패턴이 체감 피로를 키울 수 있습니다.";
+    if (t.includes("식신") || t.includes("상관"))
+      return "전체 흐름에서는 성과 압박이 과열되면 회복 리듬이 깨지는 패턴이 나타나기 쉽습니다.";
+    return "전체 흐름에서는 피로가 누적될 때 익숙한 자동 반응으로 돌아가는 패턴이 반복될 수 있습니다.";
+  }
+  if (section === "personality") {
+    if (t.includes("인")) return "성격 흐름에서는 생각이 깊어질수록 실행이 늦어지는 패턴이 자기 의심으로 이어지기 쉽습니다.";
+    if (t.includes("비견") || t.includes("겁재"))
+      return "성격 흐름에서는 혼자 책임을 과하게 떠안는 패턴이 관계 부담으로 이어질 수 있습니다.";
+    return "성격 흐름에서는 완벽 기준이 높아질수록 자기 검열이 강해지는 패턴이 반복되기 쉽습니다.";
+  }
+  if (section === "work") {
+    if (t.includes("관")) return "직업운에서는 평가와 책임을 먼저 의식해 과도하게 긴장하는 패턴이 업무 효율을 떨어뜨릴 수 있습니다.";
+    if (t.includes("식신") || t.includes("상관"))
+      return "직업운에서는 성과를 빨리 내야 한다는 압박이 과로 루프로 이어지기 쉬운 시기입니다.";
+    return "직업운에서는 역할 경계가 흐려질 때 할 일을 과잉으로 잡는 패턴이 반복되기 쉽습니다.";
+  }
+  if (section === "money") {
+    if (t.includes("재")) return "재물운에서는 불안이 올라올 때 즉시 통제·결정을 강화하는 패턴이 지출 피로를 키울 수 있습니다.";
+    return "재물운에서는 단기 불안을 줄이려는 선택이 장기 흐름을 흔드는 패턴으로 이어지기 쉽습니다.";
+  }
+  if (section === "health") {
+    if (t.includes("관")) return "건강운에서는 책임을 놓지 못해 회복 시간을 뒤로 미루는 패턴이 피로를 누적시킬 수 있습니다.";
+    if (t.includes("식신") || t.includes("상관"))
+      return "건강운에서는 과집중 뒤 급소진이 반복되는 패턴이 컨디션 기복을 키우기 쉽습니다.";
+    return "건강운에서는 생활 리듬이 흔들릴 때 수면·회복 루틴이 무너지는 패턴이 반복될 수 있습니다.";
+  }
+  return "반복되는 장면은 피로가 쌓일 때 자동 반응 패턴으로 돌아가며 강화되는 경우가 많습니다.";
+}
+
+function sectionAcknowledge(section: ReportSectionKey, tenGod: string): string {
+  const t = String(tenGod || "").trim();
+  if (section === "total") {
+    return "지금의 반응은 실패가 아니라 버티기 위해 형성된 대응 방식이며, 흐름을 조절하는 방향으로 충분히 바꿔갈 수 있습니다.";
+  }
+  if (section === "personality") {
+    if (t.includes("인")) return "신중함과 깊은 점검 성향은 약점이 아니라 강점이며, 지금은 자기 비난보다 자기 신뢰를 회복하는 쪽이 유리합니다.";
+    return "엄격함과 책임감은 분명한 장점이며, 성격 해석에서는 강도를 조절해 장점을 유지하는 접근이 더 효과적입니다.";
+  }
+  if (section === "work") {
+    return "업무에서의 긴장감은 성실함의 다른 표현이므로, 자신을 몰아붙이기보다 일하는 리듬을 재설계하는 것이 성과에 더 도움이 됩니다.";
+  }
+  if (section === "money") {
+    return "재정 불안을 빠르게 통제하려는 태도는 책임감에서 나온 반응이며, 방향만 조정하면 안정성으로 전환될 수 있습니다.";
+  }
+  if (section === "health") {
+    return "몸이 보내는 피로 신호는 의지 부족이 아니라 회복이 필요하다는 안내이므로, 휴식을 우선순위로 두는 것이 핵심입니다.";
+  }
+  return "그 반응은 실패가 아니라 버티기 위해 형성된 방식이라는 점을 인정하는 것이 회복의 시작입니다.";
+}
+
+function sectionAction(section: ReportSectionKey, tenGod: string): string {
+  const t = String(tenGod || "").trim();
+  if (section === "total") {
+    return "이번 주에는 반드시 지킬 핵심 기준 2~3개만 남기고, 나머지는 보류해 전체 흐름의 압박 강도를 낮춰보세요.";
+  }
+  if (section === "personality") {
+    if (t.includes("인")) return "하루 10분 기록(사건·감정·다음 1행동)으로 생각-행동 간격을 줄이는 연습을 권합니다.";
+    return "자기평가 문장을 줄이고, 하루 한 번은 '지금 충분히 한 것'을 체크해 자기 검열 강도를 낮춰보세요.";
+  }
+  if (section === "work") {
+    return "직업운에서는 오늘의 최우선 업무 1개만 먼저 완료하고, 나머지는 시간 블록으로 분리해 과로 루프를 끊어보세요.";
+  }
+  if (section === "money") {
+    return "재물운에서는 결제·계약 전 24시간 유예 규칙과 주간 지출 상한 1개를 고정해 흐름을 안정화해 보세요.";
+  }
+  if (section === "health") {
+    return "건강운에서는 수면 시작 시각과 짧은 회복 루틴(스트레칭/산책) 1가지를 7일만 고정해 컨디션 기복을 줄여보세요.";
+  }
+  return "이번 달에는 사건보다 반응 패턴을 기록해, 반복 고리를 먼저 알아차려 보세요.";
+}
+
+function healingToneByTenGod(
+  tenGod: string,
+  section: ReportSectionKey
+): { reason: string; acknowledge: string; action: string } {
   const t = String(tenGod || "").trim();
   if (t.includes("비견") || t.includes("겁재")) {
     return {
-      reason: "반복 패턴은 혼자 감당하려는 책임 과부하에서 시작되기 쉽습니다.",
-      acknowledge: "이 방식은 약점이 아니라 오래 버티기 위해 익힌 생존 전략이었다는 점을 먼저 인정해도 좋습니다.",
-      action: "이번 주에는 도움 요청 문장을 미리 준비해 두고, 하루 한 번은 역할을 나누는 연습을 권합니다.",
+      reason: sectionReason(section, t),
+      acknowledge: sectionAcknowledge(section, t),
+      action: sectionAction(section, t),
     };
   }
   if (t.includes("식신") || t.includes("상관")) {
     return {
-      reason: "반복 패턴은 성과 압박이 과로와 자책으로 이어지는 루프에서 자주 나타납니다.",
-      acknowledge: "성과 민감성은 결함이 아니라 강점의 그림자이므로, 자신을 비난하기보다 리듬을 조절하는 접근이 필요합니다.",
-      action: "완료 기준을 조금 낮추고 회복 시간을 먼저 캘린더에 고정해 탈진 루프를 끊어보세요.",
+      reason: sectionReason(section, t),
+      acknowledge: sectionAcknowledge(section, t),
+      action: sectionAction(section, t),
     };
   }
   if (t.includes("재")) {
     return {
-      reason: "반복 패턴은 불안이 올라올 때 통제를 먼저 강화하는 반응에서 커질 수 있습니다.",
-      acknowledge: "통제하려는 태도는 불안을 견디기 위한 보호 장치였다는 점을 인정하면 긴장이 완화됩니다.",
-      action: "결정 전 24시간 유예 규칙을 두고, 지출/계약은 재확인 후 확정하는 습관이 도움이 됩니다.",
+      reason: sectionReason(section, t),
+      acknowledge: sectionAcknowledge(section, t),
+      action: sectionAction(section, t),
     };
   }
   if (t.includes("관")) {
     return {
-      reason: "반복 패턴은 평가와 책임을 먼저 의식해 스스로를 과도하게 압박하는 흐름에서 생기기 쉽습니다.",
-      acknowledge: "엄격함은 스스로를 지키기 위한 장치였고, 지금은 기준의 강도를 조절할 타이밍입니다.",
-      action: "반드시 지킬 기준 3개만 남기고 나머지는 유보해, 자기 압박 강도를 낮추는 실천을 권합니다.",
+      reason: sectionReason(section, t),
+      acknowledge: sectionAcknowledge(section, t),
+      action: sectionAction(section, t),
     };
   }
   if (t.includes("인")) {
     return {
-      reason: "반복 패턴은 생각은 깊어지지만 행동이 늦어지는 루프에서 자책으로 이어질 수 있습니다.",
-      acknowledge: "신중함은 약점이 아니라 통찰의 힘이며, 속도보다 자기 신뢰 회복이 먼저입니다.",
-      action: "하루 10분 기록(사건·감정·다음 1행동)으로 생각-행동 간격을 줄여보세요.",
+      reason: sectionReason(section, t),
+      acknowledge: sectionAcknowledge(section, t),
+      action: sectionAction(section, t),
     };
   }
   return {
-    reason: "반복되는 장면은 피로가 쌓일 때 자동 반응 패턴으로 돌아가며 강화되는 경우가 많습니다.",
-    acknowledge: "그 반응은 실패가 아니라 버티기 위해 형성된 방식이라는 점을 인정하는 것이 회복의 시작입니다.",
-    action: "이번 달에는 사건보다 반응 패턴을 기록해, 반복 고리를 먼저 알아차려 보세요.",
+    reason: sectionReason(section, t),
+    acknowledge: sectionAcknowledge(section, t),
+    action: sectionAction(section, t),
   };
 }
 
-function enrichHealingCard(baseText: string, tenGod: string): string {
+function enrichHealingCard(baseText: string, tenGod: string, section: ReportSectionKey): string {
   const base = pickText(baseText);
   const sents = splitSentences(base);
   const intro = sents.slice(0, 2).join(" ");
-  const tone = healingToneByTenGod(tenGod);
+  const tone = healingToneByTenGod(tenGod, section);
   return [intro, tone.reason, tone.acknowledge, tone.action].filter(Boolean).join(" ");
 }
 
@@ -270,11 +351,11 @@ function pickSection(raw: Record<string, unknown>): SajuReportData {
   const monthlyFortune = parseMonthlyFortune(raw);
   const sajuOverview = parseSajuOverview(raw);
 
-  const total2 = enrichHealingCard(total, dominantTenGod);
-  const personality2 = enrichHealingCard(personality, dominantTenGod);
-  const work2 = enrichHealingCard(work, dominantTenGod);
-  const money2 = enrichHealingCard(money, dominantTenGod);
-  const health2 = enrichHealingCard(health, dominantTenGod);
+  const total2 = enrichHealingCard(total, dominantTenGod, "total");
+  const personality2 = enrichHealingCard(personality, dominantTenGod, "personality");
+  const work2 = enrichHealingCard(work, dominantTenGod, "work");
+  const money2 = enrichHealingCard(money, dominantTenGod, "money");
+  const health2 = enrichHealingCard(health, dominantTenGod, "health");
 
   return {
     total: total2,
@@ -286,6 +367,17 @@ function pickSection(raw: Record<string, unknown>): SajuReportData {
     monthlyFortune,
     raw,
   };
+}
+
+/**
+ * localStorage에 저장된 구버전 reportData를 최신 문장 규칙으로 재가공한다.
+ * raw 원본이 없으면 기존 값을 그대로 사용한다.
+ */
+export function refreshReportDataCopy(report: SajuReportData | null | undefined): SajuReportData | null {
+  if (!report) return null;
+  const raw = asRecord(report.raw);
+  if (!raw) return report;
+  return pickSection(raw);
 }
 
 export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuReportData> {

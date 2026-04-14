@@ -9,6 +9,11 @@
   padding: 0.75rem 1rem 2rem;
 }
 
+.feed-page--embedded {
+  padding: 0 0 1.5rem;
+  max-width: none;
+}
+
 .feed-page__intro {
   margin: 0 0 0.75rem;
   font-size: 0.88rem;
@@ -374,6 +379,17 @@
 .feed-modal__close:hover {
   background: #e8e4ed;
   color: var(--text);
+}
+
+.feed-modal__fortune {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text);
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .feed-modal__body {

@@ -23,6 +23,8 @@ type PersonPayload = {
   calendarApi: "solar" | "lunar" | "lunar_leap";
 };
 
+const COMPATIBILITY_TIMEOUT_MS = 45_000;
+
 export async function postCompatibility(
   birth1: BirthInputPayload,
   birth2: BirthInputPayload
@@ -42,11 +44,33 @@ export async function postCompatibility(
     calendarApi: birth2.calendarApi,
   };
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ birth1: p1, birth2: p2 }),
-  });
+  const ctrl = new AbortController();
+  const tid = window.setTimeout(() => ctrl.abort(), COMPATIBILITY_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ birth1: p1, birth2: p2 }),
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    const name = e instanceof Error ? e.name : "";
+    if (name === "AbortError" || (e instanceof DOMException && e.name === "AbortError")) {
+      throw new Error(
+        "요청 시간이 초과되었습니다. 프로젝트 루트에서 API 서버(python scripts/run_api_server_v1.py, 기본 포트 8000)가 실행 중인지 확인해 주세요.",
+      );
+    }
+    if (e instanceof TypeError) {
+      throw new Error(
+        "서버에 연결할 수 없습니다. 프론트는 npm run dev(5173)·백엔드는 8000에서 실행 중인지 확인해 주세요.",
+      );
+    }
+    throw e;
+  } finally {
+    window.clearTimeout(tid);
+  }
 
   const raw = await res.text();
   let j: unknown = null;

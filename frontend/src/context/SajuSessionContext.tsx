@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -13,33 +14,58 @@ import type { BirthInputPayload } from "@/types/birthInput";
 import type { CounselMessage } from "@/types/counsel";
 import type { SajuReportData } from "@/types/report";
 import {
+  getSessionEmail,
+  loginLocal,
+  logoutLocal,
+  registerLocal,
+} from "@/services/localAuth";
+import {
   getOrCreateUserId,
   loadUserMemory,
   saveUserMemory,
   type StoredCounselMessage,
 } from "@/services/userMemoryStorage";
+import { refreshReportDataCopy } from "@/services/reportApi";
 
-function getInitialSajuState() {
+type InitState = {
+  userId: string;
+  birth: BirthInputPayload | null;
+  analysisSummary: string | null;
+  reportData: SajuReportData | null;
+  messages: CounselMessage[];
+  hydrated: boolean;
+  identityVerified: boolean;
+  sessionEmail: string | null;
+};
+
+function getInitialSajuState(): InitState {
   if (typeof window === "undefined") {
     return {
       userId: "ssr",
-      birth: null as BirthInputPayload | null,
-      analysisSummary: null as string | null,
-      reportData: null as SajuReportData | null,
-      messages: [] as CounselMessage[],
+      birth: null,
+      analysisSummary: null,
+      reportData: null,
+      messages: [],
       hydrated: false,
+      identityVerified: false,
+      sessionEmail: null,
     };
   }
   const userId = getOrCreateUserId();
+  const sessionFromAuth = getSessionEmail();
   const mem = loadUserMemory();
+  /** 로그인 세션이 있으면 가입 이메일로 본인 연결된 것으로 봅니다(별도 버튼 불필요). */
+  const verifiedFromLogin = Boolean(sessionFromAuth);
   if (mem && mem.userId === userId) {
     return {
       userId,
       birth: mem.birth,
       analysisSummary: mem.analysisSummary,
-      reportData: mem.reportData ?? null,
+      reportData: refreshReportDataCopy(mem.reportData),
       messages: mem.recentMessages as CounselMessage[],
       hydrated: true,
+      identityVerified: verifiedFromLogin || Boolean(mem.identityVerified),
+      sessionEmail: mem.sessionEmail ?? sessionFromAuth,
     };
   }
   return {
@@ -49,6 +75,8 @@ function getInitialSajuState() {
     reportData: null,
     messages: [],
     hydrated: true,
+    identityVerified: verifiedFromLogin,
+    sessionEmail: sessionFromAuth,
   };
 }
 
@@ -63,6 +91,16 @@ type SajuSessionValue = {
   setReportData: Dispatch<SetStateAction<SajuReportData | null>>;
   counselMessages: CounselMessage[];
   setCounselMessages: Dispatch<SetStateAction<CounselMessage[]>>;
+  /** 로그인(로컬 데모) 이메일 */
+  sessionEmail: string | null;
+  /** 본인 인증 완료 — 탐색·카테고리에서 저장 사주로 바로 리포트 */
+  identityVerified: boolean;
+  setIdentityVerified: (v: boolean) => void;
+  login: (identifier: string, password: string) => { ok: boolean; message?: string };
+  register: (email: string, password: string, phone?: string) => { ok: boolean; message?: string };
+  logout: () => void;
+  /** 생년월일·시간·성별 + 로그인 + 본인인증 완료 시 탐색 주제 클릭 시 입력 없이 리포트로 */
+  canUseSavedSajuContent: boolean;
 };
 
 const SajuSessionContext = createContext<SajuSessionValue | null>(null);
@@ -75,10 +113,44 @@ export function SajuSessionProvider({ children }: { children: ReactNode }) {
   const [analysisSummary, setAnalysisSummary] = useState<string | null>(initRef.current.analysisSummary);
   const [reportData, setReportData] = useState<SajuReportData | null>(initRef.current.reportData);
   const [counselMessages, setCounselMessages] = useState<CounselMessage[]>(initRef.current.messages);
+  const [identityVerified, setIdentityVerifiedState] = useState(initRef.current.identityVerified);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(initRef.current.sessionEmail);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setMemoryHydrated(true);
+  }, []);
+
+  const setIdentityVerified = useCallback(
+    (v: boolean) => {
+      if (v && !sessionEmail) return;
+      setIdentityVerifiedState(v);
+    },
+    [sessionEmail]
+  );
+
+  const login = useCallback((identifier: string, password: string) => {
+    const r = loginLocal(identifier, password);
+    if (r.ok) {
+      setSessionEmail(getSessionEmail());
+      setIdentityVerifiedState(true);
+    }
+    return r;
+  }, []);
+
+  const register = useCallback((email: string, password: string, phone?: string) => {
+    const r = registerLocal(email, password, phone);
+    if (r.ok) {
+      setSessionEmail(getSessionEmail());
+      setIdentityVerifiedState(true);
+    }
+    return r;
+  }, []);
+
+  const logout = useCallback(() => {
+    logoutLocal();
+    setSessionEmail(null);
+    setIdentityVerifiedState(false);
   }, []);
 
   const persistTimer = useRef<number | null>(null);
@@ -100,13 +172,22 @@ export function SajuSessionProvider({ children }: { children: ReactNode }) {
         analysisSummary,
         reportData,
         recentMessages,
+        sessionEmail,
+        identityVerified,
       });
     }, 450);
 
     return () => {
       if (persistTimer.current) window.clearTimeout(persistTimer.current);
     };
-  }, [userId, birth, analysisSummary, reportData, counselMessages, memoryHydrated]);
+  }, [userId, birth, analysisSummary, reportData, counselMessages, memoryHydrated, sessionEmail, identityVerified]);
+
+  const canUseSavedSajuContent = useMemo(() => {
+    const b = birth;
+    return Boolean(
+      b?.date && b?.time && b?.gender && identityVerified && sessionEmail
+    );
+  }, [birth, identityVerified, sessionEmail]);
 
   const value = useMemo(
     () => ({
@@ -120,8 +201,29 @@ export function SajuSessionProvider({ children }: { children: ReactNode }) {
       setReportData,
       counselMessages,
       setCounselMessages,
+      sessionEmail,
+      identityVerified,
+      setIdentityVerified,
+      login,
+      register,
+      logout,
+      canUseSavedSajuContent,
     }),
-    [userId, memoryHydrated, birth, analysisSummary, reportData, counselMessages]
+    [
+      userId,
+      memoryHydrated,
+      birth,
+      analysisSummary,
+      reportData,
+      counselMessages,
+      sessionEmail,
+      identityVerified,
+      setIdentityVerified,
+      login,
+      register,
+      logout,
+      canUseSavedSajuContent,
+    ]
   );
 
   return <SajuSessionContext.Provider value={value}>{children}</SajuSessionContext.Provider>;

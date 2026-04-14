@@ -1,5 +1,7 @@
-import { useEffect, useId } from "react";
+import { useEffect, useId, useMemo } from "react";
 import type { FeedItem, FeedNavigateMeta, FeedTabTarget } from "@/types/contentFeed";
+import type { FortuneLinesData } from "@/types/fortuneLines";
+import { pickFortuneLine } from "@/utils/pickFortuneLine";
 import "./feed.css";
 
 type Props = {
@@ -9,6 +11,7 @@ type Props = {
   onGoTab: (target: FeedTabTarget, meta?: FeedNavigateMeta) => void;
   hasBirth: boolean;
   hasReport: boolean;
+  fortuneLines: FortuneLinesData | null;
 };
 
 function primaryLabel(action: FeedItem["action"]): string {
@@ -25,8 +28,13 @@ function primaryLabel(action: FeedItem["action"]): string {
   }
 }
 
-export function FeedDetailModal({ item, open, onClose, onGoTab, hasBirth, hasReport }: Props) {
+export function FeedDetailModal({ item, open, onClose, onGoTab, hasBirth, hasReport, fortuneLines }: Props) {
   const titleId = useId();
+
+  const fortuneLine = useMemo(
+    () => (item && fortuneLines ? pickFortuneLine(item, fortuneLines) : null),
+    [item, fortuneLines],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -65,8 +73,11 @@ export function FeedDetailModal({ item, open, onClose, onGoTab, hasBirth, hasRep
   const tabMeta = (): FeedNavigateMeta | undefined => {
     if (act.type !== "tab") return undefined;
     const fm = act.focusMonth;
-    if (typeof fm === "number" && fm >= 1 && fm <= 12) return { focusMonth: fm };
-    return undefined;
+    const ra = act.reportAnchor;
+    const meta: FeedNavigateMeta = {};
+    if (typeof fm === "number" && fm >= 1 && fm <= 12) meta.focusMonth = fm;
+    if (typeof ra === "string" && ra.trim()) meta.reportAnchor = ra.trim();
+    return Object.keys(meta).length ? meta : undefined;
   };
 
   const onPrimary = () => {
@@ -91,6 +102,11 @@ export function FeedDetailModal({ item, open, onClose, onGoTab, hasBirth, hasRep
             ×
           </button>
         </div>
+        {fortuneLine && (
+          <p className="feed-modal__fortune" role="note">
+            {fortuneLine}
+          </p>
+        )}
         <p className="feed-modal__body">{item.description}</p>
         <div className="feed-modal__actions">
           {act.type === "tab" && (

@@ -225,6 +225,39 @@
   }
 }
 
+/* 1차 요약: AI 상담 입력 위에 엔진 기반 텍스트 표시 */
+.counsel-intro {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(30, 27, 46, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+.counsel-intro__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.45rem;
+  color: var(--text, #1e1b2e);
+}
+
+.counsel-intro__body,
+.counsel-intro__text {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text, #1e1b2e);
+  margin: 0 0 0.5rem;
+  white-space: pre-wrap;
+}
+
+.counsel-intro__fine {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--muted, #6b6578);
+  margin: 0;
+}
+
 @media (max-width: 760px) {
   .counsel-corner__scene {
     grid-template-columns: 1fr;

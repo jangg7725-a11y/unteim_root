@@ -1,4 +1,4 @@
-import { useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import type { CounselMessage as CounselMessageModel } from "@/types/counsel";
 import { useSajuSession } from "@/context/SajuSessionContext";
 import { CharacterCounselProvider, useCharacterCounsel } from "@/counsel/CharacterCounselContext";
@@ -11,6 +11,33 @@ import type { CounselSessionCardPayload } from "@/types/counsel";
 import { COUNSEL_LAYOUT } from "@/config/counselLayout";
 import { formatDualCalendarSegment } from "@/utils/calendarDualLabel";
 import "./counsel-corner.css";
+
+function CounselIntroPanel() {
+  const { birth, reportData } = useSajuSession();
+  if (!birth) return null;
+  if (!reportData) {
+    return (
+      <section className="counsel-intro" aria-label="1차 사주 요약">
+        <p className="counsel-intro__text">
+          리포트 탭에서 사주 분석을 생성하면, 여기에 <strong>엔진 기반 요약</strong>이 먼저 표시됩니다. AI 대화는 선택
+          사항이며 이용 시 비용이 발생할 수 있습니다.
+        </p>
+      </section>
+    );
+  }
+  const snippet = (reportData.total || "").trim();
+  const short = snippet.length > 320 ? `${snippet.slice(0, 320)}…` : snippet;
+  return (
+    <section className="counsel-intro" aria-label="1차 사주 요약">
+      <h2 className="counsel-intro__title">1차 · 사주 기반 요약 (참고)</h2>
+      <p className="counsel-intro__body">{short || "요약 텍스트가 준비되지 않았습니다."}</p>
+      <p className="counsel-intro__fine" role="note">
+        아래 대화는 AI 상담으로 이어질 수 있으며, <strong>이용 시 비용이 발생할 수 있습니다</strong>. 먼저 위 요약으로
+        흐름을 파악한 뒤 필요할 때만 이어가 보세요.
+      </p>
+    </section>
+  );
+}
 
 type InnerProps = {
   draft: string;
@@ -31,6 +58,18 @@ function CounselCornerInner({
 }: InnerProps) {
   const { birth, setAnalysisSummary, counselMessages, setCounselMessages } = useSajuSession();
   const { notifyThinking } = useCharacterCounsel();
+
+  useEffect(() => {
+    try {
+      const pref = sessionStorage.getItem("unteim_counsel_prefill");
+      if (pref && birth) {
+        setDraft((d) => (d.trim() ? d : pref));
+        sessionStorage.removeItem("unteim_counsel_prefill");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [birth, setDraft]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -199,6 +238,8 @@ export function CounselCorner() {
             {analysisSummary ? " · 분석 요약 로드됨" : ""}
           </p>
         )}
+
+        {birth && <CounselIntroPanel />}
 
         <CounselCornerInner
           draft={draft}

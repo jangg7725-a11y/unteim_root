@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ContentFeedData, FeedItem, FeedNavigateMeta, FeedTabTarget } from "@/types/contentFeed";
+import type { FortuneLinesData } from "@/types/fortuneLines";
 import { loadContentFeed } from "@/services/contentFeedApi";
+import { loadFortuneLines } from "@/services/fortuneLinesApi";
 import { FeedDetailModal } from "./FeedDetailModal";
 import "./feed.css";
 
@@ -17,10 +19,13 @@ type Props = {
   hasBirth: boolean;
   hasReport: boolean;
   onNavigateTab: (tab: FeedTabTarget, meta?: FeedNavigateMeta) => void;
+  /** 탐색 허브 안에 넣을 때 상단 안내·판본 문구 숨김 */
+  embedded?: boolean;
 };
 
-export function ContentFeedPage({ hasBirth, hasReport, onNavigateTab }: Props) {
+export function ContentFeedPage({ hasBirth, hasReport, onNavigateTab, embedded }: Props) {
   const [data, setData] = useState<ContentFeedData | null>(null);
+  const [fortuneLines, setFortuneLines] = useState<FortuneLinesData | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [cat, setCat] = useState<string>("all");
   const [catExpanded, setCatExpanded] = useState(false);
@@ -29,9 +34,10 @@ export function ContentFeedPage({ hasBirth, hasReport, onNavigateTab }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const d = await loadContentFeed();
+      const [d, fl] = await Promise.all([loadContentFeed(), loadFortuneLines()]);
       if (!cancelled) {
         setData(d);
+        setFortuneLines(fl);
         setLoadError(d.items.length === 0 && d.feedVersion === "fallback");
       }
     })();
@@ -47,11 +53,13 @@ export function ContentFeedPage({ hasBirth, hasReport, onNavigateTab }: Props) {
   }, [data, cat]);
 
   return (
-    <div className="feed-page">
-      <p className="feed-page__intro">
-        매달 바뀌는 주제 카드입니다. 카드를 누르면 안내와 함께 사주 입력·리포트·상담으로 이동할 수 있습니다.
-      </p>
-      {data && (
+    <div className={`feed-page${embedded ? " feed-page--embedded" : ""}`}>
+      {!embedded && (
+        <p className="feed-page__intro">
+          매달 바뀌는 주제 카드입니다. 카드를 누르면 안내와 함께 사주 입력·리포트·상담으로 이동할 수 있습니다.
+        </p>
+      )}
+      {data && !embedded && (
         <p className="feed-page__version">
           콘텐츠 판본 {data.feedVersion}
           {data.updatedAt ? ` · ${data.updatedAt}` : ""}
@@ -189,6 +197,7 @@ export function ContentFeedPage({ hasBirth, hasReport, onNavigateTab }: Props) {
         onGoTab={onNavigateTab}
         hasBirth={hasBirth}
         hasReport={hasReport}
+        fortuneLines={fortuneLines}
       />
     </div>
   );

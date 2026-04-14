@@ -3,6 +3,8 @@ export type MicroPointOfferItem = {
   description: string;
   price: number;
   type: "single" | "pair";
+  /** solo-love-insight API topic (single·썸 분기) */
+  topicHint?: "general" | "sseom" | "timing" | "emotion";
 };
 
 export type MicroPointOfferCategory = {
@@ -42,16 +44,40 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
     id: "timing",
     title: "타이밍",
     items: [
-      { question: "지금 연락해도 될까요?", description: "먼저 다가가도 좋은 흐름인지 확인해요.", price: 700, type: "single" },
-      { question: "지금 움직여도 될까요?", description: "결정의 타이밍을 놓치지 않게 도와드려요.", price: 700, type: "single" },
+      {
+        question: "지금 연락해도 될까요?",
+        description: "먼저 다가가도 좋은 흐름인지 확인해요.",
+        price: 700,
+        type: "single",
+        topicHint: "timing",
+      },
+      {
+        question: "지금 움직여도 될까요?",
+        description: "결정의 타이밍을 놓치지 않게 도와드려요.",
+        price: 700,
+        type: "single",
+        topicHint: "timing",
+      },
     ],
   },
   {
     id: "emotion",
     title: "감정",
     items: [
-      { question: "나의 마음 상태는?", description: "흔들리는 감정의 중심을 부드럽게 정리해요.", price: 700, type: "single" },
-      { question: "이 감정 진짜일까요?", description: "순간 감정인지 진심인지 구분해봐요.", price: 700, type: "single" },
+      {
+        question: "나의 마음 상태는?",
+        description: "흔들리는 감정의 중심을 부드럽게 정리해요.",
+        price: 700,
+        type: "single",
+        topicHint: "emotion",
+      },
+      {
+        question: "이 감정 진짜일까요?",
+        description: "순간 감정인지 진심인지 구분해봐요.",
+        price: 700,
+        type: "single",
+        topicHint: "emotion",
+      },
     ],
   },
   {

@@ -1,3 +1,4 @@
+import { formatKoreanDisplayDate } from "@/utils/formatKoreanDate";
 import "./today-fortune-card.css";
 
 export type TodayFortuneData = {
@@ -31,17 +32,32 @@ const MOCK_TODAY_FORTUNE: TodayFortuneData = {
 
 type Props = {
   data?: TodayFortuneData;
+  /** 엔진·목 데이터와 구분되는 참고 문장(문장 DB) */
+  supplementaryLine?: string | null;
 };
 
-export function TodayFortuneCard({ data = MOCK_TODAY_FORTUNE }: Props) {
+export function TodayFortuneCard({ data = MOCK_TODAY_FORTUNE, supplementaryLine }: Props) {
   const stars = "★★★★★".slice(0, data.stars) + "☆☆☆☆☆".slice(0, 5 - data.stars);
+  const todayLabel = formatKoreanDisplayDate();
 
   return (
-    <section className="today-fortune" aria-label="오늘의 운세 카드">
+    <section id="report-anchor-today" className="today-fortune" aria-label="오늘의 운세 카드">
       <div className="today-fortune__head">
-        <h2 className="today-fortune__title">오늘의 운세 카드</h2>
+        <div className="today-fortune__title-wrap">
+          <h2 className="today-fortune__title">오늘의 운세 카드</h2>
+          <p className="today-fortune__date" aria-label="기준일">
+            {todayLabel}
+          </p>
+        </div>
         <p className="today-fortune__stars">{stars}</p>
       </div>
+
+      {supplementaryLine ? (
+        <div className="today-fortune__supplementary" role="note">
+          <span className="today-fortune__supplementary-label">참고 한 줄</span>
+          <p className="today-fortune__supplementary-text">{supplementaryLine}</p>
+        </div>
+      ) : null}
 
       <p className="today-fortune__flow">{data.flow}</p>
 

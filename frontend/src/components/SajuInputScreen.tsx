@@ -8,6 +8,7 @@ import { SCREEN_COPY } from "@/constants/screenCopy";
 import type { BirthFormState } from "@/types/birthInput";
 import { buildBirthPayload } from "@/types/birthInput";
 import type { SajuReportData } from "@/types/report";
+import { useSajuSession } from "@/context/SajuSessionContext";
 import { SajuSummaryDashboard } from "./SajuSummaryDashboard";
 import "./saju-screen.css";
 
@@ -31,6 +32,7 @@ const initial: BirthFormState = {
 
 export function SajuInputScreen({ onSubmit, birth, report, loading, error, onGoReport }: Props) {
   const [form, setForm] = useState<BirthFormState>(initial);
+  const { sessionEmail, canUseSavedSajuContent } = useSajuSession();
 
   const payload = useMemo(() => buildBirthPayload(form), [form]);
 
@@ -121,6 +123,31 @@ export function SajuInputScreen({ onSubmit, birth, report, loading, error, onGoR
           )}
         </div>
       </form>
+
+      {(payload ?? birth) && (
+        <section className="saju-screen__verify" aria-labelledby="verify-title">
+          <h2 id="verify-title" className="saju-screen__verify-title">
+            저장 · 계정 연동
+          </h2>
+          {!sessionEmail ? (
+            <p className="saju-screen__verify-text">
+              탐색에서 주제만 눌러 리포트로 바로 가려면 햄버거 메뉴에서 <strong>로그인 · 회원가입</strong>을 먼저 해 주세요.
+              <strong> 로그인에 성공하면 가입 시 이메일로 본인이 자동 연결</strong>됩니다. (이 기기 브라우저에만 저장되는
+              데모 계정입니다.)
+            </p>
+          ) : canUseSavedSajuContent ? (
+            <p className="saju-screen__verify-text saju-screen__verify-text--ok">
+              로그인되어 계정이 연결되었습니다 ({sessionEmail}). 탐색 탭에서 주제를 누르면 저장된 사주로 바로 리포트로
+              이동합니다.
+            </p>
+          ) : (
+            <p className="saju-screen__verify-text">
+              로그인되어 계정이 연결되었습니다 ({sessionEmail}). 아래에서 분석을 완료·저장하면 탐색에서 같은 사주로 바로
+              이용할 수 있어요.
+            </p>
+          )}
+        </section>
+      )}
 
       <SajuSummaryDashboard birth={payload ?? birth} report={report} />
 
