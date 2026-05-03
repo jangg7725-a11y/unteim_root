@@ -140,6 +140,17 @@
   word-break: keep-all;
 }
 
+.explore-hub__grid3-desc {
+  margin: 0;
+  padding: 0 0.15rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #15803d;
+  text-align: center;
+  word-break: keep-all;
+}
+
 /* 리스트 */
 .explore-hub__list {
   display: flex;
@@ -208,7 +219,8 @@
   margin: 0;
   font-size: 0.76rem;
   line-height: 1.45;
-  color: var(--muted);
+  color: #15803d;
+  font-weight: 500;
 }
 
 /* 2열 카드 */
@@ -262,7 +274,8 @@
   margin: 0;
   font-size: 0.72rem;
   line-height: 1.4;
-  color: var(--muted);
+  color: #15803d;
+  font-weight: 500;
 }
 
 .explore-hub__badge--inline {

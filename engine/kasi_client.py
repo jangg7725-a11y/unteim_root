@@ -178,7 +178,7 @@ def kasi_solar_to_lunar_tuple(dt: datetime, timeout_sec: float = 7.0) -> Tuple[i
     return int(out["year"]), int(out["month"]), int(out["day"]), bool(out.get("is_leap", False))
 
 
-def safe_kasi_solar_to_lunar(dt: datetime, timeout_sec: float = 7.0) -> Optional[Dict[str, Any]]:
+def safe_kasi_solar_to_lunar(dt: datetime, timeout_sec: float = 1.2) -> Optional[Dict[str, Any]]:
     """
     ✅ 실패해도 서비스가 죽지 않게 하는 안전 래퍼
     - 성공 시 dict 반환

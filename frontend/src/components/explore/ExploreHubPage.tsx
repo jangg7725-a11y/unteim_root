@@ -27,13 +27,14 @@ export function ExploreHubPage({
   onOpenSavedReportFlow,
   onOpenAuth,
 }: Props) {
-  const { canUseSavedSajuContent, sessionEmail } = useSajuSession();
+  const { sessionEmail } = useSajuSession();
   const [gateOpen, setGateOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
 
   const runCategoryAction = useCallback(
     async (categoryId: string) => {
-      if (!canUseSavedSajuContent) {
+      /** 로그인 여부와 무관하게, 이미 입력·저장된 사주가 있으면 탐색에서 그대로 이용 */
+      if (!hasBirth) {
         setGateOpen(true);
         return;
       }
@@ -60,7 +61,7 @@ export function ExploreHubPage({
         setNavigating(false);
       }
     },
-    [canUseSavedSajuContent, hasBirth, hasReport, onNavigateTab, onOpenSavedReportFlow, onOpenSajuInput],
+    [hasBirth, hasReport, onNavigateTab, onOpenSavedReportFlow, onOpenSajuInput],
   );
 
   return (
@@ -77,8 +78,8 @@ export function ExploreHubPage({
         <header className="explore-hub__hero">
           <h1 className="explore-hub__hero-title">탐색</h1>
           <p className="explore-hub__hero-sub">
-            주제를 고르면 저장된 사주와 오늘 날짜 기준으로 맞춤 화면(월운·섹션)으로 이동합니다. 로그인·사주 저장이
-            필요합니다.
+            주제를 고르면 입력해 둔 사주와 오늘 날짜 기준으로 맞춤 화면(월운·섹션)으로 이동합니다. 사주는 한 번
+            입력해 두면 탐색으로 나갔다 와도 같은 정보로 이어집니다.
           </p>
         </header>
 
@@ -102,6 +103,9 @@ export function ExploreHubPage({
                       {it.icon}
                     </span>
                     <span className="explore-hub__grid3-label">{it.label}</span>
+                    {it.description ? (
+                      <p className="explore-hub__grid3-desc">{it.description}</p>
+                    ) : null}
                   </button>
                 ))}
               </div>

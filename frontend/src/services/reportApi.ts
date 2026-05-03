@@ -27,6 +27,151 @@ function splitSentences(text: string): string[] {
     .filter(Boolean);
 }
 
+function simplifyReportCopy(text: string, month?: number): string {
+  let out = String(text || "").trim();
+  if (!out) return out;
+
+  const mo = month && month >= 1 && month <= 12 ? `${month}월` : "이번 달";
+  // 과거 '지지' 일괄 치환 잔재 문구 정리
+  out = out.replace(/생활 패턴 관계로는/g, "이번 달의 기운과 나의 흐름을 함께 보면");
+
+  // 사용자가 이해하기 어려운 명리 용어 패턴을 생활어로 변환(월 표기로 달별 구분)
+  out = out.replace(
+    /월간을 일간이 십신으로 보면\s*([^\s.]+)\s*에 해당합니다\.?/g,
+    `${mo}에는 책임·관계·성과 중 어디에 힘이 실리는지가 분명해질 수 있습니다.`
+  );
+  out = out.replace(
+    /지지를 일간에 대해 보면\s*12운성은\s*([^\s.]+)\s*에 놓입니다\.?/g,
+    () => monthlyEnergyLine(month)
+  );
+  out = out.replace(
+    /용신·희신·기신 관점에서는[^.]*\./g,
+    `${mo}에는 나에게 맞는 방식은 살리고, 무리한 선택은 줄이는 운영이 유리합니다.`
+  );
+  out = out.replace(
+    /용신\([^)]+\)·희신\([^)]+\)·기신\([^)]+\)와의 관계를 보면,?/g,
+    "나에게 맞는 흐름과 주의할 흐름을 함께 보면,"
+  );
+
+  // 용어명 대신 '역할'이 먼저 보이도록 치환
+  out = out.replace(
+    /오행/g,
+    "에너지 균형(무엇이 과하고 부족한지 보여주는 기준)"
+  );
+  out = out.replace(/월간 십신/g, "이번 달 핵심 성향");
+  out = out.replace(
+    /십신/g,
+    "행동 성향 신호(어떤 방식으로 반응하는지 보여주는 기준)"
+  );
+  out = out.replace(
+    /신살/g,
+    "상황 신호(도움·주의가 들어오기 쉬운 장면을 알려주는 기준)"
+  );
+  out = out.replace(
+    /12운성/g,
+    "에너지 단계(지금 밀어붙일지 정리할지 알려주는 기준)"
+  );
+  out = out.replace(/월간/g, "이번 달 흐름");
+  out = out.replace(/용신/g, "도움 되는 방향");
+  out = out.replace(/희신/g, "보조되는 방향");
+  out = out.replace(/기신/g, "주의할 방향");
+  out = out.replace(/지장간/g, "숨은 패턴");
+  out = out.replace(/이 호흡에 맞춰 속도를 조절할수록/g, "일정을 촘촘히 잡기보다 중요한 일 1~2개에 집중할수록");
+  out = out.replace(/이 호흡에 맞춰/g, `${mo} 흐름에 맞춰`);
+  out = out.replace(/속도 조절이 중요합니다\./g, "무리하게 밀어붙이기보다 우선순위를 줄여 진행하는 것이 중요합니다.");
+  out = out.replace(/^이번 달은 에너지의 오르내림이 뚜렷해/g, `${mo}에는 에너지와 컨디션이 오르내리기 쉽습니다`);
+  out = out.replace(
+    /이번 달은 체력과 집중의 오르내림이 비교적 뚜렷할 수 있어, 일정을 촘촘히 잡기보다 중요한 일 1~2개에 집중하는 편이 유리합니다\./g,
+    monthlyEnergyLine(month)
+  );
+  out = out.replace(
+    /이번 달은 일정을 촘촘히 잡기보다 중요한 일 1~2개에 집중할수록 성과와 컨디션의 균형이 맞아갑니다\./g,
+    monthlyEnergyLine(month)
+  );
+  out = out.replace(
+    /말 한마디에 [‘'"]?역할[’'"]?을 붙이면 오해가 줄어듭니다\./g,
+    "말을 시작할 때 이 말의 목적을 먼저 밝혀주세요. 예를 들어 지시인지, 부탁인지, 공유인지 먼저 말하면 상대가 의도를 바로 이해해 오해가 줄어듭니다."
+  );
+  out = out.replace(
+    /대화 창구를 맞추면/g,
+    "연락 방식(전화/메신저/대면)과 대화 목적을 먼저 맞추면"
+  );
+  out = out.replace(
+    /관계 장면을 보면/g,
+    "관계에서는 먼저 상황을 정리해서 보면"
+  );
+  out = out.replace(
+    /감정보다 역할·우선순위를 먼저 정리하면 실수가 줄어들 수 있습니다\./g,
+    "감정이 올라와도 바로 반응하지 말고, 지금 무엇을 먼저 해야 하는지부터 정리해 보세요. 이 순서만 지켜도 실수가 크게 줄어듭니다."
+  );
+  out = out.replace(
+    /조건을 분명히가 신뢰를 만듭니다\./g,
+    "조건을 말할 때는 기간, 금액, 책임 범위를 구체적으로 확인해 주세요. 이렇게 해야 서로 기대가 맞고 신뢰가 유지됩니다."
+  );
+  const gmStableLine = "이번 달은 흐름이 끊기기보다 사람·관계·일의 변화가 더 크게 작용하며, 새로운 사람이 들어오거나 기존 관계가 정리될 수 있습니다.";
+  const gmMonthlyMap: Record<number, string> = {
+    1: "1월은 사람·일정 변화가 함께 들어오는 달이라, 새 연결이 생기거나 기존 관계 정리가 나타날 수 있습니다.",
+    2: "2월은 협업·관계 조정 이슈가 먼저 올라오기 쉬워, 새 인연이 붙거나 역할 정리가 진행될 수 있습니다.",
+    3: "3월은 사람과 일의 속도가 빨라져 관계 온도 변화가 크게 느껴질 수 있어, 기존 연결 재정리가 필요할 수 있습니다.",
+    4: "4월은 일정 재배치와 함께 관계 변화도 같이 들어오기 쉬워, 새 인연 형성 또는 기존 흐름 정리가 생길 수 있습니다.",
+    5: "5월은 관계 피로와 업무 변화가 겹치기 쉬워, 사람 정리와 역할 재조정이 동시에 나타날 수 있습니다.",
+    6: "6월은 결정 이슈가 늘면서 사람·일 변화가 함께 작동해, 연결 구조가 다시 짜이는 장면이 생길 수 있습니다.",
+    7: "7월은 성과 기회와 함께 관계 재정렬도 들어오는 달이라, 새로운 협업이나 기존 관계 정리가 나타날 수 있습니다.",
+    8: "8월은 핵심 과제 집중 구간이면서 사람·일 변화도 크게 체감되어, 연결 구조 재정리가 나타날 수 있습니다.",
+    9: "9월은 변수 대응 과정에서 사람·관계·일 변화가 크게 느껴져, 관계 거리 조정이나 재정리가 나타날 수 있습니다.",
+    10: "10월은 마감·정리 흐름과 함께 사람 관계도 정돈되는 달이라, 기존 연결 정리가 자연스럽게 진행될 수 있습니다.",
+    11: "11월은 체력 리듬 변화와 함께 대인 관계도 재조정되기 쉬워, 필요한 관계만 남기고 정리하는 흐름이 생길 수 있습니다.",
+    12: "12월은 한 해 마무리와 함께 사람·일 관계도 정리되는 달이라, 새 연결보다 기존 흐름 정돈이 두드러질 수 있습니다.",
+  };
+  out = out.replace(
+    new RegExp(gmStableLine.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+    gmMonthlyMap[month ?? 0] || `${mo}에는 사람·관계·일 변화가 함께 들어와 연결 구조가 재정리될 수 있습니다.`
+  );
+  out = out.replace(
+    /이번 달은\s*흐름이\s*끊기기보다\s*사람·관계·일의\s*변화가\s*더\s*크게\s*작용하며,\s*새로운\s*사람이\s*들어오거나\s*기존\s*관계가\s*정리될\s*수\s*있습니다\./g,
+    gmMonthlyMap[month ?? 0] || `${mo}에는 사람·관계·일 변화가 함께 들어와 연결 구조가 재정리될 수 있습니다.`
+  );
+
+  // 같은 문장이 반복될 때 1회만 남긴다.
+  const sentenceParts = out
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (sentenceParts.length > 1) {
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const s of sentenceParts) {
+      const key = s.replace(/\s+/g, " ");
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(s);
+      }
+    }
+    out = deduped.join(" ");
+  }
+
+  return out;
+}
+
+function monthlyEnergyLine(month?: number): string {
+  const m = Number(month || 0);
+  const lines: Record<number, string> = {
+    1: "1월은 리듬을 새로 만드는 달이라, 시작한 일을 짧게 끊어 완료하는 방식이 잘 맞습니다.",
+    2: "2월은 협업·약속이 늘기 쉬워, 중요한 일정을 먼저 확정해 두면 피로를 줄일 수 있습니다.",
+    3: "3월은 속도가 붙는 만큼 실수도 늘기 쉬워, 검토 시간을 미리 확보하는 편이 유리합니다.",
+    4: "4월은 일정이 겹치기 쉬우니, 하루 핵심 1~2개만 끝내는 운영이 더 안정적입니다.",
+    5: "5월은 대인 피로가 쌓이기 쉬워, 집중 시간과 회복 시간을 명확히 나눠 쓰는 것이 좋습니다.",
+    6: "6월은 판단해야 할 일이 많아지는 달이라, 결정을 서두르지 않고 순서를 정하는 편이 맞습니다.",
+    7: "7월은 성과를 만들기 좋은 달이지만 과로도 쉬워, 집중 뒤 짧은 회복 루틴을 꼭 넣어야 합니다.",
+    8: "8월은 중요한 일에 힘을 모을수록 성과가 잘 나는 구간이라, 우선순위 축소가 핵심입니다.",
+    9: "9월은 변수 대응이 잦을 수 있어, 여유 시간 블록을 남겨두면 컨디션을 지키기 쉽습니다.",
+    10: "10월은 마감·정리 비중이 커지는 달이라, 빠르게 벌리기보다 끝내는 순서가 중요합니다.",
+    11: "11월은 체력 기복이 올라오기 쉬워, 수면·식사 같은 기본 루틴 고정이 성과를 지켜줍니다.",
+    12: "12월은 정리와 마무리 비중이 큰 달이라, 욕심을 줄이고 핵심 과제 완결에 집중하는 편이 좋습니다.",
+  };
+  return lines[m] || "이번 달은 집중과 피로의 간격을 잘 나누는 운영이 중요합니다.";
+}
+
 function pickDominantTenGod(analysis: Record<string, unknown>): string {
   const sipsin = asRecord(analysis.sipsin) ?? {};
   const summary = asRecord(sipsin.summary) ?? {};
@@ -184,8 +329,10 @@ function parseMonthlyFortune(raw: Record<string, unknown>): MonthlyFortuneEngine
       const x = m as Record<string, unknown>;
       const score = Number(x.score);
       const sc = (score >= 1 && score <= 5 ? score : 3) as 1 | 2 | 3 | 4 | 5;
+      const monthNum = Number(x.month) || 0;
+      const moArg = monthNum >= 1 && monthNum <= 12 ? monthNum : undefined;
       return {
-        month: Number(x.month) || 0,
+        month: monthNum,
         year: Number(x.year) || 0,
         monthPillar: String(x.monthPillar ?? ""),
         monthStem: String(x.monthStem ?? ""),
@@ -206,23 +353,23 @@ function parseMonthlyFortune(raw: Record<string, unknown>): MonthlyFortuneEngine
         shinsalHighlights: Array.isArray(x.shinsalHighlights)
           ? (x.shinsalHighlights as unknown[]).map((s) => String(s))
           : [],
-        narrative: String(x.narrative ?? ""),
-        flow: String(x.flow ?? ""),
-        good: String(x.good ?? ""),
-        caution: String(x.caution ?? ""),
-        action: String(x.action ?? ""),
-        overallFlow: pickText(x.overallFlow),
-        mingliInterpretation: pickText(x.mingliInterpretation),
-        realityChanges: pickText(x.realityChanges),
-        coreEvents: pickText(x.coreEvents),
-        opportunity: pickText(x.opportunity),
-        riskPoints: pickText(x.riskPoints),
-        actionGuide: pickText(x.actionGuide),
-        behaviorGuide: pickText(x.behaviorGuide),
-        emotionCoaching: pickText(x.emotionCoaching),
-        elementPractice: pickText(x.elementPractice),
-        oneLineConclusion: pickText(x.oneLineConclusion),
-        aiCounselBridge: pickText(x.aiCounselBridge),
+        narrative: simplifyReportCopy(String(x.narrative ?? ""), moArg),
+        flow: simplifyReportCopy(String(x.flow ?? ""), moArg),
+        good: simplifyReportCopy(String(x.good ?? ""), moArg),
+        caution: simplifyReportCopy(String(x.caution ?? ""), moArg),
+        action: simplifyReportCopy(String(x.action ?? ""), moArg),
+        overallFlow: simplifyReportCopy(pickText(x.overallFlow), moArg),
+        mingliInterpretation: simplifyReportCopy(pickText(x.mingliInterpretation), moArg),
+        realityChanges: simplifyReportCopy(pickText(x.realityChanges), moArg),
+        coreEvents: simplifyReportCopy(pickText(x.coreEvents), moArg),
+        opportunity: simplifyReportCopy(pickText(x.opportunity), moArg),
+        riskPoints: simplifyReportCopy(pickText(x.riskPoints), moArg),
+        actionGuide: simplifyReportCopy(pickText(x.actionGuide), moArg),
+        behaviorGuide: simplifyReportCopy(pickText(x.behaviorGuide), moArg),
+        emotionCoaching: simplifyReportCopy(pickText(x.emotionCoaching), moArg),
+        elementPractice: simplifyReportCopy(pickText(x.elementPractice), moArg),
+        oneLineConclusion: simplifyReportCopy(pickText(x.oneLineConclusion), moArg),
+        aiCounselBridge: simplifyReportCopy(pickText(x.aiCounselBridge), moArg),
         score: sc,
         luckScore: typeof x.luckScore === "number" ? x.luckScore : undefined,
       };
@@ -351,11 +498,11 @@ function pickSection(raw: Record<string, unknown>): SajuReportData {
   const monthlyFortune = parseMonthlyFortune(raw);
   const sajuOverview = parseSajuOverview(raw);
 
-  const total2 = enrichHealingCard(total, dominantTenGod, "total");
-  const personality2 = enrichHealingCard(personality, dominantTenGod, "personality");
-  const work2 = enrichHealingCard(work, dominantTenGod, "work");
-  const money2 = enrichHealingCard(money, dominantTenGod, "money");
-  const health2 = enrichHealingCard(health, dominantTenGod, "health");
+  const total2 = simplifyReportCopy(enrichHealingCard(total, dominantTenGod, "total"));
+  const personality2 = simplifyReportCopy(enrichHealingCard(personality, dominantTenGod, "personality"));
+  const work2 = simplifyReportCopy(enrichHealingCard(work, dominantTenGod, "work"));
+  const money2 = simplifyReportCopy(enrichHealingCard(money, dominantTenGod, "money"));
+  const health2 = simplifyReportCopy(enrichHealingCard(health, dominantTenGod, "health"));
 
   return {
     total: total2,

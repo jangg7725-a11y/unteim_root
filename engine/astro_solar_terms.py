@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from typing import List, Optional, Tuple, Dict, Any
+from functools import lru_cache
 
 import numpy as np
 from skyfield.api import load
@@ -12,6 +13,8 @@ from skyfield.framelib import ecliptic_frame
 from skyfield import almanac
 
 KST = ZoneInfo("Asia/Seoul")
+_TS = load.timescale()
+_EPH = load("de421.bsp")
 
 # 태양 황경 λ에 대해 floor(λ/15)=k (0~23)일 때 해당 15° 구간의 절기명.
 # (k=0 → 춘분/0°, k=1 → 청명/15°, … k=21 → 입춘/315°, k=22 → 우수, k=23 → 경칩)
@@ -60,18 +63,16 @@ def _solar_term_index_factory(eph):
     return term_index
 
 
-def compute_solar_terms_for_year(year: int) -> List[SolarTerm]:
+@lru_cache(maxsize=16)
+def _compute_solar_terms_for_year_cached(year: int) -> Tuple[SolarTerm, ...]:
     """
     year에 해당하는 24절기 시각을 KST로 계산하여 반환.
     결과 길이는 항상 24를 목표로 합니다.
     """
-    ts = load.timescale()
-    eph = load("de421.bsp")
+    t0 = _TS.utc(year, 1, 1)
+    t1 = _TS.utc(year + 1, 1, 1)
 
-    t0 = ts.utc(year, 1, 1)
-    t1 = ts.utc(year + 1, 1, 1)
-
-    f = _solar_term_index_factory(eph)
+    f = _solar_term_index_factory(_EPH)
     f.step_days = 1
     times, values = almanac.find_discrete(t0, t1, f)
 
@@ -96,7 +97,12 @@ def compute_solar_terms_for_year(year: int) -> List[SolarTerm]:
         t = first_time_by_idx[k]
         out.append(SolarTerm(name=name, degree=degree, dt_kst=_to_kst(t)))
 
-    return out
+    return tuple(out)
+
+
+def compute_solar_terms_for_year(year: int) -> List[SolarTerm]:
+    # 호출자는 list를 기대하므로 복사본을 반환한다.
+    return list(_compute_solar_terms_for_year_cached(year))
 
 
 def nearest_terms_around(dt_kst: datetime, terms: List[SolarTerm]) -> Tuple[Optional[SolarTerm], Optional[SolarTerm]]:

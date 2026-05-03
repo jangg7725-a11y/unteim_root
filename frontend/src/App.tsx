@@ -7,6 +7,7 @@ import { CounselCorner } from "./counsel/CounselCorner";
 import { AppShellDrawer } from "./components/AppShellDrawer";
 import { AuthModal } from "./components/auth/AuthModal";
 import { ExploreHubPage } from "./components/explore/ExploreHubPage";
+import { PwaInstallHint } from "./components/PwaInstallHint";
 import { hasStoredBirth } from "./services/userMemoryStorage";
 import { fetchSajuReport } from "./services/reportApi";
 import type { FeedNavigateMeta, FeedTabTarget } from "./types/contentFeed";
@@ -54,6 +55,8 @@ function AppShell() {
     try {
       setReportLoading(true);
       setReportError(null);
+      // 새 요청 시작 시 이전 결과를 비워 입력-결과 불일치 노출을 막는다.
+      setReportData(null);
       const data = await fetchSajuReport(birth);
       setReportData(data);
     } catch (err) {
@@ -148,6 +151,7 @@ function AppShell() {
                 try {
                   setReportLoading(true);
                   setReportError(null);
+                  setReportData(null);
                   const data = await fetchSajuReport(birth);
                   setReportData(data);
                 } catch (err) {
@@ -199,6 +203,7 @@ function AppShell() {
               setBirth(p);
               setReportError(null);
               setReportLoading(true);
+              setReportData(null);
               try {
                 const data = await fetchSajuReport(p);
                 setReportData(data);
@@ -240,6 +245,7 @@ function AppShell() {
         onOpenAuth={() => setAuthOpen(true)}
       />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <PwaInstallHint />
     </div>
   );
 }

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import os
 import sys
+import concurrent.futures
+from functools import lru_cache
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(_ROOT)
@@ -20,6 +22,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, cast
+import threading
 
 from fastapi import FastAPI, HTTPException  # type: ignore[import-untyped]
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore[import-untyped]
@@ -33,6 +36,9 @@ from engine.compatibility_analyzer import analyze_compatibility
 from engine.solo_love_insight import build_solo_love_insight
 from engine.hidden_stems import compute_hidden_stems
 from engine.sipsin import ten_god_stem
+from engine.ohengAnalyzer import analyze_oheng
+from engine.shinsalDetector import detect_shinsal
+from engine.twelve_fortunes import map_twelve_fortunes
 from reports.monthly_report import build_monthly_report_pdf
 import traceback
 
@@ -41,6 +47,12 @@ import traceback
 # 고정 출력 경로 (1개로 통일)
 # -------------------------
 OUT_PDF = Path("out") / "monthly_report.pdf"
+
+
+@lru_cache(maxsize=256)
+def _calculate_saju_cached(birth: str):
+    """동일 birth 입력 반복 시 원국 계산 결과를 재사용한다."""
+    return calculate_saju(birth)
 
 _STEM_EL_YY: dict[str, tuple[str, str]] = {
     "甲": ("목", "+"), "乙": ("목", "-"), "丙": ("화", "+"), "丁": ("화", "-"),
@@ -96,7 +108,7 @@ def _build_saju_overview(engine_result: dict[str, Any]) -> dict[str, Any]:
             continue
         w = str(it.get("where") or "").strip()
         n = str(it.get("name") or "").strip()
-        if w in by_where_shinsal and n and ("12운성" not in n) and (not n.startswith("12")):
+        if w in by_where_shinsal and n and (not n.startswith("12운성:")):
             by_where_shinsal[w].append(n)
     for k in by_where_shinsal:
         # 중복 제거 + 기둥별 최대 8개 노출(누락 체감 방지)
@@ -214,6 +226,14 @@ class AnalyzeMetaResponse(BaseModel):
     birth: str
 
 
+class PillarsRequest(BaseModel):
+    birth: str = Field(..., description="YYYY-MM-DD HH:MM")
+    calendar: str = Field(
+        default="solar",
+        description="solar | lunar | lunar_leap",
+    )
+
+
 class CounselChatMessage(BaseModel):
     role: str = Field(..., description="user | assistant")
     text: str = ""
@@ -317,6 +337,17 @@ def _pillars_to_dict(pillars_obj: Any) -> Dict[str, Any]:
                     out[k] = {"gan": "", "ji": ""}
             return out
 
+        # SajuPillars dict 형태: {"gan":[...], "ji":[...]} 대응
+        gan_list = p.get("gan")
+        ji_list = p.get("ji")
+        if isinstance(gan_list, list) and isinstance(ji_list, list) and len(gan_list) >= 4 and len(ji_list) >= 4:
+            return {
+                "year": {"gan": str(gan_list[0] or ""), "ji": str(ji_list[0] or "")},
+                "month": {"gan": str(gan_list[1] or ""), "ji": str(ji_list[1] or "")},
+                "day": {"gan": str(gan_list[2] or ""), "ji": str(ji_list[2] or "")},
+                "hour": {"gan": str(gan_list[3] or ""), "ji": str(ji_list[3] or "")},
+            }
+
         # 다른 키로 들어온 경우(방어): 못 찾으면 빈 dict
         return {"year": {"gan": "", "ji": ""}, "month": {"gan": "", "ji": ""}, "day": {"gan": "", "ji": ""}, "hour": {"gan": "", "ji": ""}}
 
@@ -407,10 +438,43 @@ def _inject_user_card(report: Dict[str, Any], *, name: str, sex: str, birth: str
     report["profile"] = prof
 
 
+def _pairs_from_pillars_dict(p: Dict[str, Any]) -> Dict[str, tuple[str, str]]:
+    out: Dict[str, tuple[str, str]] = {}
+    for k in ("year", "month", "day", "hour"):
+        blk = p.get(k) if isinstance(p.get(k), dict) else {}
+        out[k] = (str((blk or {}).get("gan") or ""), str((blk or {}).get("ji") or ""))
+    return out
+
+
+def _stem_branch_map_from_pillars_dict(p: Dict[str, Any]) -> Dict[str, Dict[str, str]]:
+    out: Dict[str, Dict[str, str]] = {}
+    for k in ("year", "month", "day", "hour"):
+        blk = p.get(k) if isinstance(p.get(k), dict) else {}
+        out[k] = {"stem": str((blk or {}).get("gan") or ""), "branch": str((blk or {}).get("ji") or "")}
+    return out
+
+
 # -------------------------
 # FastAPI 앱
 # -------------------------
 app = FastAPI(title="Unteim API v1", version="1.0")
+
+
+def _prewarm_saju_cache() -> None:
+    """
+    첫 요청 지연을 줄이기 위해 절기 계산 캐시를 백그라운드로 워밍업한다.
+    """
+    try:
+        calculate_saju("2000-01-01 12:00")
+    except Exception:
+        # 워밍업 실패는 서비스 실행을 막지 않는다.
+        pass
+
+
+@app.on_event("startup")
+def _startup_warmup() -> None:
+    t = threading.Thread(target=_prewarm_saju_cache, daemon=True)
+    t.start()
 
 
 def _cors_allow_origins() -> list[str]:
@@ -440,6 +504,89 @@ def health():
 def api_health():
     """프론트·로드밸런서용 — `/health`와 동일 응답."""
     return {"ok": True, "service": "unteim-api"}
+
+
+@app.post("/api/pillars")
+def pillars_preview(req: PillarsRequest):
+    """
+    입력 직후 빠른 원국 미리보기용.
+    - analyze_full 없이 calculate_saju만 수행해 응답 지연을 줄인다.
+    """
+    try:
+        birth = _normalize_birth(req.birth, req.calendar)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    try:
+        pillars = _calculate_saju_cached(birth)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"pillar engine failed: {type(e).__name__}: {e}",
+        )
+
+    p_dict = _pillars_to_dict(pillars)
+
+    # 빠른 요약(오행/신살/12운성)도 함께 내려 입력 화면 공백을 줄인다.
+    try:
+        oh = analyze_oheng(pillars)
+        counts = oh.get("counts") if isinstance(oh, dict) else {}
+        counts = counts if isinstance(counts, dict) else {}
+        five_counts = {
+            "목": int(counts.get("木", 0) or 0),
+            "화": int(counts.get("火", 0) or 0),
+            "토": int(counts.get("土", 0) or 0),
+            "금": int(counts.get("金", 0) or 0),
+            "수": int(counts.get("水", 0) or 0),
+        }
+    except Exception:
+        five_counts = {"목": 0, "화": 0, "토": 0, "금": 0, "수": 0}
+
+    shinsal_by_where: Dict[str, list[str]] = {"year": [], "month": [], "day": [], "hour": []}
+    try:
+        sh = detect_shinsal(_pairs_from_pillars_dict(p_dict))
+        items = sh.get("items") if isinstance(sh, dict) else []
+        if isinstance(items, list):
+            for it in items:
+                if not isinstance(it, dict):
+                    continue
+                where = str(it.get("where") or "").strip()
+                name = str(it.get("name") or "").strip()
+                if where in shinsal_by_where and name and (not name.startswith("12운성:")):
+                    shinsal_by_where[where].append(name)
+            for k in shinsal_by_where:
+                uniq: list[str] = []
+                seen: set[str] = set()
+                for n in shinsal_by_where[k]:
+                    if n not in seen:
+                        seen.add(n)
+                        uniq.append(n)
+                shinsal_by_where[k] = uniq[:8]
+    except Exception:
+        pass
+
+    twelve_by_where: Dict[str, str] = {"year": "—", "month": "—", "day": "—", "hour": "—"}
+    try:
+        tf = map_twelve_fortunes(_stem_branch_map_from_pillars_dict(p_dict))
+        if isinstance(tf, dict):
+            for k in ("year", "month", "day", "hour"):
+                blk = tf.get(k) if isinstance(tf.get(k), dict) else {}
+                f = str((blk or {}).get("fortune") or "").strip()
+                if f:
+                    twelve_by_where[k] = f
+    except Exception:
+        pass
+
+    return JSONResponse(
+        content={
+            "ok": True,
+            "birth": birth,
+            "pillars": p_dict,
+            "fiveElements": {"counts": five_counts},
+            "shinsalByWhere": shinsal_by_where,
+            "twelveByWhere": twelve_by_where,
+        }
+    )
 
 
 @app.post("/api/counsel")
@@ -542,13 +689,49 @@ def analyze(req: AnalyzeRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
     try:
-        pillars = calculate_saju(birth)
-        engine_result = analyze_full(cast(Any, pillars), birth_str=birth)
+        pillars = _calculate_saju_cached(birth)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"pillars failed: {type(e).__name__}: {e}",
+        )
+
+    analyze_timeout_sec = float(os.getenv("ANALYZE_FULL_TIMEOUT_SEC", "25"))
+    timed_out = False
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(analyze_full, cast(Any, pillars), birth_str=birth)
+    try:
+        engine_result = future.result(timeout=analyze_timeout_sec)
+    except concurrent.futures.TimeoutError:
+        timed_out = True
+        future.cancel()
+        pillars_dict = _pillars_to_dict(cast(Any, pillars))
+        oheng: Dict[str, Any] = {}
+        try:
+            _oh = analyze_oheng(pillars_dict)
+            if isinstance(_oh, dict):
+                oheng = _oh
+        except Exception:
+            oheng = {}
+
+        # analyze_full 지연 시에도 프론트가 최소 리포트를 그릴 수 있도록 기본 payload 반환
+        engine_result = {
+            "pillars": pillars_dict,
+            "analysis": {"oheng": oheng},
+            "meta": {
+                "partial": True,
+                "reason": "analyze_full_timeout",
+                "timeoutSec": analyze_timeout_sec,
+            },
+            "summary": "상세 분석이 지연되어 기본 리포트를 먼저 표시합니다. 잠시 후 다시 시도하면 상세 내용이 보강됩니다.",
+        }
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"engine failed: {type(e).__name__}: {e}",
         )
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
     from datetime import date as _date
 
@@ -579,6 +762,8 @@ def analyze(req: AnalyzeRequest):
             "birth": birth,
             "calendar": req.calendar,
         }
+        if timed_out:
+            result["partial"] = True
 
     return JSONResponse(content=result)
 
@@ -637,7 +822,7 @@ def make_monthly_report(req: AnalyzeRequest):
 
 
     try:
-        pillars = calculate_saju(birth)
+        pillars = _calculate_saju_cached(birth)
         report = analyze_full(cast(Any, pillars), birth_str=birth)
         print(report.get("pillars"))
         print(report.get("analysis", {}).get("pillars"))
@@ -707,7 +892,7 @@ def make_monthly_report_meta(req: AnalyzeRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
     try:
-        pillars = calculate_saju(birth)
+        pillars = _calculate_saju_cached(birth)
         report = analyze_full(cast(Any, pillars), birth_str=birth)
 
     except Exception as e:

@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import type { BirthInputPayload } from "@/types/birthInput";
 import type { SajuReportData } from "@/types/report";
 import { formatDualCalendarBirthLine } from "@/utils/calendarDualLabel";
+import { getApiBase } from "@/services/apiBase";
 
 type Props = {
   birth: BirthInputPayload | null;
@@ -162,7 +164,8 @@ function byWhereShinsal(raw: Record<string, unknown>, where: PillarKey): string[
     .filter((x) => asRecord(x)?.where === where)
     .map((x) => String(asRecord(x)?.name ?? "").trim())
     .filter(Boolean)
-    .filter((n) => !n.startsWith("12") && !n.includes("12운성"));
+    // 12운성은 별도 섹션에서 다루므로 '12운성:' 접두만 제외
+    .filter((n) => !n.startsWith("12운성:"));
   return Array.from(new Set(out)).slice(0, 8);
 }
 
@@ -180,6 +183,62 @@ function getOhaengCounts(raw: Record<string, unknown>): Record<string, number> {
     if (typeof v === "number") out[k] = v;
   }
   return out;
+}
+
+function getLocalOhaengCountsFromPillars(p: {
+  year: Record<string, unknown> | null;
+  month: Record<string, unknown> | null;
+  day: Record<string, unknown> | null;
+  hour: Record<string, unknown> | null;
+}): Record<string, number> {
+  const out: Record<string, number> = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
+  const ks: Array<"year" | "month" | "day" | "hour"> = ["year", "month", "day", "hour"];
+  for (const k of ks) {
+    const blk = p[k];
+    const gan = String(blk?.gan ?? "").trim();
+    const ji = String(blk?.ji ?? "").trim();
+    const ge = STEM_META[gan]?.element;
+    const je = BRANCH_META[ji]?.element;
+    if (ge && ge in out) out[ge] += 1;
+    if (je && je in out) out[je] += 1;
+  }
+  return out;
+}
+
+function isAllZeroCounts(c: Record<string, number>): boolean {
+  const keys = Object.keys(c);
+  if (!keys.length) return true;
+  return keys.every((k) => Number(c[k] ?? 0) === 0);
+}
+
+function localTwelveByWhereFromPillars(p: {
+  year: Record<string, unknown> | null;
+  month: Record<string, unknown> | null;
+  day: Record<string, unknown> | null;
+  hour: Record<string, unknown> | null;
+}): Record<string, string> {
+  const dayStem = String(p.day?.gan ?? "").trim();
+  const mapStart: Record<string, string> = {
+    甲: "亥", 乙: "午", 丙: "寅", 丁: "酉", 戊: "寅",
+    己: "酉", 庚: "巳", 辛: "子", 壬: "申", 癸: "卯",
+  };
+  const fortunes = ["長生", "沐浴", "冠帶", "臨官", "帝旺", "衰", "病", "死", "墓", "絕", "胎", "養"];
+  const branches = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+  const start = mapStart[dayStem];
+  if (!start) return { year: "—", month: "—", day: "—", hour: "—" };
+  const sidx = branches.indexOf(start);
+  if (sidx < 0) return { year: "—", month: "—", day: "—", hour: "—" };
+  const yang = new Set(["甲", "丙", "戊", "庚", "壬"]);
+  const table: Record<string, string> = {};
+  for (let i = 0; i < fortunes.length; i += 1) {
+    const idx = (sidx + (yang.has(dayStem) ? i : -i) + 120) % 12;
+    table[branches[idx]] = fortunes[i];
+  }
+  const pick = (key: "year" | "month" | "day" | "hour") => {
+    const br = String(p[key]?.ji ?? "").trim();
+    return table[br] ?? "—";
+  };
+  return { year: pick("year"), month: pick("month"), day: pick("day"), hour: pick("hour") };
 }
 
 function OhaengChips({ counts }: { counts: Record<string, number> }) {
@@ -202,8 +261,95 @@ function OhaengChips({ counts }: { counts: Record<string, number> }) {
 }
 
 export function SajuSummaryDashboard({ birth, report }: Props) {
+  const [previewPillars, setPreviewPillars] = useState<Record<string, Record<string, string>> | null>(null);
+  const [previewFiveElements, setPreviewFiveElements] = useState<Record<string, number> | null>(null);
+  const [previewShinsalByWhere, setPreviewShinsalByWhere] = useState<Record<string, string[]> | null>(null);
+  const [previewTwelveByWhere, setPreviewTwelveByWhere] = useState<Record<string, string> | null>(null);
   const ov = report?.sajuOverview ?? null;
   const raw = asRecord(report?.raw) ?? {};
+  useEffect(() => {
+    let alive = true;
+    if (!birth) {
+      setPreviewPillars(null);
+      return () => {
+        alive = false;
+      };
+    }
+    const body = {
+      birth: `${birth.date} ${birth.time}`,
+      calendar: birth.calendarApi,
+    };
+    const base = getApiBase();
+    const url = base ? `${base}/api/pillars` : "/api/pillars";
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+      .then(async (res) => {
+        const json = (await res.json()) as Record<string, unknown>;
+        const p = asRecord(json.pillars);
+        if (!alive || !res.ok || !p) return;
+        const year = asRecord(p.year);
+        const month = asRecord(p.month);
+        const day = asRecord(p.day);
+        const hour = asRecord(p.hour);
+        if (!year || !month || !day || !hour) return;
+        setPreviewPillars({
+          year: { gan: String(year.gan ?? ""), ji: String(year.ji ?? "") },
+          month: { gan: String(month.gan ?? ""), ji: String(month.ji ?? "") },
+          day: { gan: String(day.gan ?? ""), ji: String(day.ji ?? "") },
+          hour: { gan: String(hour.gan ?? ""), ji: String(hour.ji ?? "") },
+        });
+        const fe = asRecord(json.fiveElements);
+        const counts = asRecord(fe?.counts);
+        setPreviewFiveElements(
+          counts
+            ? {
+                목: Number(counts["목"] ?? 0),
+                화: Number(counts["화"] ?? 0),
+                토: Number(counts["토"] ?? 0),
+                금: Number(counts["금"] ?? 0),
+                수: Number(counts["수"] ?? 0),
+              }
+            : null
+        );
+        const sbw = asRecord(json.shinsalByWhere);
+        setPreviewShinsalByWhere(
+          sbw
+            ? {
+                year: Array.isArray(sbw.year) ? (sbw.year as unknown[]).map((x) => String(x)) : [],
+                month: Array.isArray(sbw.month) ? (sbw.month as unknown[]).map((x) => String(x)) : [],
+                day: Array.isArray(sbw.day) ? (sbw.day as unknown[]).map((x) => String(x)) : [],
+                hour: Array.isArray(sbw.hour) ? (sbw.hour as unknown[]).map((x) => String(x)) : [],
+              }
+            : null
+        );
+        const tbw = asRecord(json.twelveByWhere);
+        setPreviewTwelveByWhere(
+          tbw
+            ? {
+                year: String(tbw.year ?? "—"),
+                month: String(tbw.month ?? "—"),
+                day: String(tbw.day ?? "—"),
+                hour: String(tbw.hour ?? "—"),
+              }
+            : null
+        );
+      })
+      .catch(() => {
+        if (alive) {
+          setPreviewPillars(null);
+          setPreviewFiveElements(null);
+          setPreviewShinsalByWhere(null);
+          setPreviewTwelveByWhere(null);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, [birth?.date, birth?.time, birth?.calendarApi]);
+
   const p = ov
     ? {
         hour: ov.pillars.hour,
@@ -211,12 +357,38 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
         month: ov.pillars.month,
         year: ov.pillars.year,
       }
+    : previewPillars
+      ? {
+          hour: previewPillars.hour ?? null,
+          day: previewPillars.day ?? null,
+          month: previewPillars.month ?? null,
+          year: previewPillars.year ?? null,
+        }
     : getPillars(raw);
   const sipsin = pickSipsin(raw);
-  const ohaeng = ov?.fiveElements?.counts ?? getOhaengCounts(raw);
+  const localOhaeng = getLocalOhaengCountsFromPillars({
+    year: p.year as Record<string, unknown> | null,
+    month: p.month as Record<string, unknown> | null,
+    day: p.day as Record<string, unknown> | null,
+    hour: p.hour as Record<string, unknown> | null,
+  });
+  const ohaengCandidate = ov?.fiveElements?.counts ?? previewFiveElements ?? getOhaengCounts(raw);
+  const ohaeng = isAllZeroCounts(ohaengCandidate) ? localOhaeng : ohaengCandidate;
+  const localTwelveByWhere = localTwelveByWhereFromPillars({
+    year: p.year as Record<string, unknown> | null,
+    month: p.month as Record<string, unknown> | null,
+    day: p.day as Record<string, unknown> | null,
+    hour: p.hour as Record<string, unknown> | null,
+  });
   const yinYangCounts = ov?.fiveElements?.yinYangCounts ?? {};
   const gongmang = pickFirst(raw.gongmang ?? asRecord(raw.analysis)?.gongmang);
   const dayStem = String((p.day as Record<string, unknown> | null)?.gan ?? "").trim();
+  const gridKeys: Array<{ key: PillarKey; title: string; pillar: Record<string, unknown> | null }> = [
+    { key: "hour", title: "시주", pillar: p.hour as Record<string, unknown> | null },
+    { key: "day", title: "일주", pillar: p.day as Record<string, unknown> | null },
+    { key: "month", title: "월주", pillar: p.month as Record<string, unknown> | null },
+    { key: "year", title: "년주", pillar: p.year as Record<string, unknown> | null },
+  ];
   /** 표시 순서: 년주 → 월주 → 일주 → 시주 (만세력 읽는 순서와 동일) */
   const cardKeys: Array<{ key: PillarKey; title: string; pillar: Record<string, unknown> | null }> = [
     { key: "year", title: "년주", pillar: p.year as Record<string, unknown> | null },
@@ -241,18 +413,18 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
 
       <div className="saju-dash__grid8">
         <div className="saju-dash__grid-head"> </div>
-        <div className="saju-dash__grid-head">년주</div>
-        <div className="saju-dash__grid-head">월주</div>
-        <div className="saju-dash__grid-head">일주</div>
         <div className="saju-dash__grid-head">시주</div>
+        <div className="saju-dash__grid-head">일주</div>
+        <div className="saju-dash__grid-head">월주</div>
+        <div className="saju-dash__grid-head">년주</div>
         <div className="saju-dash__grid-label">천간</div>
-        {cardKeys.map((c) => (
+        {gridKeys.map((c) => (
           <div key={`g-${c.key}`} className="saju-dash__grid-cell saju-dash__grid-cell--gan">
             {String(c.pillar?.gan ?? "—")}
           </div>
         ))}
         <div className="saju-dash__grid-label">지지</div>
-        {cardKeys.map((c) => (
+        {gridKeys.map((c) => (
           <div key={`j-${c.key}`} className="saju-dash__grid-cell saju-dash__grid-cell--ji">
             {String(c.pillar?.ji ?? "—")}
           </div>
@@ -266,7 +438,7 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
           const gm = STEM_META[gan];
           const jm = BRANCH_META[ji];
           const hidden = (jm?.hidden ?? []).slice(0, 3);
-          const sh = byWhereShinsal(raw, c.key);
+          const sh = previewShinsalByWhere?.[c.key] ?? byWhereShinsal(raw, c.key);
           return (
             <article key={c.title} className="saju-dash__pillar-card">
               <p className="saju-dash__pillar-title">{c.title}</p>
@@ -295,7 +467,7 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
                 <span className="saju-dash__mini-label">12운성</span>
                 <span className="saju-dash__mini-value">
                   {formatTwelveStage(
-                    String((c.pillar?.twelve as string | undefined) ?? byWhereTwelve(raw, c.key))
+                    String((c.pillar?.twelve as string | undefined) ?? previewTwelveByWhere?.[c.key] ?? localTwelveByWhere[c.key] ?? byWhereTwelve(raw, c.key) ?? "—")
                   )}
                 </span>
               </div>
@@ -367,11 +539,12 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
           <div className="saju-dash__shinsal-grid">
             {cardKeys.map((c) => {
               const arr = Array.isArray(c.pillar?.shinsal) ? (c.pillar?.shinsal as string[]) : [];
+              const arrPreview = previewShinsalByWhere?.[c.key] ?? [];
               return (
                 <div key={`sg-${c.key}`} className="saju-dash__shinsal-col">
                   <p className="saju-dash__shinsal-head">{c.title} 기준</p>
                   <div className="saju-dash__chips">
-                    {(arr.length ? arr : ["신살 없음"]).map((x, i) => (
+                    {(arr.length ? arr : arrPreview.length ? arrPreview : ["신살 없음"]).map((x, i) => (
                       <span key={`${c.key}-${i}`} className="saju-dash__chip saju-dash__chip--fortune">
                         {x}
                       </span>
@@ -386,7 +559,7 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
           </p>
           <div className="saju-dash__shinsal-grid">
             {cardKeys.map((c) => {
-              const rawTw = String((c.pillar?.twelve as string | undefined) ?? byWhereTwelve(raw, c.key));
+              const rawTw = String((c.pillar?.twelve as string | undefined) ?? previewTwelveByWhere?.[c.key] ?? localTwelveByWhere[c.key] ?? byWhereTwelve(raw, c.key));
               return (
                 <div key={`twelve-${c.key}`} className="saju-dash__shinsal-col">
                   <p className="saju-dash__shinsal-head">{c.title} 기준</p>

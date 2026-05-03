@@ -105,7 +105,8 @@ def _try_solar_to_lunar(d: date) -> Optional[Tuple[int, int, int, bool]]:
     # date -> datetime(00:00) 래핑
     dt = datetime(d.year, d.month, d.day)
 
-    out = safe_kasi_solar_to_lunar(dt)
+    # UI 응답 지연 방지: 음력 보조 라벨은 짧은 timeout으로만 시도
+    out = safe_kasi_solar_to_lunar(dt, timeout_sec=1.2)
     if not out:
         return None
 

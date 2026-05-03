@@ -1,0 +1,56 @@
+.pwa-hint {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  margin: 0;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  background: linear-gradient(180deg, rgba(30, 27, 46, 0.92), rgba(30, 27, 46, 0.97));
+  color: #f5f3ff;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: 0 -4px 24px rgba(30, 27, 46, 0.25);
+}
+
+.pwa-hint--subtle {
+  background: linear-gradient(180deg, rgba(67, 56, 202, 0.92), rgba(49, 46, 129, 0.97));
+}
+
+.pwa-hint__text {
+  margin: 0;
+  flex: 1 1 12rem;
+  max-width: 36rem;
+}
+
+.pwa-hint__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pwa-hint__btn {
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pwa-hint__btn--primary {
+  background: #fff;
+  color: #312e81;
+  border-color: #fff;
+}
+
+.pwa-hint__btn:hover {
+  opacity: 0.92;
+}

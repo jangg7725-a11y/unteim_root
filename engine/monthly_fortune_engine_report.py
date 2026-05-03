@@ -183,15 +183,25 @@ def _score_to_stars(score: int) -> int:
 def _interaction_lines(
     month_branch_kor: str,
     pillars: Dict[str, Any],
+    month: int,
 ) -> List[str]:
+    """합·충을 전문 용어 없이, 해당 월·지지가 드러나게 설명한다."""
     natal = _natal_branches_kor(pillars)
     out: List[str] = []
     mb = month_branch_kor
+    mo = int(month) if month else 0
+    mo_txt = f"{mo}월" if 1 <= mo <= 12 else "이번 달"
     for b in natal:
         if (mb, b) in CHUNG:
-            out.append(f"월지({mb})와 원국 지지({b})가 충(沖)을 이루어 변동·이동·감정 기복이 커질 수 있습니다.")
+            out.append(
+                f"{mo_txt}에는 이번 달의 기운({mb})과 평소 나에게 깊이 박힌 흐름({b})이 서로 밀어내는 느낌이 생기기 쉽습니다. "
+                "일정·이동·감정 기복이 커질 수 있어 약속은 여유를 두는 편이 덜 어긋납니다."
+            )
         elif (mb, b) in HAP:
-            out.append(f"월지({mb})와 원국 지지({b})가 합(合)을 이루어 인연·협력·정리가 맞물릴 수 있습니다.")
+            out.append(
+                f"{mo_txt}에는 이번 달의 기운({mb})과 평소 나에게 익숙한 패턴({b})이 잘 맞물리는 흐름입니다. "
+                "도움·협력·정리가 동시에 붙을 여지가 큽니다."
+            )
     return out[:3]
 
 
@@ -391,7 +401,7 @@ def _sipsin_category_hint(stem_tg: str) -> Tuple[str, str, str, str]:
         return (
             "규칙·책임·상사·제도와 맞닿는 일이 늘거나, 역할이 분명해지는 흐름입니다.",
             "보수·안정·장기 계약을 점검하기 좋은 타이밍일 수 있으나, 부담도 함께 올라올 수 있습니다.",
-            "거리·권위·선·후배 문제가 민감해질 수 있습니다. 말 한마디에 ‘역할’을 붙이면 오해가 줄어듭니다.",
+            "상대와의 거리(친함/공식), 직급, 선후배 관계가 예민해질 수 있습니다. 말을 할 때는 \"요청인지\", \"공유인지\", \"확정인지\"를 먼저 밝혀 오해를 줄이세요.",
             "긴장과 책임감이 동시에 올 수 있습니다. 숨 고르기(수면·산책)를 ‘의무’처럼 넣으면 판단이 선명해집니다.",
         )
     if s in ("정인", "편인"):
@@ -501,7 +511,7 @@ def _reality_story(
             f"가까웠던 사람과 거리가 벌어지거나 의외의 인연이 붙는 변곡점이 생길 수 있고, 실제로는 {w3}",
             f"말의 의도와 전달 방식이 어긋나면 감정이 흔들리는데, 관계 흐름을 보면 {w3}",
             f"연락 빈도 변화가 관계 온도를 바꾸는 달이라, 체감상으로는 {w3}",
-            f"짧은 답장 하나가 냉담함으로 읽혀 오해가 커질 수 있어도, 대화 창구를 맞추면 {w3}",
+            f"짧은 답장이 무뚝뚝하게 느껴져 오해가 생길 수 있습니다. 연락 방식과 대화 목적을 먼저 맞추면 {w3}",
             f"새로운 협업 인연이 빠르게 붙는 대신 기존 관계의 거리 조정이 필요해질 수 있고, 결국 {w3}",
             f"가족·동료 사이에서 기대치가 달라 서운함이 생겨도, 역할을 다시 합의하면 {w3}",
         ],
@@ -520,10 +530,24 @@ def _reality_story(
     )
     inter_line = ""
     if has_chung:
-        inter_line = "충의 영향이 겹치면 갑작스러운 이동, 관계 변화, 감정 기복이 실제로 나타날 수 있습니다."
+        inter_line = _stable_pick(
+            seed + "|real|inter",
+            [
+                f"{month}월에는 이동·약속 변경이 갑자기 생길 수 있어, 일정 여유 시간을 미리 남겨두는 편이 안전합니다.",
+                f"{month}월은 관계 거리 조정이 필요한 장면이 늘 수 있습니다. 답변을 서두르기보다 의도를 먼저 확인하면 오해를 줄일 수 있습니다.",
+                f"{month}월에는 감정 기복이 커질 수 있으니, 중요한 대화는 피로가 낮은 시간대에 짧게 진행하는 편이 유리합니다.",
+            ],
+        )
     gm_line = ""
     if has_gm:
-        gm_line = "이번 달은 흐름이 끊기기보다 사람·관계·일의 변화가 더 크게 작용하며, 새로운 사람이 들어오거나 기존 관계가 정리될 수 있습니다."
+        gm_line = _stable_pick(
+            seed + "|real|gm",
+            [
+                f"{month}월은 계획이 한 번에 확정되지 않고 중간 조정이 잦을 수 있습니다. 중요한 일정은 하루 유예 후 확정하는 방식이 더 안정적입니다.",
+                f"{month}월은 사람·일·관계 변화가 같이 들어오기 쉬운 달입니다. 새로운 연결이 생기거나 기존 관계가 정리되는 흐름이 나타날 수 있습니다.",
+                f"{month}월은 결정이 늦어지는 장면이 생길 수 있지만, 체크리스트를 두고 순서대로 처리하면 흐름이 다시 안정됩니다.",
+            ],
+        )
     tail = _stable_pick(
         seed + "|rstail",
         [
@@ -693,14 +717,34 @@ def _build_counsel_sections(
     o_line = _oheng_top_line(packed)
     w1, w2, w3, w4 = _sipsin_category_hint(s_stem)
     heal_reason, heal_ack, heal_action, heal_q = _sipsin_healing_bundle(s_stem)
+    month_focus = {
+        1: "시작한 일을 작게라도 끝내며 리듬을 만드는 것",
+        2: "약속·협업의 기준을 먼저 맞춰 시행착오를 줄이는 것",
+        3: "속도보다 정확도를 높여 실수를 줄이는 것",
+        4: "일정 재배치로 과부하를 막는 것",
+        5: "관계 피로를 줄이며 핵심 업무를 지키는 것",
+        6: "지출·계약·결정을 서두르지 않고 검토하는 것",
+        7: "작은 성과를 꾸준히 쌓아 흐름을 안정시키는 것",
+        8: "중요한 일 1~2개에 집중해 에너지 낭비를 줄이는 것",
+        9: "변수 대응용 여유 시간을 미리 확보하는 것",
+        10: "마감·정리를 먼저 끝내 마음 부담을 낮추는 것",
+        11: "체력 회복 루틴을 고정해 기복을 줄이는 것",
+        12: "한 해 흐름을 정리하고 다음 달 계획을 가볍게 세우는 것",
+    }.get(month, "핵심 우선순위를 먼저 정하고 작은 실행을 이어가는 것")
+    if luck >= 72:
+        energy_hint = "흐름이 비교적 좋은 편이라 실행량을 조금 늘려도 버틸 수 있습니다."
+    elif luck >= 55:
+        energy_hint = "기회와 부담이 함께 들어오는 구간이라 속도와 휴식 균형이 중요합니다."
+    else:
+        energy_hint = "무리해서 밀어붙이면 금방 지치기 쉬우니, 할 일을 줄이고 회복 시간을 먼저 확보하는 편이 유리합니다."
 
     overall = _stable_pick(
         seed + "|ov",
         [
-            f"이 달은 {stem_el or '오행'} 기운과 월간 십신({s_stem})이 맞물리면서, 준비되었던 마음이 현실 선택으로 옮겨가기 쉬운 흐름입니다.",
-            f"이번 달은 {twelve} 운성의 온도 위에서 {s_stem}의 작용이 강하게 드러나, 일상의 우선순위가 재배치되기 쉽습니다.",
-            f"현재 흐름을 보면 {pillar}의 기운이 겉을 잡고, 안에서는 지장간(본기 십신 {br_main})이 리듬을 조율하는 에너지가 나타날 수 있습니다.",
-            f"운의 흐름상 {month}월은 변화가 ‘한꺼번에’ 오기보다, 월간 십신이 말하는 주제가 반복 체크되며 쌓이는 방식으로 감지됩니다.",
+            f"{month}월 핵심은 {month_focus}입니다. {energy_hint}",
+            f"{month}월은 한 번에 많은 일을 벌리기보다, 우선순위를 줄여 끝내는 방식이 더 잘 맞습니다. 특히 {month_focus}에 집중할수록 체감이 좋아질 수 있습니다.",
+            f"{month}월은 비슷한 이슈가 반복되며 방향이 잡히는 달입니다. 그래서 이번 달에는 {month_focus}를 기준으로 계획을 짜는 편이 유리합니다.",
+            f"{month}월은 겉으로 보이는 상황과 실제 생활 패턴이 함께 움직이는 구간입니다. 이번 달 포인트는 {month_focus}이며, {energy_hint}",
         ],
     )
 
@@ -711,8 +755,8 @@ def _build_counsel_sections(
         _stable_pick(
             seed + "|mj1",
             [
-                f"월간을 일간이 십신으로 보면 {s_stem}에 해당합니다. 이는 ‘내가 세상을 어떤 방식으로 만지려 하는지’가 앞에 서는 달로 읽을 수 있어, 비슷한 시기에는 {w1}",
-                f"이 달의 겉은 {pillar}이고, 월간 십신 {s_stem}은 ‘사건의 제목’을 정합니다. 같은 사건도 십신에 따라 해석의 초점이 달라지니, 감정보다 역할과 의도를 먼저 분리해 보는 편이 덜 어긋납니다.",
+                f"이번 달은 ‘어떻게 행동하면 흐름이 좋아지는지’가 비교적 분명한 시기라, {w1}",
+                "같은 사건이라도 감정 반응보다 역할·우선순위를 먼저 정리하면 실수가 줄어들 수 있습니다.",
             ],
         )
     )
@@ -727,23 +771,23 @@ def _build_counsel_sections(
     )
     if twelve == "양":
         mingli_parts.append(
-            "지지를 일간에 대해 보면 12운성은 양(養)입니다. 양은 준비와 회복의 단계라서 지금은 결과를 서두르기보다 기반을 다지는 쪽이 더 힘이 붙습니다."
+            "이번 달은 준비·회복의 성격이 강한 구간입니다. 결과를 급히 내기보다 기본 루틴을 다지면 다음 달 흐름이 더 안정됩니다."
         )
     else:
         mingli_parts.append(
-            f"지지를 일간에 대해 보면 12운성은 {twelve}에 놓입니다. 이번 달은 이 호흡에 맞춰 속도를 조절할수록 성과와 컨디션의 균형이 맞아갑니다."
+            "이번 달은 집중이 잘되는 날과 급격히 지치는 날의 차이가 커질 수 있습니다. 집중 구간에 중요한 일을 처리하고, 피로가 오기 전에 짧게 쉬는 운영이 더 현실적입니다."
         )
     if yong_line:
         mingli_parts.append(
-            f"용신·희신·기신 관점에서는 {yong_line} 이 부분이 보완과 리스크를 동시에 짚는 축이 됩니다."
+            "이번 달은 나에게 맞는 방식은 살리고 무리한 선택은 줄이는 운영이 유리합니다."
         )
     if sewun_pillar:
         mingli_parts.append(
             _stable_pick(
                 seed + "|mj2",
                 [
-                    f"{target_year}년 세운 {sewun_pillar}의 연간 테마 위에서 월운이 ‘이번 달 실행’을 나눕니다. 그래서 같은 해라도 달마다 강조되는 감정과 사건의 질이 달라질 수 있습니다.",
-                    f"세운이 {sewun_pillar}로 잡히면 연간 방향은 이미 깔리고, 월운은 그 안에서 ‘지금 당장 손대야 할 일’을 고르는 층에 가깝습니다.",
+                    f"{target_year}년 전체 흐름 위에서 이번 달 실행 포인트가 정리됩니다. 같은 해라도 달마다 강조되는 장면이 달라질 수 있습니다.",
+                    "연간 방향은 이미 깔려 있고, 이번 달은 그 안에서 지금 당장 손대야 할 일을 고르는 구간에 가깝습니다.",
                 ],
             )
         )
@@ -752,15 +796,13 @@ def _build_counsel_sections(
             _stable_pick(
                 seed + "|mj3",
                 [
-                    f"대운 {daewoon_p}의 장기 주제가 깔린 위에서 월운이 미세 조정을 합니다. 급하게 결론 내리기보다 ‘이번 달 범위’만 정하면 판단이 안정됩니다.",
-                    f"대운 흐름({daewoon_p})은 천천히 움직이므로, 월별로는 표현 방식·거리·루틴만 바꿔도 체감이 크게 달라질 수 있습니다.",
+                    "장기 흐름은 천천히 가고, 이번 달은 그 안에서 미세 조정이 필요한 구간입니다. 급하게 결론 내리기보다 이번 달 범위만 정하면 판단이 안정됩니다.",
+                    "장기 흐름은 급하게 바뀌지 않으므로, 월별로는 표현 방식·거리·루틴만 바꿔도 체감이 크게 달라질 수 있습니다.",
                 ],
             )
         )
     if inter:
-        mingli_parts.append(
-            "지지 관계로는 " + " ".join(inter) + " 신호가 겹칠 수 있어, 실제 생활에서는 일정 재편·이동·관계 재정렬이 먼저 나타나기 쉽습니다."
-        )
+        mingli_parts.append(" ".join(inter))
     if gm_line:
         mingli_parts.append(gm_line)
     sh_mingli = str(shinsal_ctx.get("mingli") or "").strip()
@@ -923,20 +965,49 @@ def _build_counsel_sections(
     one_line = _stable_pick(
         seed + "|one",
         [
-            f"{month}월은 속도보다 방향을 지키는 선택이 결과를 만듭니다.",
-            f"이번 달의 승부처는 관계·일정·체력의 균형을 잃지 않는 운영입니다.",
-            f"{month}월은 작은 실행의 누적이 큰 변화를 만드는 달입니다.",
-            "지금의 조정이 다음 달 안정으로 이어지는 연결 구간입니다.",
+            f"{month}월은 속도보다 우선순위를 지키는 선택이 결과를 만듭니다.",
+            f"{month}월은 중요한 일 1~2개를 끝까지 밀어주는 운영이 가장 유리합니다.",
+            f"{month}월은 작은 실행을 끊기지 않게 이어갈수록 체감이 좋아지는 달입니다.",
         ],
     )
 
+    # --- 사용자 친화형 월별 5블록 구성(엔진 계산값 기반) ---
+    core_flow = [
+        f"{month}월은 {month_focus}이 핵심입니다.",
+        energy_hint,
+        "감정보다 해야 할 일의 순서를 먼저 정할수록 흔들림이 줄어듭니다.",
+    ]
+    change_flow = []
+    if has_chung:
+        change_flow.append("일정 변경이나 이동 이슈가 갑자기 생길 수 있습니다.")
+    if has_gm:
+        change_flow.append("계획이 한 번에 확정되지 않고 수정이 필요한 장면이 생길 수 있습니다.")
+    if inter:
+        change_flow.append("관계에서 역할 조정이나 거리 조절이 필요할 수 있습니다.")
+    if not change_flow:
+        change_flow = [
+            "큰 충돌보다는 작은 변화가 반복되며 방향이 잡히는 달입니다.",
+            "급격한 전환보다 생활 리듬을 다듬는 쪽으로 흐르기 쉽습니다.",
+        ]
+
+    good_bullets = [
+        f"- {month_focus}",
+        "- 일정은 짧게 나눠 끝내고, 완료 체크를 자주 하세요.",
+        "- 중요한 결정은 근거를 적어두고 현실적인 판단을 유지하세요.",
+    ]
+    risk_bullets = [
+        "- 성급한 결정으로 일정을 한꺼번에 늘리는 선택",
+        "- 감정이 올라온 상태에서 바로 답하거나 확정하는 행동",
+        "- 체력 저하 신호를 무시하고 무리하게 밀어붙이는 운영",
+    ]
+
     return {
-        "overallFlow": overall,
-        "mingliInterpretation": mingli,
-        "realityChanges": reality,
+        "overallFlow": "\n".join(core_flow),
+        "mingliInterpretation": "\n".join(change_flow[:3]),
+        "realityChanges": "\n".join(change_flow[:3]),
         "coreEvents": _core_events_story(seed, month),
-        "opportunity": opportunity,
-        "riskPoints": risk,
+        "opportunity": "\n".join(good_bullets),
+        "riskPoints": "\n".join(risk_bullets),
         "actionGuide": action,
         "behaviorGuide": _behavior_guide(seed),
         "emotionCoaching": emotion,
@@ -970,21 +1041,32 @@ def _shinsal_month_context(
     packed: Dict[str, Any],
     seed: str,
     month_branch_hanja: str,
+    month: int,
 ) -> Dict[str, str]:
     """월간운세용 신살 문맥 생성(보조가 아닌 적극 반영)."""
     items = _extract_shinsal_items(packed)
     if not items:
         return {}
 
+    month_branch_hanja = str(month_branch_hanja or "").strip()
     month_hits = []
     month_good: List[str] = []
     month_risk: List[str] = []
     month_caution: List[str] = []
+
+    def _item_branch(it: Dict[str, Any]) -> str:
+        # 데이터 소스별 branch 표기 키가 달라도 월지 매칭이 되도록 보정
+        for k in ("branch", "month_branch", "monthBranch", "ji"):
+            v = str(it.get(k) or "").strip()
+            if v:
+                return BRANCH_KO2HZ.get(v, v)
+        return ""
+
     for it in items:
         name = str(it.get("name") or "").strip()
         if not name or name.startswith("12운성:"):
             continue
-        if str(it.get("branch") or "").strip() == str(month_branch_hanja or "").strip():
+        if _item_branch(it) == month_branch_hanja:
             month_hits.append(name)
             if name in _SHINSAL_GOOD_SET or ("귀인" in name):
                 month_good.append(name)
@@ -1023,7 +1105,21 @@ def _shinsal_month_context(
     if not month_hits and not top_name:
         return {}
 
-    hit_text = "·".join(month_hits[:3]) if month_hits else (top_name or "신살 흐름")
+    # 월지 직접 매칭이 없더라도 월별 문구가 동일해지지 않도록 월별 seed로 보조 선택
+    if not month_hits:
+        all_names = [
+            str(it.get("name") or "").strip()
+            for it in items
+            if str(it.get("name") or "").strip() and (not str(it.get("name") or "").strip().startswith("12운성:"))
+        ]
+        all_names = list(dict.fromkeys(all_names))
+        ordered = sorted(
+            all_names,
+            key=lambda x: int(hashlib.md5(f"{seed}|{month_branch_hanja}|{x}".encode("utf-8")).hexdigest(), 16),
+        )
+        month_hits = ordered[:2]
+
+    hit_text = "·".join(month_hits[:3]) if month_hits else (top_name or f"{month_branch_hanja}월 신살 흐름")
     good_text = "·".join(month_good[:2]) if month_good else (top_good or "")
     risk_text = "·".join((month_risk + month_caution)[:2]) if (month_risk or month_caution) else (top_risk or "")
 
@@ -1052,9 +1148,13 @@ def _shinsal_month_context(
         )
 
     ctx = {
-        "mingli": (
-            f"신살 축에서는 이번 달 지지({month_branch_hanja})와 맞물린 {hit_text} 흐름이 함께 작동할 수 있습니다. "
-            "월간 십신·지지 관계 해석과 겹쳐 읽으면 실제 사건의 결이 더 선명해집니다."
+        "mingli": _stable_pick(
+            f"{seed}|sh_mingli",
+            [
+                f"{month}월 신살 축에서는 월지({month_branch_hanja})와 맞물린 {hit_text} 흐름이 함께 작동할 수 있습니다. 월간 십신·지지 관계 해석과 겹쳐 읽으면 실제 사건의 결이 더 선명해집니다.",
+                f"{month}월은 월지 {month_branch_hanja}에서 {hit_text} 신호가 두드러질 수 있어, 같은 사건도 반응 강도가 달라지기 쉽습니다. 이번 달은 월간 십신 해석과 함께 묶어 읽는 편이 정확도가 높습니다.",
+                f"당월({month}월) 신살 포인트는 {month_branch_hanja} 지지와 연결된 {hit_text}입니다. 일정·관계·금전 장면에서 반복되는 패턴이 보이면 신살 축과 십신 축을 함께 점검해 보세요.",
+            ],
         ),
         "opportunity": opp_line,
         "risk": risk_line,
@@ -1063,7 +1163,7 @@ def _shinsal_month_context(
             f"신살 리듬({hit_text})이 강한 날에는 마음이 예민해질 수 있으니, 반응보다 호흡을 먼저 고르는 것이 감정 소모를 줄입니다."
         ),
         "bridge_core": (
-            f"{month_branch_hanja} 월의 신살 핵심({hit_text})과 십신({verdict or '혼재'}) 흐름을 함께 조율하는 것이 이번 달 핵심 과제입니다."
+            f"{month}월 {month_branch_hanja} 월지의 신살 핵심({hit_text})과 십신({verdict or '혼재'}) 흐름을 함께 조율하는 것이 이번 달 핵심 과제입니다."
         ),
     }
     return ctx
@@ -1242,14 +1342,14 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
         stars = _score_to_stars(luck)
         scores.append((m, luck))
 
-        inter = _interaction_lines(mb_kor, pillars)
+        inter = _interaction_lines(mb_kor, pillars, m)
         gm_line = _gongmang_line(month_branch, v1, v2)
         stem_el = _stem_elem_ko(month_stem)
         yong_line = _yongshin_line(stem_el, yong, hee, gi)
 
         labels = _top3_labels(row if isinstance(row, dict) else {})
         var_seed = f"{target_year}|{m}|{pillar}|{s_stem}|{twelve}"
-        sh_ctx = _shinsal_month_context(packed, var_seed, mb_hanja or month_branch)
+        sh_ctx = _shinsal_month_context(packed, var_seed, mb_hanja or month_branch, m)
         sh_chips = _shinsal_month_chips(packed, mb_hanja or month_branch)
 
         counsel = _build_counsel_sections(

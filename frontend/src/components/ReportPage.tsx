@@ -251,8 +251,7 @@ export function ReportPage({
   return (
     <div className="report-page">
       <header className="report-page__head">
-        <h1 className="report-page__title">{SCREEN_COPY.output.title}</h1>
-        <p className="report-page__sub">{SCREEN_COPY.output.subtitle}</p>
+        <h1 className="report-page__lead">{SCREEN_COPY.output.subtitle}</h1>
         {!loading && !error && report ? (
           <p className="report-page__output-date" role="note">
             출력일 {outputDateLine}

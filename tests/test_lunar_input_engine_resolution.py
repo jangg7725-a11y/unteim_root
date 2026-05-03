@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from engine.counsel_birth import normalize_birth_string
 from engine.daewoon_engine import DaewoonEngine
+from engine.sajuCalculator import calculate_saju
 
 
 def test_lunar_1966_11_04_resolves_to_solar_december() -> None:
@@ -34,3 +35,19 @@ def test_daewoon_differs_lunar_vs_mistaken_solar_same_numbers() -> None:
     # 음력→양력(12/15) 기준 남성 순행 첫 대운 시작나이(반올림)는 7 근방
     assert d_ok[0]["start_age"] == 7
     assert d_wrong[0]["start_age"] == 1
+
+
+def test_lunar_1972_07_24_18_00_pillars_regression() -> None:
+    """
+    사용자 제보 회귀:
+    음력 1972-07-24 18:00(평달) → 양력 1972-09-01 18:00 기준
+    사주 원국은 壬子 / 戊申 / 乙未 / 乙酉 이어야 한다.
+    """
+    solar = normalize_birth_string("1972-07-24", "18:00", "lunar")
+    assert solar == "1972-09-01 18:00"
+
+    p = calculate_saju(solar).as_dict()
+    assert f"{p['year']['gan']}{p['year']['ji']}" == "壬子"
+    assert f"{p['month']['gan']}{p['month']['ji']}" == "戊申"
+    assert f"{p['day']['gan']}{p['day']['ji']}" == "乙未"
+    assert f"{p['hour']['gan']}{p['hour']['ji']}" == "乙酉"

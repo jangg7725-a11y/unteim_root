@@ -41,6 +41,7 @@ export function MonthlyFortuneEngine({
   );
   const total = monthsSorted.length;
   const [idx, setIdx] = useState(0);
+  const [changeOpen, setChangeOpen] = useState(false);
 
   const focusIndex = useMemo(() => {
     if (monthFocus == null) return null;
@@ -55,12 +56,23 @@ export function MonthlyFortuneEngine({
     setIdx(focusIndex);
   }, [focusIndex, monthFocus]);
 
+  useEffect(() => {
+    setChangeOpen(false);
+  }, [idx]);
+
   const safeIdx = Math.min(idx, Math.max(0, total - 1));
   const m = monthsSorted[safeIdx];
   const pageNum = safeIdx + 1;
 
   const goPrev = useCallback(() => setIdx((i) => Math.max(0, i - 1)), []);
   const goNext = useCallback(() => setIdx((i) => Math.min(total - 1, i + 1)), [total]);
+  const goMonth = useCallback(
+    (month: number) => {
+      const i = monthsSorted.findIndex((x) => x.month === month);
+      if (i >= 0) setIdx(i);
+    },
+    [monthsSorted]
+  );
 
   useEffect(() => {
     if (singleMonthView) return;
@@ -74,7 +86,6 @@ export function MonthlyFortuneEngine({
 
   if (!m || total === 0) return null;
 
-  const flowText = (m.overallFlow || m.flow).trim();
   const mingli = (m.mingliInterpretation || "").trim();
   const reality = (m.realityChanges || "").trim();
   const coreEvents = (m.coreEvents || "").trim();
@@ -94,8 +105,17 @@ export function MonthlyFortuneEngine({
   const shinsalHighlights = Array.isArray(m.shinsalHighlights)
     ? m.shinsalHighlights.map((x) => x.trim()).filter(Boolean).slice(0, 2)
     : [];
-
   const friendlyParagraphs = useMemo(() => buildMonthlyFriendlyParagraphs(m), [m]);
+  const goodBullets = (m.opportunity || m.good)
+    .split(/\n+/)
+    .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const riskBullets = (m.riskPoints || m.caution)
+    .split(/\n+/)
+    .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
 
   return (
     <section className={`mfb${singleMonthView ? " mfb--single-month" : ""}`} aria-labelledby="mfb-title">
@@ -133,6 +153,21 @@ export function MonthlyFortuneEngine({
             </p>
           </div>
         )}
+        {!singleMonthView ? (
+          <div className="mfb__month-jump" role="navigation" aria-label="월별 바로가기">
+            {monthsSorted.map((x, i) => (
+              <button
+                key={`jump-${x.month}`}
+                type="button"
+                className={`mfb__month-jump-btn${i === safeIdx ? " mfb__month-jump-btn--on" : ""}`}
+                onClick={() => goMonth(x.month)}
+                aria-current={i === safeIdx ? "page" : undefined}
+              >
+                {x.month}월
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="mfb__book-wrap">
@@ -180,8 +215,8 @@ export function MonthlyFortuneEngine({
               </div>
             ) : null}
 
-            <div className="mfb__friendly" aria-label="이번 달 쉬운 설명">
-              <p className="mfb__section-title mfb__section-title--friendly">이번 달 쉬운 설명</p>
+            <div className="mfb__friendly" aria-label="이달의 핵심">
+              <p className="mfb__section-title mfb__section-title--friendly">이달의 핵심</p>
               {friendlyParagraphs.map((para, i) => (
                 <p key={i} className="mfb__friendly-text">
                   <BoldInline text={para} />
@@ -189,21 +224,27 @@ export function MonthlyFortuneEngine({
               ))}
             </div>
 
-            <p className="mfb__section-title">전체 흐름</p>
-            <p className="mfb__narrative" style={{ marginBottom: "0.85rem" }}>
-              {flowText}
-            </p>
-
             {hasCounselSections ? (
               <>
-                <p className="mfb__section-title">명리학 해석</p>
-                <div className="mfb__narrative">
-                  {mingli.split("\n\n").map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
+                <div className="mfb__change-box">
+                  <button
+                    type="button"
+                    className="mfb__change-toggle"
+                    onClick={() => setChangeOpen((v) => !v)}
+                    aria-expanded={changeOpen}
+                  >
+                    변화 흐름 {changeOpen ? "접기 ▲" : "보기 ▼"}
+                  </button>
+                  {changeOpen ? (
+                    <div className="mfb__narrative">
+                      {mingli.split("\n\n").map((para, i) => (
+                        <p key={i}>{para}</p>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
-                <p className="mfb__section-title">현실 변화 예측</p>
+                <p className="mfb__section-title">월별 풀이해설</p>
                 <div className="mfb__narrative mfb__narrative--reality">
                   {reality
                     .split(/\n+/)
@@ -237,14 +278,20 @@ export function MonthlyFortuneEngine({
             )}
 
             <div className="mfb__short-grid">
+              <p className="mfb__section-title">잘 풀리는 방향</p>
+              <ul className="mfb__bullet-list">
+                {(goodBullets.length ? goodBullets : [opportunityText]).map((line, i) => (
+                  <li key={`good-${i}`}>{line}</li>
+                ))}
+              </ul>
+              <p className="mfb__section-title">주의할 점</p>
+              <ul className="mfb__bullet-list">
+                {(riskBullets.length ? riskBullets : [riskText]).map((line, i) => (
+                  <li key={`risk-${i}`}>{line}</li>
+                ))}
+              </ul>
               <p>
-                <strong>기회 포인트</strong> {opportunityText}
-              </p>
-              <p>
-                <strong>주의 포인트</strong> {riskText}
-              </p>
-              <p>
-                <strong>명리학 해석의 현실 행동</strong> {actionText}
+                <strong>한 줄 정리</strong> {oneLineConclusion || actionText}
               </p>
             </div>
 

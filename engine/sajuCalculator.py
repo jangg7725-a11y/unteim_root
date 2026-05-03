@@ -35,7 +35,7 @@ from .sewun_engine import SewoonEngine
 from .daewoon_engine import DaewoonEngine
 
 # ✅ seg_start 없이 안정적으로 월절기 계산하는 astro_solar_terms 기반
-from .astro_solar_terms import compute_solar_terms_for_year
+from .solar_terms_loader import SolarTermsLoader
 
 # -----------------------------
 # 유틸
@@ -103,23 +103,15 @@ class _SolarTermLoaderBridge:
     """
 
     def find_adjacent_principal_term_name(self, dt_kst: datetime) -> str:
-        candidates = []
-        for yy in (dt_kst.year - 1, dt_kst.year, dt_kst.year + 1):
-            candidates.extend(compute_solar_terms_for_year(yy))
-        candidates.sort(key=lambda t: t.dt_kst)
-        last = None
-        for t in candidates:
-            if t.dt_kst <= dt_kst:
-                last = t
-            else:
-                break
-        if last is None:
+        term = _SOLAR_TERMS_LOADER.find_last_term_before(dt_kst)
+        if term is None:
             return "입춘"
-        name = getattr(last, "name", None)
+        name = getattr(term, "name", None)
         return name if isinstance(name, str) and name else "입춘"
 
 
 _SOLAR_TERM_BRIDGE = _SolarTermLoaderBridge()
+_SOLAR_TERMS_LOADER = SolarTermsLoader()
 
 
 def _month_branch_hanja_from_resolver(dt_kst: datetime) -> str:
@@ -132,16 +124,7 @@ def _month_term_meta_stable(dt_kst: datetime) -> Tuple[Optional[str], Optional[s
     (month_term_name, month_term_time_kst_iso)
     - year±1 절기 시각을 합쳐 dt 직전 절기(prev)를 구해 month_term로 사용
     """
-    candidates = []
-    for yy in (dt_kst.year - 1, dt_kst.year, dt_kst.year + 1):
-        candidates.extend(compute_solar_terms_for_year(yy))
-    candidates.sort(key=lambda t: t.dt_kst)
-    prev_t = None
-    for t in candidates:
-        if t.dt_kst <= dt_kst:
-            prev_t = t
-        else:
-            break
+    prev_t = _SOLAR_TERMS_LOADER.find_last_term_before(dt_kst)
     if prev_t is None:
         return None, None
 

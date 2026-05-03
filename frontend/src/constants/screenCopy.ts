@@ -18,7 +18,7 @@ export const SCREEN_COPY = {
     subtitle: "태어난 순간의 흐름이, 지금의 방향을 알려줍니다",
   },
   output: {
-    title: "당신의 흐름이 이렇게 흘러가고 있습니다",
+    /** 리포트 상단 메인 헤더(한 줄) */
     subtitle: "이해하고, 준비하면 운은 기회가 됩니다",
   },
   aiCounsel: {

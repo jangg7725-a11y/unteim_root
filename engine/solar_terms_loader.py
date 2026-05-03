@@ -100,6 +100,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Dict, Optional
+from functools import lru_cache
 
 from .solar_terms import find_term_times  # ✅ 방금 통째 교체한 solar_terms.py 사용
 
@@ -123,7 +124,9 @@ class SolarTermsLoader:
     def __init__(self):
         pass
 
-    def get_terms_for_year(self, year: int) -> Dict[str, SolarTermItem]:
+    @staticmethod
+    @lru_cache(maxsize=256)
+    def _get_terms_for_year_cached(year: int) -> Dict[str, SolarTermItem]:
         """
         return: { '입춘': SolarTermItem(...), ... }
         """
@@ -146,6 +149,10 @@ class SolarTermsLoader:
             )
 
         return out
+
+    def get_terms_for_year(self, year: int) -> Dict[str, SolarTermItem]:
+        # 외부 변경으로부터 캐시 원본을 보호하기 위해 복사본 반환
+        return dict(self._get_terms_for_year_cached(year))
    
      # ✅ MonthBranchResolver 호환: 기존 이름 alias
     def get_year_terms(self, year: int) -> Dict[str, str]:
