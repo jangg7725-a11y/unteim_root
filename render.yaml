@@ -19,9 +19,9 @@ services:
         value: 0.0.0.0
       - key: UVICORN_RELOAD
         value: "0"
-      # 월별 엔진(analyze_full)이 끝나기 전에 끊기면 월운이 빠진 partial 이 됩니다. 무료 플랜·콜드스타트 여유.
+      # analyze_full이 느린 환경에서 6분 가까이 걸릴 수 있어, 짧게 끊으면 월별 리포트 없는 partial 이 됩니다.
       - key: ANALYZE_FULL_TIMEOUT_SEC
-        value: "180"
+        value: "420"
       - key: OPENAI_API_KEY
         sync: false
       # 정적 사이트 배포 URL (예: https://unteim-web.onrender.com). 비우면 서버는 CORS * 허용.

@@ -259,9 +259,12 @@ export function ReportPage({
       </header>
 
       {loading && (
-        <p className="report-page__state" role="status">
-          사주 리포트를 생성하고 있습니다…
-        </p>
+        <div className="report-page__state" role="status">
+          <p className="report-page__state-line">사주 리포트를 생성하고 있습니다…</p>
+          <p className="report-page__state-line report-page__state-hint">
+            첫 분석은 <strong>3~7분</strong> 걸릴 수 있습니다. 이 탭을 유지한 채로 기다려 주세요.
+          </p>
+        </div>
       )}
 
       {!loading && error && (

@@ -696,7 +696,7 @@ def analyze(req: AnalyzeRequest):
             detail=f"pillars failed: {type(e).__name__}: {e}",
         )
 
-    analyze_timeout_sec = float(os.getenv("ANALYZE_FULL_TIMEOUT_SEC", "180"))
+    analyze_timeout_sec = float(os.getenv("ANALYZE_FULL_TIMEOUT_SEC", "420"))
     timed_out = False
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
     future = executor.submit(analyze_full, cast(Any, pillars), birth_str=birth)

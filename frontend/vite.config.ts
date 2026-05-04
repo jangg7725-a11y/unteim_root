@@ -67,6 +67,8 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: proxyTarget,
           changeOrigin: true,
+          /** analyze_full이 수 분 걸릴 수 있음 — 기본 프록시 타임아웃으로 끊기지 않게 */
+          timeout: 480_000,
         },
       },
     },

@@ -181,7 +181,13 @@ export function SajuInputScreen({
 
       <section className="saju-screen__progress" aria-label="분석 진행 영역">
         {loading ? (
-          <p className="saju-screen__progress-text">사주 분석과 월별 리포트를 생성하고 있습니다…</p>
+          <div className="saju-screen__progress-stack">
+            <p className="saju-screen__progress-text">사주 분석과 월별 리포트를 생성하고 있습니다…</p>
+            <p className="saju-screen__progress-text saju-screen__progress-hint">
+              첫 요청은 서버 준비·연산량 때문에 <strong>3~7분</strong> 걸릴 수 있습니다. 화면을 닫지 말고 잠시만 기다려
+              주세요.
+            </p>
+          </div>
         ) : error ? (
           <p className="saju-screen__progress-text saju-screen__progress-text--error">{error}</p>
         ) : report ? (

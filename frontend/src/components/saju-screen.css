@@ -201,11 +201,22 @@
   border: 1px solid rgba(124, 58, 237, 0.16);
 }
 
+.saju-screen__progress-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
 .saju-screen__progress-text {
   margin: 0;
   font-size: 0.83rem;
   line-height: 1.55;
   color: #4b3d6a;
+}
+
+.saju-screen__progress-hint {
+  font-size: 0.78rem;
+  color: #6b5b88;
 }
 
 .saju-screen__progress-text--error {
