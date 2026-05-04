@@ -568,6 +568,45 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 }
 
+/** Chrome 등에서 흔한 `TypeError: Failed to fetch` — CORS·DNS·SSL·오프라인 등 */
+function remoteNetError(apiBase: string, e: unknown): Error {
+  const name = e instanceof Error ? e.name : "";
+  const msg = e instanceof Error ? e.message : String(e);
+  if (name === "TimeoutError" || name === "AbortError") {
+    return new Error(
+      "요청 시간이 초과되었습니다. Render 무료 플랜은 첫 응답이 매우 느릴 수 있습니다. 잠시 후 다시 시도해 주세요."
+    );
+  }
+  const low = msg.toLowerCase();
+  if (e instanceof TypeError || low.includes("failed to fetch") || low.includes("networkerror")) {
+    return new Error(
+      `브라우저가 API(${apiBase})에 연결하지 못했습니다. ` +
+        `로컬(localhost)은 Vite가 같은 주소로 프록시해 주지만, Pages는 **다른 도메인(Render)** 으로 요청합니다. ` +
+        `Render 웹 서비스 환경 변수 **CORS_ORIGINS**에 **정확히** 이 사이트 주소를 넣었는지 확인하세요. 예: https://unteim-root.pages.dev ` +
+        `(끝 슬래시 없음, 여러 개면 쉼표로 구분). 배포 후 API를 재시작·재배포했는지도 확인해 주세요.`
+    );
+  }
+  return e instanceof Error ? e : new Error("리포트 요청 중 오류가 발생했습니다.");
+}
+
+async function parseAnalyzeOkResponse(res: Response): Promise<SajuReportData> {
+  const rawText = await res.text();
+  let json: unknown = null;
+  try {
+    json = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    json = null;
+  }
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json && "detail" in json
+        ? String((json as { detail: unknown }).detail)
+        : rawText || "리포트 생성 중 오류가 발생했습니다."
+    );
+  }
+  return finalizeAnalyzeRecord(asRecord(json));
+}
+
 function buildAnalyzeBody(birth: BirthInputPayload): AnalyzeRequest {
   return {
     name: "",
@@ -612,27 +651,38 @@ async function fetchSajuReportLocalSync(birth: BirthInputPayload): Promise<SajuR
   } finally {
     cancelTimer();
   }
+  return parseAnalyzeOkResponse(res);
+}
 
-  const rawText = await res.text();
-  let json: unknown = null;
+/** 구버전 Render(비동기 엔드포인트 없음) — 긴 단일 POST */
+async function fetchSajuReportRemoteSinglePost(birth: BirthInputPayload, base: string): Promise<SajuReportData> {
+  const body = buildAnalyzeBody(birth);
+  const url = `${base}/api/analyze`;
+  const { signal, cancelTimer } = analyzeFetchAbortSignal(ANALYZE_SYNC_TIMEOUT_MS);
+  let res: Response;
   try {
-    json = rawText ? JSON.parse(rawText) : null;
-  } catch {
-    json = null;
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (e) {
+    throw remoteNetError(base, e);
+  } finally {
+    cancelTimer();
   }
-  if (!res.ok) {
-    throw new Error(
-      typeof json === "object" && json && "detail" in json
-        ? String((json as { detail: unknown }).detail)
-        : rawText || "리포트 생성 중 오류가 발생했습니다."
-    );
-  }
-  return finalizeAnalyzeRecord(asRecord(json));
+  return parseAnalyzeOkResponse(res);
 }
 
 /** Render 등 원격 — 비동기 job + 폴링 */
 async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<SajuReportData> {
   const base = getApiBase();
+  if (typeof window !== "undefined" && window.location.protocol === "https:" && base.startsWith("http:")) {
+    throw new Error(
+      "VITE_API_BASE_URL 이 http 로 되어 있어 HTTPS 사이트에서 차단됩니다. Render 주소를 https://… 로 바꾼 뒤 Pages를 다시 빌드하세요."
+    );
+  }
   const body = buildAnalyzeBody(birth);
   const startUrl = `${base}/api/analyze-async`;
   const postSig = analyzeFetchAbortSignal(90_000);
@@ -645,13 +695,7 @@ async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<S
       signal: postSig.signal,
     });
   } catch (e) {
-    const name = e instanceof Error ? e.name : "";
-    if (name === "TimeoutError" || name === "AbortError") {
-      throw new Error(
-        "분석 요청을 서버에 보내지 못했습니다. 네트워크 또는 Render 콜드 스타트일 수 있습니다. 잠시 후 다시 시도해 주세요."
-      );
-    }
-    throw e instanceof Error ? e : new Error("리포트 요청 중 오류가 발생했습니다.");
+    throw remoteNetError(base, e);
   } finally {
     postSig.cancelTimer();
   }
@@ -664,6 +708,9 @@ async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<S
     startJson = null;
   }
   if (!startRes.ok) {
+    if (startRes.status === 404) {
+      return fetchSajuReportRemoteSinglePost(birth, base);
+    }
     throw new Error(
       typeof startJson === "object" && startJson && "detail" in startJson
         ? String((startJson as { detail: unknown }).detail)
@@ -686,6 +733,8 @@ async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<S
         method: "GET",
         signal: pollSig.signal,
       });
+    } catch (e) {
+      throw remoteNetError(base, e);
     } finally {
       pollSig.cancelTimer();
     }
