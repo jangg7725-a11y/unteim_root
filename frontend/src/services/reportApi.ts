@@ -388,6 +388,21 @@ function parseMonthlyFortune(raw: Record<string, unknown>): MonthlyFortuneEngine
   };
 }
 
+/** `/api/analyze` 타임아웃 등으로 partial 인데 12개월 엔진이 없을 때 */
+export function isAnalyzeTimedOutWithoutMonthly(api: Record<string, unknown> | null | undefined): boolean {
+  if (!api) return false;
+  const meta = asRecord(api.meta);
+  const partial = api.partial === true || meta?.partial === true;
+  if (!partial) return false;
+  const mf = parseMonthlyFortune(api);
+  return !mf || mf.months.length === 0 || Boolean(mf.error);
+}
+
+/** localStorage 등에 남은 리포트가 ‘지연 기본본’만 있을 때 — 다시 받아야 함 */
+export function isStoredReportTimedOutWithoutMonthly(report: SajuReportData | null | undefined): boolean {
+  return isAnalyzeTimedOutWithoutMonthly(asRecord(report?.raw));
+}
+
 function parseSajuOverview(raw: Record<string, unknown>): SajuOverviewPayload | null {
   const so = raw.saju_overview;
   if (!so || typeof so !== "object") return null;
@@ -561,6 +576,11 @@ export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuRep
   const record = asRecord(json);
   if (!record) {
     throw new Error("리포트 응답 형식이 올바르지 않습니다.");
+  }
+  if (isAnalyzeTimedOutWithoutMonthly(record)) {
+    throw new Error(
+      "상세 분석이 시간 안에 끝나지 않아 월별 리포트를 받지 못했습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요. Render API에는 환경 변수 ANALYZE_FULL_TIMEOUT_SEC=90 을 넣는 것을 권장합니다."
+    );
   }
   return pickSection(record);
 }

@@ -26,7 +26,7 @@ import {
   saveUserMemory,
   type StoredCounselMessage,
 } from "@/services/userMemoryStorage";
-import { refreshReportDataCopy } from "@/services/reportApi";
+import { isStoredReportTimedOutWithoutMonthly, refreshReportDataCopy } from "@/services/reportApi";
 
 type InitState = {
   userId: string;
@@ -58,11 +58,15 @@ function getInitialSajuState(): InitState {
   /** 로그인 세션이 있으면 가입 이메일로 본인 연결된 것으로 봅니다(별도 버튼 불필요). */
   const verifiedFromLogin = Boolean(sessionFromAuth);
   if (mem && mem.userId === userId) {
+    let reportData = refreshReportDataCopy(mem.reportData);
+    if (isStoredReportTimedOutWithoutMonthly(reportData)) {
+      reportData = null;
+    }
     return {
       userId,
       birth: mem.birth,
       analysisSummary: mem.analysisSummary,
-      reportData: refreshReportDataCopy(mem.reportData),
+      reportData,
       messages: mem.recentMessages as CounselMessage[],
       hydrated: true,
       identityVerified: verifiedFromLogin || Boolean(mem.identityVerified),
