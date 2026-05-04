@@ -35,7 +35,7 @@ services:
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: ./frontend/dist
+    staticPublishPath: ./dist
     envVars:
       # 위 API 서비스의 공개 URL (끝 슬래시 없음), 예: https://unteim-api.onrender.com
       - key: VITE_API_BASE_URL
