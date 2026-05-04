@@ -495,6 +495,17 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root():
+    """브라우저로 API 호스트만 열었을 때 404 대신 안내."""
+    return {
+        "service": "unteim-api",
+        "hint": "이 주소는 백엔드(API)입니다. 화면(리포트)은 Cloudflare Pages 등 프론트 URL로 여세요.",
+        "health": "/api/health",
+        "analyze": "POST /api/analyze",
+    }
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "service": "unteim-api"}
