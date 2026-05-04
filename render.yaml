@@ -19,6 +19,9 @@ services:
         value: 0.0.0.0
       - key: UVICORN_RELOAD
         value: "0"
+      # 월별 엔진(analyze_full)이 25초 안에 끝나지 않으면 월운이 빠진 부분 응답이 될 수 있어 여유를 둡니다.
+      - key: ANALYZE_FULL_TIMEOUT_SEC
+        value: "90"
       - key: OPENAI_API_KEY
         sync: false
       # 정적 사이트 배포 URL (예: https://unteim-web.onrender.com). 비우면 서버는 CORS * 허용.

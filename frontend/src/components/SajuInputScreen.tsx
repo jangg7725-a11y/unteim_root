@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CalendarToggle } from "./CalendarToggle";
 import { DateInput } from "./DateInput";
 import { GenderSelect } from "./GenderSelect";
@@ -6,7 +6,7 @@ import { LeapMonthOption } from "./LeapMonthOption";
 import { TimeInput } from "./TimeInput";
 import { SCREEN_COPY } from "@/constants/screenCopy";
 import type { BirthFormState } from "@/types/birthInput";
-import { buildBirthPayload } from "@/types/birthInput";
+import { birthPayloadToFormState, buildBirthPayload } from "@/types/birthInput";
 import type { SajuReportData } from "@/types/report";
 import { useSajuSession } from "@/context/SajuSessionContext";
 import { SajuSummaryDashboard } from "./SajuSummaryDashboard";
@@ -19,6 +19,8 @@ type Props = {
   loading: boolean;
   error: string | null;
   onGoReport: () => void;
+  /** 저장된 사주·리포트를 모두 비우고 새로 입력 */
+  onResetSession?: () => void;
 };
 
 const initial: BirthFormState = {
@@ -30,9 +32,25 @@ const initial: BirthFormState = {
   leapResolutionSource: "user",
 };
 
-export function SajuInputScreen({ onSubmit, birth, report, loading, error, onGoReport }: Props) {
-  const [form, setForm] = useState<BirthFormState>(initial);
+export function SajuInputScreen({
+  onSubmit,
+  birth,
+  report,
+  loading,
+  error,
+  onGoReport,
+  onResetSession,
+}: Props) {
+  const [form, setForm] = useState<BirthFormState>(() => (birth ? birthPayloadToFormState(birth) : initial));
   const { sessionEmail, canUseSavedSajuContent } = useSajuSession();
+
+  useEffect(() => {
+    if (birth) {
+      setForm(birthPayloadToFormState(birth));
+    } else {
+      setForm(initial);
+    }
+  }, [birth]);
 
   const payload = useMemo(() => buildBirthPayload(form), [form]);
 
@@ -115,7 +133,17 @@ export function SajuInputScreen({ onSubmit, birth, report, loading, error, onGoR
           >
             이 정보로 계속하기
           </button>
-          <button type="button" className="saju-screen__reset" onClick={() => setForm(initial)}>
+          <button
+            type="button"
+            className="saju-screen__reset"
+            onClick={() => {
+              if (onResetSession) {
+                onResetSession();
+              } else {
+                setForm(initial);
+              }
+            }}
+          >
             입력 초기화
           </button>
           {!payload && (

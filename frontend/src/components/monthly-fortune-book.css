@@ -152,7 +152,8 @@
   position: relative;
   perspective: 1400px;
   margin: 0 auto;
-  max-width: 42rem;
+  /* 리포트 카드와 비슷한 읽기 폭; 예전 42rem은 넓은 모니터에서 과하게 좁아 보일 수 있음 */
+  max-width: min(50rem, 100%);
 }
 
 .mfb__book {

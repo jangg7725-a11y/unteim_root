@@ -9,7 +9,6 @@ import { deriveTodayFortuneFromReport } from "@/utils/reportTodayCard";
 import { formatKoreanDisplayDate } from "@/utils/formatKoreanDate";
 import { COMPAT_SCORE_LEGEND_LINES, starBandFrom100 } from "@/utils/compatibilityLabels";
 import { TodayFortuneCard } from "./TodayFortuneCard";
-import { MonthlyFortunePremium } from "./MonthlyFortunePremium";
 import { MonthlyFortuneEngine } from "./MonthlyFortuneEngine";
 import { MicroPointOffers } from "./MicroPointOffers";
 import { PartnerInputModal } from "./PartnerInputModal";
@@ -287,14 +286,26 @@ export function ReportPage({
               />
             </div>
           ) : (
-            <div id="report-anchor-monthly">
+            <div id="report-anchor-monthly" className="report-page__card" aria-live="polite">
+              <h3 className="report-page__card-title">월별 운세</h3>
               {reportFortune?.monthlyIntro ? (
                 <div className="report-page__fortune-aside report-page__fortune-aside--block" role="note">
                   <span className="report-page__fortune-label">참고 한 줄 · 월운 흐름</span>
                   <p className="report-page__fortune-text">{reportFortune.monthlyIntro}</p>
                 </div>
               ) : null}
-              <MonthlyFortunePremium onGoCounsel={onGoCounsel} />
+              <p className="report-page__card-text">
+                엔진 기반 12개월 상세 리포트를 불러오지 못했습니다. 서버 분석 시간이 길어 중간에 끊기거나, 일시적인
+                오류일 수 있습니다. 아래에서 다시 생성해 주세요. (짧은 데모 리포트로 대체하지 않습니다.)
+              </p>
+              {report.monthlyFortune?.error ? (
+                <p className="report-page__compat-error" role="status">
+                  {report.monthlyFortune.error}
+                </p>
+              ) : null}
+              <button type="button" className="report-page__retry" onClick={onRetry}>
+                월별 리포트 포함 전체 다시 생성
+              </button>
             </div>
           )}
 

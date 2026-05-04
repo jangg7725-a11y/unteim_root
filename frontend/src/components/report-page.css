@@ -1,5 +1,6 @@
 .report-page {
-  max-width: 48rem;
+  /* 넓은 화면에서도 본문이 지나치게 좁아 보이지 않도록 상한만 넉넉히 */
+  max-width: min(56rem, 100%);
   margin: 0 auto;
   padding: 1.25rem 1rem 2.5rem;
 }

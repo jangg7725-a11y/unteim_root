@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import type { CounselMessage as CounselMessageModel } from "@/types/counsel";
+import type { SajuReportData } from "@/types/report";
 import { useSajuSession } from "@/context/SajuSessionContext";
 import { CharacterCounselProvider, useCharacterCounsel } from "@/counsel/CharacterCounselContext";
 import { CounselMessage } from "@/components/counsel/CounselMessage";
@@ -11,6 +12,35 @@ import type { CounselSessionCardPayload } from "@/types/counsel";
 import { COUNSEL_LAYOUT } from "@/config/counselLayout";
 import { formatDualCalendarSegment } from "@/utils/calendarDualLabel";
 import "./counsel-corner.css";
+
+function buildCounselIntroBody(report: SajuReportData): string {
+  const mf = report.monthlyFortune;
+  const total = (report.total || "").trim();
+  const hasEngine =
+    mf && !mf.error && Array.isArray(mf.months) && mf.months.length > 0;
+  if (hasEngine) {
+    const now = new Date();
+    const focusMonth =
+      now.getFullYear() === mf.year ? Math.min(12, Math.max(1, now.getMonth() + 1)) : mf.bestMonth || 1;
+    const focus = mf.months.find((m) => m.month === focusMonth) ?? mf.months[0];
+    const parts: string[] = [];
+    const ysum = (mf.yearSummary || "").trim();
+    if (ysum) parts.push(`[${mf.year}년 월운 개요]\n${ysum}`);
+    if (focus) {
+      const mo = focus.month;
+      const one = (focus.oneLineConclusion || "").trim();
+      const core = (focus.mingliInterpretation || focus.narrative || "").trim();
+      const clipped = core.length > 520 ? `${core.slice(0, 520)}…` : core;
+      if (one) parts.push(`[${mo}월 한 줄]\n${one}`);
+      if (clipped) parts.push(`[${mo}월 해설 발췌]\n${clipped}`);
+    }
+    const tclip = total.length > 360 ? `${total.slice(0, 360)}…` : total;
+    if (tclip) parts.push(`[총운 요약]\n${tclip}`);
+    return parts.join("\n\n").trim() || total.slice(0, 400);
+  }
+  const fallback = total.length > 480 ? `${total.slice(0, 480)}…` : total;
+  return fallback || "요약 텍스트가 준비되지 않았습니다.";
+}
 
 function CounselIntroPanel() {
   const { birth, reportData } = useSajuSession();
@@ -25,15 +55,23 @@ function CounselIntroPanel() {
       </section>
     );
   }
-  const snippet = (reportData.total || "").trim();
-  const short = snippet.length > 320 ? `${snippet.slice(0, 320)}…` : snippet;
+  const hasMonthly =
+    reportData.monthlyFortune &&
+    !reportData.monthlyFortune.error &&
+    (reportData.monthlyFortune.months?.length ?? 0) > 0;
+  const body = buildCounselIntroBody(reportData);
+  const short = body.length > 2200 ? `${body.slice(0, 2200)}…` : body;
   return (
     <section className="counsel-intro" aria-label="1차 사주 요약">
-      <h2 className="counsel-intro__title">1차 · 사주 기반 요약 (참고)</h2>
-      <p className="counsel-intro__body">{short || "요약 텍스트가 준비되지 않았습니다."}</p>
+      <h2 className="counsel-intro__title">
+        {hasMonthly ? "1차 · 월별 리포트 기반 요약 (참고)" : "1차 · 사주 기반 요약 (참고)"}
+      </h2>
+      <p className="counsel-intro__body" style={{ whiteSpace: "pre-wrap" }}>
+        {short}
+      </p>
       <p className="counsel-intro__fine" role="note">
-        아래 대화는 AI 상담으로 이어질 수 있으며, <strong>이용 시 비용이 발생할 수 있습니다</strong>. 먼저 위 요약으로
-        흐름을 파악한 뒤 필요할 때만 이어가 보세요.
+        아래 대화는 AI 상담으로 이어질 수 있으며, <strong>이용 시 비용이 발생할 수 있습니다</strong>. 위 내용은 리포트
+        엔진 결과이며, AI 답변도 같은 근거를 우선하도록 서버에 전달됩니다.
       </p>
     </section>
   );

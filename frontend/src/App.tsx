@@ -14,7 +14,7 @@ import type { FeedNavigateMeta, FeedTabTarget } from "./types/contentFeed";
 import "./app.css";
 
 function AppShell() {
-  const { birth, setBirth, reportData, setReportData } = useSajuSession();
+  const { birth, setBirth, reportData, setReportData, resetSajuMemory } = useSajuSession();
   const [tab, setTab] = useState<"explore" | "input" | "report" | "counsel">(() =>
     typeof window !== "undefined" && hasStoredBirth() ? "report" : "explore"
   );
@@ -199,6 +199,12 @@ function AppShell() {
             loading={reportLoading}
             error={reportError}
             onGoReport={() => setTab("report")}
+            onResetSession={() => {
+              resetSajuMemory();
+              setReportError(null);
+              setReportLoading(false);
+              setReportMonthFocus(null);
+            }}
             onSubmit={async (p) => {
               setBirth(p);
               setReportError(null);

@@ -60,3 +60,21 @@ export function buildBirthPayload(state: BirthFormState): BirthInputPayload | nu
     leapResolutionSource: state.leapResolutionSource,
   };
 }
+
+/** 저장된 사주를 입력 화면 폼에 되돌릴 때 사용 */
+export function birthPayloadToFormState(b: BirthInputPayload): BirthFormState {
+  const lunarMonthKind: LunarMonthKind =
+    b.calendar === "lunar"
+      ? b.calendarApi === "lunar_leap"
+        ? "leap"
+        : (b.lunarMonthKind ?? "normal")
+      : "normal";
+  return {
+    date: b.date,
+    time: b.time,
+    gender: b.gender,
+    calendar: b.calendar,
+    lunarMonthKind,
+    leapResolutionSource: b.leapResolutionSource,
+  };
+}

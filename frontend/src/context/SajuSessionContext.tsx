@@ -20,6 +20,7 @@ import {
   registerLocal,
 } from "@/services/localAuth";
 import {
+  clearUserMemory,
   getOrCreateUserId,
   loadUserMemory,
   saveUserMemory,
@@ -101,6 +102,8 @@ type SajuSessionValue = {
   logout: () => void;
   /** 생년월일·시간·성별 + 로그인 + 본인인증 완료 시 탐색 주제 클릭 시 입력 없이 리포트로 */
   canUseSavedSajuContent: boolean;
+  /** 사주·리포트·상담 기록을 비우고 새 사주를 입력할 수 있게 함(로그인 세션은 유지) */
+  resetSajuMemory: () => void;
 };
 
 const SajuSessionContext = createContext<SajuSessionValue | null>(null);
@@ -151,6 +154,14 @@ export function SajuSessionProvider({ children }: { children: ReactNode }) {
     logoutLocal();
     setSessionEmail(null);
     setIdentityVerifiedState(false);
+  }, []);
+
+  const resetSajuMemory = useCallback(() => {
+    setBirth(null);
+    setAnalysisSummary(null);
+    setReportData(null);
+    setCounselMessages([]);
+    clearUserMemory();
   }, []);
 
   const persistTimer = useRef<number | null>(null);
@@ -208,6 +219,7 @@ export function SajuSessionProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       canUseSavedSajuContent,
+      resetSajuMemory,
     }),
     [
       userId,
@@ -223,6 +235,7 @@ export function SajuSessionProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       canUseSavedSajuContent,
+      resetSajuMemory,
     ]
   );
 

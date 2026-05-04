@@ -24,6 +24,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "pillars",
         "flow",
         "domains",
+        "monthly_engine",
         "shinsal",
         "unified",
     ],
@@ -33,6 +34,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "domains",
         "oheng",
         "flow",
+        "monthly_engine",
         "geukguk",
         "pillars",
         "day_master",
@@ -48,6 +50,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "pillars",
         "day_master",
         "domains",
+        "monthly_engine",
         "shinsal",
         "unified",
     ],
@@ -61,6 +64,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "day_master",
         "oheng",
         "domains",
+        "monthly_engine",
         "unified",
     ],
     "health": [
@@ -72,6 +76,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "pillars",
         "day_master",
         "geukguk",
+        "monthly_engine",
         "shinsal",
         "unified",
     ],
@@ -84,6 +89,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "oheng",
         "pillars",
         "day_master",
+        "monthly_engine",
         "shinsal",
         "unified",
     ],
@@ -96,6 +102,7 @@ SECTION_ORDER: Dict[str, List[str]] = {
         "sipsin",
         "domains",
         "flow",
+        "monthly_engine",
         "shinsal",
         "unified",
     ],
@@ -204,6 +211,57 @@ def _collect_sections(report: Dict[str, Any], profile: Dict[str, Any]) -> Dict[s
     sm = u.get("summary")
     if sm:
         sections["unified"] = "[통합 요약]\n" + _clip(str(sm), 1500)
+
+    # 월별 엔진(12개월) — 상담 시 월 흐름·행동 가이드 근거로 LLM에 전달
+    mf_obj = report.get("monthly_fortune")
+    mf: Dict[str, Any] = mf_obj if isinstance(mf_obj, dict) else {}
+    months_raw = mf.get("months")
+    if isinstance(months_raw, list) and months_raw:
+        mlines: List[str] = [
+            "[월별 운세 엔진 — AI 답변 시 아래 월별 문맥을 총운·대운과 함께 근거로 삼으세요. 없는 사실은 지어내지 말 것]"
+        ]
+        ys = str(mf.get("yearSummary") or "").strip()
+        if ys:
+            mlines.append(_clip(ys, 800))
+        try:
+            bm = int(mf.get("bestMonth") or 0)
+            cm = int(mf.get("cautionMonth") or 0)
+            if 1 <= bm <= 12 and 1 <= cm <= 12:
+                mlines.append(f"(참고) 기회에 유리한 달: {bm}월 · 점검 권장 달: {cm}월")
+        except Exception:
+            pass
+        for m in months_raw:
+            if not isinstance(m, dict):
+                continue
+            try:
+                mo = int(m.get("month") or 0)
+            except Exception:
+                continue
+            if mo < 1 or mo > 12:
+                continue
+            parts: List[str] = []
+            for key in (
+                "oneLineConclusion",
+                "mingliInterpretation",
+                "realityChanges",
+                "coreEvents",
+                "opportunity",
+                "riskPoints",
+                "actionGuide",
+                "behaviorGuide",
+                "emotionCoaching",
+                "narrative",
+            ):
+                v = m.get(key)
+                if isinstance(v, str) and v.strip():
+                    parts.append(_clip(v.strip(), 1100))
+            if parts:
+                mlines.append("")
+                mlines.append(f"--- {mo}월 ---")
+                mlines.extend(parts)
+        blob = "\n".join(mlines).strip()
+        if len(blob) > 80:
+            sections["monthly_engine"] = _clip(blob, 9000)
 
     return sections
 
