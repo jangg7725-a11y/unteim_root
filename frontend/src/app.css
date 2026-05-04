@@ -187,3 +187,43 @@ body {
 .api-banner__dismiss:hover {
   background: rgba(255, 255, 255, 0.95);
 }
+
+.app-shell__prod-api-miss {
+  position: relative;
+  z-index: 3;
+  margin: 0 1rem 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius, 14px);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #7f1d1d;
+  background: rgba(254, 226, 226, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.app-shell__prod-api-miss-title {
+  margin: 0 0 0.4rem;
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.app-shell__prod-api-miss-body {
+  margin: 0 0 0.5rem;
+}
+
+.app-shell__prod-api-miss-steps {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.app-shell__prod-api-miss-steps li {
+  margin-bottom: 0.25rem;
+}
+
+.app-shell__prod-api-miss-code {
+  font-size: 0.78em;
+  padding: 0.08em 0.32em;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.75);
+  word-break: break-all;
+}

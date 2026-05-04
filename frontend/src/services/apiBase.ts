@@ -11,3 +11,8 @@ export function getApiBase(): string {
   const raw = (primary ?? legacy ?? "").trim();
   return raw.replace(/\/+$/, "");
 }
+
+/** 배포 번들인데 API 베이스가 비었을 때 — Pages에 `/api`가 없어 로컬과 동작이 달라진다. */
+export function isProdBundleMissingApiBase(): boolean {
+  return Boolean(import.meta.env.PROD) && !getApiBase();
+}

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { SajuSessionProvider, useSajuSession } from "./context/SajuSessionContext";
 import { ApiConnectionBanner } from "./components/ApiConnectionBanner";
+import { ProdApiMissingBanner } from "./components/ProdApiMissingBanner";
+import { isProdBundleMissingApiBase } from "./services/apiBase";
 import { SajuInputScreen } from "./components/SajuInputScreen";
 import { ReportPage } from "./components/ReportPage";
 import { CounselCorner } from "./counsel/CounselCorner";
@@ -85,6 +87,7 @@ function AppShell() {
         </button>
       </header>
       <ApiConnectionBanner />
+      {isProdBundleMissingApiBase() ? <ProdApiMissingBanner /> : null}
       <nav className="app-shell__nav" aria-label="화면 전환">
         <button
           type="button"

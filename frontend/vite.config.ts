@@ -8,6 +8,14 @@ export default defineConfig(({ mode }) => {
   const proxyTarget =
     (env.VITE_DEV_PROXY_TARGET || "http://127.0.0.1:8000").replace(/\/$/, "");
 
+  const prodApi = (env.VITE_API_BASE_URL || env.VITE_API_BASE || "").trim();
+  if (mode === "production" && process.env.CF_PAGES === "1" && !prodApi) {
+    throw new Error(
+      "[UNTEIM] Cloudflare Pages 빌드에 VITE_API_BASE_URL 이 필요합니다. " +
+        "Dashboard → 프로젝트 → Settings → Environment variables 에 Render API URL(예: https://xxx.onrender.com)을 추가한 뒤 재배포하세요.",
+    );
+  }
+
   return {
     plugins: [
       react(),
