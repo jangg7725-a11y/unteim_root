@@ -1,0 +1,39 @@
+# UNTEIM — Render Blueprint: FastAPI(API) + 정적 프론트(PWA)
+# 사용: Render 대시보드 → New → Blueprint → 이 저장소 연결
+# 첫 생성 시 OPENAI_API_KEY, VITE_API_BASE_URL, CORS_ORIGINS 값을 대시보드에서 입력합니다.
+
+services:
+  # 백엔드: https://<이 서비스 이름>.onrender.com
+  - type: web
+    name: unteim-api
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/run_api_server_v1.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.11"
+      - key: BACKEND_HOST
+        value: 0.0.0.0
+      - key: UVICORN_RELOAD
+        value: "0"
+      - key: OPENAI_API_KEY
+        sync: false
+      # 정적 사이트 배포 URL (예: https://unteim-web.onrender.com). 비우면 서버는 CORS * 허용.
+      - key: CORS_ORIGINS
+        sync: false
+
+  # 프론트(PWA): 빌드 시 VITE_API_BASE_URL이 번들에 박힙니다.
+  - type: web
+    name: unteim-web
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      # 위 API 서비스의 공개 URL (끝 슬래시 없음), 예: https://unteim-api.onrender.com
+      - key: VITE_API_BASE_URL
+        sync: false

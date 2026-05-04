@@ -118,7 +118,26 @@ npm run preview
 - **CORS 오류**: `CORS_ORIGINS`에 프론트 정확한 origin 추가(스킴+호스트+포트).
 - **상담 503**: 서버에 `OPENAI_API_KEY` 설정.
 
-## 9. 보안 메모
+## 9. Render로 웹·PWA 배포 (Blueprint)
+
+저장소 루트의 **`render.yaml`** 으로 **API(Web Service)** 와 **정적 사이트(프론트)** 를 한 번에 만들 수 있습니다.
+
+1. [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint** → GitHub에서 `unteim_root` 저장소 선택.
+2. 첫 배포 마법사에서 아래를 입력합니다.
+   - **`OPENAI_API_KEY`**: OpenAI 키 (상담 기능용).
+   - **`VITE_API_BASE_URL`**: API 서비스의 공개 URL, **끝 `/` 없이**. 예: `https://unteim-api.onrender.com`  
+     - API가 먼저 살아 있어야 하므로, **첫 배포가 실패하면** API만 재배포한 뒤 브라우저에서 `https://…/api/health` 가 `{ "ok": true }` 인지 확인하고, **정적 사이트만 Redeploy** 하거나 `VITE_API_BASE_URL` 을 수정합니다.
+   - **`CORS_ORIGINS`** (권장): 정적 사이트 origin, 예: `https://unteim-web.onrender.com`  
+     - 비워 두면 서버는 개발 편의상 `*` 로 CORS를 허용합니다. 운영에서는 프론트 URL을 넣는 것이 좋습니다.
+3. `render.yaml` 의 **`name: unteim-api` / `unteim-web`** 은 전역에서 유일해야 합니다. 이미 사용 중이면 대시보드에서 이름을 바꾸고, 그에 맞게 `VITE_API_BASE_URL`·`CORS_ORIGINS` 를 다시 맞춥니다.
+
+**PWA(홈 화면 추가)** 는 **HTTPS로 열린 배포 URL**에서 동작합니다. 로컬은 `npm run preview` 등으로 확인할 수 있습니다.
+
+### Cloudflare Pages를 쓰는 경우
+
+**Workers**가 아니라 **Pages**에서 **Root `frontend`**, **Build `npm install && npm run build`**, **Output `dist`**, 환경 변수 **`VITE_API_BASE_URL`** = Render API URL.
+
+## 10. 보안 메모
 
 - 저장소에 API 키 커밋 금지.
 - `localStorage`는 브라우저별 사용자 기억용 — 민감 정보 저장 금지.
