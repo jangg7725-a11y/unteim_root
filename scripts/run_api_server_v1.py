@@ -6,6 +6,8 @@ from __future__ import annotations
 import os
 import sys
 import concurrent.futures
+import secrets
+import time
 from functools import lru_cache
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -688,17 +690,8 @@ def solo_love_insight(req: SoloLoveInsightRequest):
         ) from e
 
 
-@app.post("/api/analyze")
-def analyze(req: AnalyzeRequest):
-    """
-    사주 분석 결과를 JSON으로 반환.
-    PDF 생성 없이 빠르게 분석 결과만 받을 수 있다.
-    """
-    try:
-        birth = _normalize_birth(req.birth, req.calendar)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
+def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
+    """analyze_full까지 수행해 JSON 직렬화 가능한 dict 반환. HTTPException은 호출부에서 처리."""
     try:
         pillars = _calculate_saju_cached(birth)
     except Exception as e:
@@ -725,7 +718,6 @@ def analyze(req: AnalyzeRequest):
         except Exception:
             oheng = {}
 
-        # analyze_full 지연 시에도 프론트가 최소 리포트를 그릴 수 있도록 기본 payload 반환
         engine_result = {
             "pillars": pillars_dict,
             "analysis": {"oheng": oheng},
@@ -769,14 +761,113 @@ def analyze(req: AnalyzeRequest):
         result["request"] = {
             "name": req.name,
             "sex": req.sex,
-            # 엔진·절기·대운에 쓰인 최종 생시(KST 문자열). calendar가 lunar/lunar_leap이면 음력→양력 변환 후 값.
             "birth": birth,
             "calendar": req.calendar,
         }
         if timed_out:
             result["partial"] = True
 
+    return cast(Dict[str, Any], result)
+
+
+_ANALYZE_JOBS: Dict[str, Dict[str, Any]] = {}
+_ANALYZE_JOBS_LOCK = threading.Lock()
+
+
+def _purge_analyze_jobs_unlocked() -> None:
+    """호출부가 _ANALYZE_JOBS_LOCK 을 잡은 상태에서만 호출."""
+    if len(_ANALYZE_JOBS) <= 70:
+        return
+    items = sorted(_ANALYZE_JOBS.items(), key=lambda kv: float((kv[1] or {}).get("created", 0)))
+    n = max(0, len(_ANALYZE_JOBS) - 50)
+    for k, _ in items[:n]:
+        _ANALYZE_JOBS.pop(k, None)
+
+
+@app.post("/api/analyze")
+def analyze(req: AnalyzeRequest):
+    """
+    사주 분석 결과를 JSON으로 반환.
+    PDF 생성 없이 빠르게 분석 결과만 받을 수 있다.
+    """
+    try:
+        birth = _normalize_birth(req.birth, req.calendar)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    result = _analyze_to_dict(birth, req)
     return JSONResponse(content=result)
+
+
+@app.post("/api/analyze-async")
+def analyze_async(req: AnalyzeRequest):
+    """
+    즉시 job_id를 반환하고 백그라운드에서 analyze_full을 돌린다.
+    프록시·브라우저의 장시간 단일 POST 제한을 피하기 위해 Pages→Render에서 사용한다.
+    """
+    try:
+        birth = _normalize_birth(req.birth, req.calendar)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    job_id = secrets.token_hex(16)
+
+    def _worker() -> None:
+        try:
+            out = _analyze_to_dict(birth, req)
+            with _ANALYZE_JOBS_LOCK:
+                _ANALYZE_JOBS[job_id] = {
+                    "status": "done",
+                    "result": out,
+                    "created": time.time(),
+                }
+        except HTTPException as he:
+            with _ANALYZE_JOBS_LOCK:
+                _ANALYZE_JOBS[job_id] = {
+                    "status": "error",
+                    "detail": str(he.detail),
+                    "http_status": int(he.status_code),
+                    "created": time.time(),
+                }
+        except Exception as e:
+            with _ANALYZE_JOBS_LOCK:
+                _ANALYZE_JOBS[job_id] = {
+                    "status": "error",
+                    "detail": f"{type(e).__name__}: {e}",
+                    "http_status": 500,
+                    "created": time.time(),
+                }
+
+    with _ANALYZE_JOBS_LOCK:
+        _purge_analyze_jobs_unlocked()
+        _ANALYZE_JOBS[job_id] = {"status": "pending", "created": time.time()}
+
+    threading.Thread(target=_worker, name=f"analyze-{job_id[:8]}", daemon=True).start()
+    return {
+        "job_id": job_id,
+        "poll_url": f"/api/analyze-job/{job_id}",
+    }
+
+
+@app.get("/api/analyze-job/{job_id}")
+def analyze_job(job_id: str):
+    """비동기 분석 상태 조회. 짧은 요청을 반복해 장시간 단일 연결을 피한다."""
+    with _ANALYZE_JOBS_LOCK:
+        job = _ANALYZE_JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found or expired")
+    st = str(job.get("status") or "")
+    if st == "pending":
+        return {"status": "pending"}
+    if st == "error":
+        return {
+            "status": "error",
+            "detail": str(job.get("detail") or "unknown error"),
+            "http_status": int(job.get("http_status") or 500),
+        }
+    if st == "done":
+        return {"status": "done", "result": job.get("result")}
+    return {"status": "unknown", "detail": st}
 
 
 @app.post("/api/monthly-report", response_class=FileResponse)

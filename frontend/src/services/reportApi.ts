@@ -543,10 +543,13 @@ export function refreshReportDataCopy(report: SajuReportData | null | undefined)
 }
 
 /**
- * 서버 `ANALYZE_FULL_TIMEOUT_SEC`(기본 420)보다 길게 — 느린 기기·콜드스타트에서 analyze_full이 6분 가까이
- * 걸린 사례가 있어 브라우저가 먼저 끊지 않도록 여유를 둔다.
+ * 로컬(vite proxy) 단일 POST용 — 길어도 같은 오리진이라 상대적으로 안정적.
  */
-const ANALYZE_FETCH_TIMEOUT_MS = 450_000;
+const ANALYZE_SYNC_TIMEOUT_MS = 480_000;
+
+/** 원격(Render) — 짧은 POST로 job 받은 뒤 GET 폴링(프록시·브라우저 장시간 단일 연결 제한 완화) */
+const ANALYZE_POLL_INTERVAL_MS = 2_000;
+const ANALYZE_POLL_MAX_MS = 12 * 60 * 1_000;
 
 function analyzeFetchAbortSignal(ms: number): { signal: AbortSignal; cancelTimer: () => void } {
   const AS = globalThis.AbortSignal;
@@ -561,20 +564,38 @@ function analyzeFetchAbortSignal(ms: number): { signal: AbortSignal; cancelTimer
   };
 }
 
-export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuReportData> {
-  const base = getApiBase();
-  const url = base ? `${base}/api/analyze` : "/api/analyze";
-  const body: AnalyzeRequest = {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+}
+
+function buildAnalyzeBody(birth: BirthInputPayload): AnalyzeRequest {
+  return {
     name: "",
     sex: birth.gender === "male" ? "남자" : "여자",
     birth: `${birth.date} ${birth.time}`,
     calendar: birth.calendarApi,
   };
+}
 
-  const { signal, cancelTimer } = analyzeFetchAbortSignal(ANALYZE_FETCH_TIMEOUT_MS);
+function finalizeAnalyzeRecord(record: Record<string, unknown> | null): SajuReportData {
+  if (!record) {
+    throw new Error("리포트 응답 형식이 올바르지 않습니다.");
+  }
+  if (isAnalyzeTimedOutWithoutMonthly(record)) {
+    throw new Error(
+      "상세 분석이 시간 안에 끝나지 않아 월별 리포트를 받지 못했습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요. 호스팅(Render 등) API에 환경 변수 ANALYZE_FULL_TIMEOUT_SEC=420 을 권장합니다."
+    );
+  }
+  return pickSection(record);
+}
+
+/** Vite 프록시 → 로컬 API, 한 번의 POST */
+async function fetchSajuReportLocalSync(birth: BirthInputPayload): Promise<SajuReportData> {
+  const body = buildAnalyzeBody(birth);
+  const { signal, cancelTimer } = analyzeFetchAbortSignal(ANALYZE_SYNC_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -584,7 +605,7 @@ export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuRep
     const name = e instanceof Error ? e.name : "";
     if (name === "TimeoutError" || name === "AbortError") {
       throw new Error(
-        "요청 시간이 초과되어 리포트를 받지 못했습니다. 네트워크가 느리거나 서버가 바쁠 수 있습니다. 잠시 후 「리포트 다시 생성」을 눌러 주세요."
+        "요청 시간이 초과되어 리포트를 받지 못했습니다. 잠시 후 「리포트 다시 생성」을 눌러 주세요."
       );
     }
     throw e instanceof Error ? e : new Error("리포트 요청 중 오류가 발생했습니다.");
@@ -606,16 +627,107 @@ export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuRep
         : rawText || "리포트 생성 중 오류가 발생했습니다."
     );
   }
+  return finalizeAnalyzeRecord(asRecord(json));
+}
 
-  const record = asRecord(json);
-  if (!record) {
-    throw new Error("리포트 응답 형식이 올바르지 않습니다.");
+/** Render 등 원격 — 비동기 job + 폴링 */
+async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<SajuReportData> {
+  const base = getApiBase();
+  const body = buildAnalyzeBody(birth);
+  const startUrl = `${base}/api/analyze-async`;
+  const postSig = analyzeFetchAbortSignal(90_000);
+  let startRes: Response;
+  try {
+    startRes = await fetch(startUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: postSig.signal,
+    });
+  } catch (e) {
+    const name = e instanceof Error ? e.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
+      throw new Error(
+        "분석 요청을 서버에 보내지 못했습니다. 네트워크 또는 Render 콜드 스타트일 수 있습니다. 잠시 후 다시 시도해 주세요."
+      );
+    }
+    throw e instanceof Error ? e : new Error("리포트 요청 중 오류가 발생했습니다.");
+  } finally {
+    postSig.cancelTimer();
   }
-  if (isAnalyzeTimedOutWithoutMonthly(record)) {
+
+  const startText = await startRes.text();
+  let startJson: unknown = null;
+  try {
+    startJson = startText ? JSON.parse(startText) : null;
+  } catch {
+    startJson = null;
+  }
+  if (!startRes.ok) {
     throw new Error(
-      "상세 분석이 시간 안에 끝나지 않아 월별 리포트를 받지 못했습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요. 호스팅(Render 등) API에 환경 변수 ANALYZE_FULL_TIMEOUT_SEC=420 을 권장합니다."
+      typeof startJson === "object" && startJson && "detail" in startJson
+        ? String((startJson as { detail: unknown }).detail)
+        : startText || "분석 작업을 시작하지 못했습니다."
     );
   }
-  return pickSection(record);
+  const startRec = asRecord(startJson);
+  const jobId = String(startRec?.job_id ?? "").trim();
+  if (!jobId) {
+    throw new Error("서버가 작업 ID를 주지 않았습니다. API를 최신 버전으로 배포했는지 확인해 주세요.");
+  }
+
+  const deadline = Date.now() + ANALYZE_POLL_MAX_MS;
+  while (Date.now() < deadline) {
+    await sleep(ANALYZE_POLL_INTERVAL_MS);
+    const pollSig = analyzeFetchAbortSignal(60_000);
+    let pollRes: Response;
+    try {
+      pollRes = await fetch(`${base}/api/analyze-job/${jobId}`, {
+        method: "GET",
+        signal: pollSig.signal,
+      });
+    } finally {
+      pollSig.cancelTimer();
+    }
+    const pollText = await pollRes.text();
+    let pollJson: unknown = null;
+    try {
+      pollJson = pollText ? JSON.parse(pollText) : null;
+    } catch {
+      pollJson = null;
+    }
+    if (!pollRes.ok) {
+      throw new Error(
+        typeof pollJson === "object" && pollJson && "detail" in pollJson
+          ? String((pollJson as { detail: unknown }).detail)
+          : pollText || "분석 상태를 확인하지 못했습니다."
+      );
+    }
+    const pr = asRecord(pollJson);
+    const st = String(pr?.status ?? "");
+    if (st === "pending") {
+      continue;
+    }
+    if (st === "error") {
+      throw new Error(String(pr?.detail ?? "분석 중 오류가 발생했습니다."));
+    }
+    if (st === "done") {
+      const result = asRecord(pr?.result);
+      return finalizeAnalyzeRecord(result);
+    }
+    throw new Error(`알 수 없는 분석 상태: ${st}`);
+  }
+
+  throw new Error(
+    "분석이 제한 시간 안에 끝나지 않았습니다. Render 무료 플랜은 첫 요청이 매우 느릴 수 있습니다. 잠시 후 「리포트 다시 생성」을 눌러 주세요."
+  );
+}
+
+export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuReportData> {
+  const base = getApiBase();
+  if (!base) {
+    return fetchSajuReportLocalSync(birth);
+  }
+  return fetchSajuReportRemotePolling(birth);
 }
 

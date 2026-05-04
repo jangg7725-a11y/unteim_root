@@ -162,6 +162,11 @@
   opacity: 0.92;
 }
 
+.report-page__state-wait {
+  font-size: 0.82rem;
+  color: #3730a3;
+}
+
 .report-page__empty {
   margin: 0 0 0.6rem;
   color: #4338ca;

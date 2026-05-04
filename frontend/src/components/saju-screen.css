@@ -219,6 +219,11 @@
   color: #6b5b88;
 }
 
+.saju-screen__progress-wait {
+  font-size: 0.8rem;
+  color: #4338ca;
+}
+
 .saju-screen__progress-text--error {
   color: #7f1d1d;
 }

@@ -28,6 +28,7 @@ type Props = {
   birth: BirthInputPayload | null;
   report: SajuReportData | null;
   loading: boolean;
+  analyzeWaitSec?: number | null;
   error: string | null;
   onRetry: () => void;
   onGoCounsel: () => void;
@@ -121,6 +122,7 @@ export function ReportPage({
   birth,
   report,
   loading,
+  analyzeWaitSec = null,
   error,
   onRetry,
   onGoCounsel,
@@ -261,8 +263,13 @@ export function ReportPage({
       {loading && (
         <div className="report-page__state" role="status">
           <p className="report-page__state-line">사주 리포트를 생성하고 있습니다…</p>
+          {typeof analyzeWaitSec === "number" ? (
+            <p className="report-page__state-line report-page__state-wait" aria-live="polite">
+              서버 분석 경과: <strong>{analyzeWaitSec}</strong>초 — 연결이 끊기지 않았다면 계속 진행 중입니다.
+            </p>
+          ) : null}
           <p className="report-page__state-line report-page__state-hint">
-            첫 분석은 <strong>3~7분</strong> 걸릴 수 있습니다. 이 탭을 유지한 채로 기다려 주세요.
+            배포(무료) 환경에서는 수 분 걸릴 수 있습니다. 이 탭을 닫지 말고 기다려 주세요.
           </p>
         </div>
       )}

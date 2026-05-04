@@ -12,6 +12,7 @@ import { ExploreHubPage } from "./components/explore/ExploreHubPage";
 import { PwaInstallHint } from "./components/PwaInstallHint";
 import { hasStoredBirth } from "./services/userMemoryStorage";
 import { fetchSajuReport } from "./services/reportApi";
+import type { BirthInputPayload } from "./types/birthInput";
 import type { FeedNavigateMeta, FeedTabTarget } from "./types/contentFeed";
 import "./app.css";
 
@@ -22,6 +23,8 @@ function AppShell() {
   );
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
+  /** 리포트 생성 중 경과 초 — 멈춘 것처럼 보이지 않게 표시 */
+  const [reportWaitSec, setReportWaitSec] = useState<number | null>(null);
   /** 피드·탐색의 focusMonth — 있으면 월운을 해당 달만 먼저 표시 */
   const [reportMonthFocus, setReportMonthFocus] = useState<number | null>(null);
   /** 리포트 탭에서 스크롤할 섹션 id */
@@ -52,21 +55,34 @@ function AppShell() {
     document.title = `UNTEIM · ${sub}`;
   }, [tab]);
 
-  const createReport = async () => {
-    if (!birth) return;
+  /** @returns 성공 여부 */
+  const runFetchReport = async (payload: BirthInputPayload): Promise<boolean> => {
+    setReportLoading(true);
+    setReportError(null);
+    setReportData(null);
+    setReportWaitSec(0);
+    const tick = window.setInterval(() => {
+      setReportWaitSec((s) => (s == null ? 0 : s) + 1);
+    }, 1000);
+    let ok = false;
     try {
-      setReportLoading(true);
-      setReportError(null);
-      // 새 요청 시작 시 이전 결과를 비워 입력-결과 불일치 노출을 막는다.
-      setReportData(null);
-      const data = await fetchSajuReport(birth);
+      const data = await fetchSajuReport(payload);
       setReportData(data);
+      ok = true;
     } catch (err) {
       setReportError(err instanceof Error ? err.message : "리포트 생성 중 오류가 발생했습니다.");
       setReportData(null);
     } finally {
+      window.clearInterval(tick);
       setReportLoading(false);
+      setReportWaitSec(null);
     }
+    return ok;
+  };
+
+  const createReport = async () => {
+    if (!birth) return;
+    await runFetchReport(birth);
   };
 
   return (
@@ -151,17 +167,7 @@ function AppShell() {
                 setReportScrollAnchor(null);
               }
               if (birth && !reportData) {
-                try {
-                  setReportLoading(true);
-                  setReportError(null);
-                  setReportData(null);
-                  const data = await fetchSajuReport(birth);
-                  setReportData(data);
-                } catch (err) {
-                  setReportError(err instanceof Error ? err.message : "리포트 생성 중 오류가 발생했습니다.");
-                } finally {
-                  setReportLoading(false);
-                }
+                await runFetchReport(birth);
               }
               setTab("report");
             }}
@@ -200,32 +206,26 @@ function AppShell() {
             birth={birth}
             report={reportData}
             loading={reportLoading}
+            analyzeWaitSec={reportLoading ? reportWaitSec : null}
             error={reportError}
             onGoReport={() => setTab("report")}
             onResetSession={() => {
               resetSajuMemory();
               setReportError(null);
               setReportLoading(false);
+              setReportWaitSec(null);
               setReportMonthFocus(null);
             }}
             onSubmit={async (p) => {
               setBirth(p);
               setReportError(null);
-              setReportLoading(true);
-              setReportData(null);
-              try {
-                const data = await fetchSajuReport(p);
-                setReportData(data);
+              const ok = await runFetchReport(p);
+              if (ok) {
                 const pm = feedMonthPendingRef.current;
                 if (pm != null) {
                   setReportMonthFocus(pm);
                   feedMonthPendingRef.current = null;
                 }
-              } catch (err) {
-                setReportError(err instanceof Error ? err.message : "리포트 생성 중 오류가 발생했습니다.");
-                setReportData(null);
-              } finally {
-                setReportLoading(false);
               }
             }}
           />
@@ -234,6 +234,7 @@ function AppShell() {
             birth={birth}
             report={reportData}
             loading={reportLoading}
+            analyzeWaitSec={reportLoading ? reportWaitSec : null}
             error={reportError}
             onRetry={createReport}
             onGoCounsel={() => setTab("counsel")}

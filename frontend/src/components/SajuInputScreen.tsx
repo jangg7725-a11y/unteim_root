@@ -17,6 +17,8 @@ type Props = {
   birth: NonNullable<ReturnType<typeof buildBirthPayload>> | null;
   report: SajuReportData | null;
   loading: boolean;
+  /** 리포트 생성 중 경과 초(원격 분석 시 표시) */
+  analyzeWaitSec?: number | null;
   error: string | null;
   onGoReport: () => void;
   /** 저장된 사주·리포트를 모두 비우고 새로 입력 */
@@ -37,6 +39,7 @@ export function SajuInputScreen({
   birth,
   report,
   loading,
+  analyzeWaitSec = null,
   error,
   onGoReport,
   onResetSession,
@@ -183,9 +186,13 @@ export function SajuInputScreen({
         {loading ? (
           <div className="saju-screen__progress-stack">
             <p className="saju-screen__progress-text">사주 분석과 월별 리포트를 생성하고 있습니다…</p>
+            {typeof analyzeWaitSec === "number" ? (
+              <p className="saju-screen__progress-text saju-screen__progress-wait" aria-live="polite">
+                서버 분석 경과: <strong>{analyzeWaitSec}</strong>초 — 멈춘 것이 아니라 처리 중일 수 있습니다.
+              </p>
+            ) : null}
             <p className="saju-screen__progress-text saju-screen__progress-hint">
-              첫 요청은 서버 준비·연산량 때문에 <strong>3~7분</strong> 걸릴 수 있습니다. 화면을 닫지 말고 잠시만 기다려
-              주세요.
+              배포(무료) 서버는 첫 요청이 수 분 걸릴 수 있습니다. 이 탭을 유지해 주세요.
             </p>
           </div>
         ) : error ? (
