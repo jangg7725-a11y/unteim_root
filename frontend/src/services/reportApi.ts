@@ -542,6 +542,9 @@ export function refreshReportDataCopy(report: SajuReportData | null | undefined)
   return pickSection(raw);
 }
 
+/** 서버 ANALYZE_FULL_TIMEOUT_SEC(기본 180)보다 약간 길게 — 브라우저가 먼저 끊기지 않도록 */
+const ANALYZE_FETCH_TIMEOUT_MS = 195_000;
+
 export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuReportData> {
   const base = getApiBase();
   const url = base ? `${base}/api/analyze` : "/api/analyze";
@@ -552,11 +555,23 @@ export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuRep
     calendar: birth.calendarApi,
   };
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(ANALYZE_FETCH_TIMEOUT_MS),
+    });
+  } catch (e) {
+    const name = e instanceof Error ? e.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
+      throw new Error(
+        "요청 시간이 초과되어 리포트를 받지 못했습니다. 네트워크가 느리거나 서버가 바쁠 수 있습니다. 잠시 후 「리포트 다시 생성」을 눌러 주세요."
+      );
+    }
+    throw e instanceof Error ? e : new Error("리포트 요청 중 오류가 발생했습니다.");
+  }
 
   const rawText = await res.text();
   let json: unknown = null;
@@ -579,7 +594,7 @@ export async function fetchSajuReport(birth: BirthInputPayload): Promise<SajuRep
   }
   if (isAnalyzeTimedOutWithoutMonthly(record)) {
     throw new Error(
-      "상세 분석이 시간 안에 끝나지 않아 월별 리포트를 받지 못했습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요. Render API에는 환경 변수 ANALYZE_FULL_TIMEOUT_SEC=90 을 넣는 것을 권장합니다."
+      "상세 분석이 시간 안에 끝나지 않아 월별 리포트를 받지 못했습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요. 호스팅(Render 등)의 API 서비스 환경 변수 ANALYZE_FULL_TIMEOUT_SEC=180 을 권장합니다."
     );
   }
   return pickSection(record);

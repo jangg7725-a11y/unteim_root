@@ -358,6 +358,8 @@ def attach_calendar_year_fortunes(packed: Dict[str, Any]) -> None:
         w12_raw = []
 
     w12 = ensure_12_calendar_months(ty, w12_raw)
+    # attach_monthly_fortune_engine 이 같은 연도 1~12월 월운을 다시 계산하지 않도록 캐시
+    packed.setdefault("meta", {})["calendar_wolwoon_w12"] = w12
     monthly_reports = build_monthly_reports_12(packed, ty, w12)
     annual = build_annual_fortune_block(packed, ty, w12)
 

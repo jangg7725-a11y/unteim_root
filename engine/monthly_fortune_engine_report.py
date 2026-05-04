@@ -1281,18 +1281,43 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
     target_year = resolve_pdf_target_year(packed)
     birth_year = _birth_year(packed)
 
-    try:
-        from engine.full_analyzer import _call_wolwoon_engine
-    except Exception:
-        w12_raw: List[Dict[str, Any]] = []
-    else:
+    w12_raw: List[Dict[str, Any]] = []
+    meta_raw = packed.get("meta")
+    meta = meta_raw if isinstance(meta_raw, dict) else {}
+    cached = meta.get("calendar_wolwoon_w12")
+    use_cache = False
+    if isinstance(cached, list) and len(cached) == 12:
+        use_cache = True
+        for i, it in enumerate(cached, start=1):
+            if not isinstance(it, dict):
+                use_cache = False
+                break
+            try:
+                y = int(it.get("year", -1))
+                m = int(it.get("month", -1))
+            except Exception:
+                use_cache = False
+                break
+            if y != target_year or m != i:
+                use_cache = False
+                break
+        if use_cache:
+            w12_norm = deep_norm(cached)
+            w12_raw = w12_norm if isinstance(w12_norm, list) else []
+
+    if not w12_raw:
         try:
-            w12_raw = _call_wolwoon_engine(target_year, 1, 12, ctx=packed)
-            w12_raw = deep_norm(w12_raw)
-            if not isinstance(w12_raw, list):
-                w12_raw = []
+            from engine.full_analyzer import _call_wolwoon_engine
         except Exception:
             w12_raw = []
+        else:
+            try:
+                w12_raw = _call_wolwoon_engine(target_year, 1, 12, ctx=packed)
+                w12_raw = deep_norm(w12_raw)
+                if not isinstance(w12_raw, list):
+                    w12_raw = []
+            except Exception:
+                w12_raw = []
 
     w12 = ensure_12_calendar_months(target_year, w12_raw)
 
