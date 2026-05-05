@@ -676,7 +676,10 @@ async function fetchSajuReportRemoteSinglePost(birth: BirthInputPayload, base: s
 }
 
 /** Render 등 원격 — 비동기 job + 폴링 */
-async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<SajuReportData> {
+async function fetchSajuReportRemotePolling(
+  birth: BirthInputPayload,
+  retryOnMissingJob = 0
+): Promise<SajuReportData> {
   const base = getApiBase();
   if (typeof window !== "undefined" && window.location.protocol === "https:" && base.startsWith("http:")) {
     throw new Error(
@@ -746,10 +749,19 @@ async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<S
       pollJson = null;
     }
     if (!pollRes.ok) {
-      throw new Error(
+      const detailText =
         typeof pollJson === "object" && pollJson && "detail" in pollJson
           ? String((pollJson as { detail: unknown }).detail)
-          : pollText || "분석 상태를 확인하지 못했습니다."
+          : pollText;
+      const missingJob = pollRes.status === 404 && /job not found|expired/i.test(detailText);
+      if (missingJob && retryOnMissingJob < 1) {
+        // Multi-worker / redeploy 타이밍 등으로 job 메모리가 사라진 경우 1회 자동 재시도.
+        return fetchSajuReportRemotePolling(birth, retryOnMissingJob + 1);
+      }
+      throw new Error(
+        missingJob
+          ? "분석 작업이 서버에서 초기화되었습니다. 「리포트 다시 생성」을 눌러 다시 시도해 주세요."
+          : detailText || "분석 상태를 확인하지 못했습니다."
       );
     }
     const pr = asRecord(pollJson);
