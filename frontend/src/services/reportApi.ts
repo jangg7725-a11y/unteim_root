@@ -622,7 +622,7 @@ function finalizeAnalyzeRecord(record: Record<string, unknown> | null): SajuRepo
   }
   if (isAnalyzeTimedOutWithoutMonthly(record)) {
     throw new Error(
-      "상세 분석이 시간 안에 끝나지 않아 월별 리포트를 받지 못했습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요. 호스팅(Render 등) API에 환경 변수 ANALYZE_FULL_TIMEOUT_SEC=420 을 권장합니다."
+      "분석이 예상보다 오래 걸리고 있습니다. 잠시 후 다시 시도하거나 「리포트 다시 생성」을 눌러 주세요."
     );
   }
   return pickSection(record);
@@ -644,7 +644,7 @@ async function fetchSajuReportLocalSync(birth: BirthInputPayload): Promise<SajuR
     const name = e instanceof Error ? e.name : "";
     if (name === "TimeoutError" || name === "AbortError") {
       throw new Error(
-        "요청 시간이 초과되어 리포트를 받지 못했습니다. 잠시 후 「리포트 다시 생성」을 눌러 주세요."
+        "요청이 지연되고 있습니다. 네트워크가 안정적인지 확인한 뒤 「리포트 다시 생성」을 눌러 주세요."
       );
     }
     throw e instanceof Error ? e : new Error("리포트 요청 중 오류가 발생했습니다.");
@@ -768,7 +768,7 @@ async function fetchSajuReportRemotePolling(birth: BirthInputPayload): Promise<S
   }
 
   throw new Error(
-    "분석이 제한 시간 안에 끝나지 않았습니다. Render 무료 플랜은 첫 요청이 매우 느릴 수 있습니다. 잠시 후 「리포트 다시 생성」을 눌러 주세요."
+    "분석이 예상보다 오래 걸리고 있습니다. 잠시 후 「리포트 다시 생성」을 눌러 다시 시도해 주세요."
   );
 }
 

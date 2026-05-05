@@ -192,7 +192,7 @@ export function SajuInputScreen({
               </p>
             ) : null}
             <p className="saju-screen__progress-text saju-screen__progress-hint">
-              배포(무료) 서버는 첫 요청이 수 분 걸릴 수 있습니다. 이 탭을 유지해 주세요.
+              서버 상태에 따라 첫 분석이 다소 지연될 수 있습니다. 이 탭을 유지해 주세요.
             </p>
           </div>
         ) : error ? (

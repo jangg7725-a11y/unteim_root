@@ -269,7 +269,7 @@ export function ReportPage({
             </p>
           ) : null}
           <p className="report-page__state-line report-page__state-hint">
-            배포(무료) 환경에서는 수 분 걸릴 수 있습니다. 이 탭을 닫지 말고 기다려 주세요.
+            서버 상태에 따라 분석에 시간이 걸릴 수 있습니다. 이 탭을 닫지 말고 잠시만 기다려 주세요.
           </p>
         </div>
       )}
