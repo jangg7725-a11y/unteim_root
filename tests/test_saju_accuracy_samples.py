@@ -70,10 +70,12 @@ def test_sample_file_schema_minimum() -> None:
 @pytest.mark.parametrize("sample", SAMPLES, ids=[s["id"] for s in SAMPLES])
 def test_core_pillar_and_engine_regression(sample: Dict[str, Any]) -> None:
     birth = sample["input"]["birth_str"]
+    calendar = sample["input"].get("calendar", "solar")
+    sex = sample["input"].get("sex", "F")
     expected = sample["expected"]
     exp_p = expected["pillars"]
 
-    pillars = calculate_saju(birth)
+    pillars = calculate_saju(birth, gender=sex, calendar=calendar)
     actual_p = _pillar_obj_to_dict(pillars)
 
     _assert_optional_pillar_expectation(exp_p.get("year"), actual_p["year"], f"{sample['id']} year")
@@ -82,7 +84,7 @@ def test_core_pillar_and_engine_regression(sample: Dict[str, Any]) -> None:
     _assert_optional_pillar_expectation(exp_p.get("hour"), actual_p["hour"], f"{sample['id']} hour")
 
     # ---- analyze_saju 단에서 오행/신살/운 흐름 회귀 ----
-    result = analyze_saju(birth)
+    result = analyze_saju(birth, gender=sex, calendar=calendar)
     assert isinstance(result, dict)
 
     # 오행 불변식(전 샘플 공통): 5원소 키 존재

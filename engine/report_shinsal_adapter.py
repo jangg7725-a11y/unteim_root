@@ -36,7 +36,7 @@ def _coerce_pillars(p: Dict[str, Any]) -> Dict[str, Tuple[str, str]]:
 
 # 오행 분석기 로딩 (실제 모듈명이 다르면 여기만 바꾸세요)
 try:
-    from .ohengAnalyzer import analyze_oheng as _analyze_oheng_impl
+    from .oheng_analyzer import analyze_oheng as _analyze_oheng_impl
 except Exception:
     def _analyze_oheng_impl(x: Any, *, strict: bool | None = None) -> Dict[str, Any]:
         return {
@@ -50,7 +50,7 @@ def analyze_oheng(pillars: Dict[str, Tuple[str, str]], *, strict: bool | None = 
     return _analyze_oheng_impl(pillars, strict=strict)
 
 # 신살 분석 + 확장 요약
-from .shinsalDetector import analyze_shinsal_with_enrichment  # 반드시 존재
+from .shinsal_detector import analyze_shinsal_with_enrichment  # 반드시 존재
 
 def calc_daewoon_periods(_pillars: Dict[str, Tuple[str, str]]) -> List[Tuple[int, int, str]]:
     """대운 구간 [(시작연, 끝연, 라벨), ...]. daewoonCalculator 연동은 추후 교체 가능."""

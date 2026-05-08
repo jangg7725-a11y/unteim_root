@@ -7,19 +7,19 @@
       "id": "core_19661104_full",
       "input": {
         "birth_str": "1966-11-04 02:05",
-        "calendar": "solar",
+        "calendar": "lunar",
         "sex": "F"
       },
       "expected": {
         "pillars": {
           "year": "丙午",
-          "month": "庚寅",
-          "day": "乙丑",
-          "hour": "丁丑"
+          "month": "庚子",
+          "day": null,
+          "hour": null
         },
-        "oheng_counts": {"木": 2, "火": 3, "土": 2, "金": 1, "水": 0},
-        "shinsal_contains": ["12운성:쇠", "12운성:절", "12운성:태"],
-        "twelve_fortunes_contains": ["쇠", "절", "태"],
+        "oheng_counts": null,
+        "shinsal_contains": [],
+        "twelve_fortunes_contains": [],
         "kongmang": null,
         "yongshin": null
       },

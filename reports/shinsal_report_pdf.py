@@ -91,7 +91,7 @@ except Exception as e:
     print("[WARN] 폰트 등록 실패:", e)
 
 # ===================== 엔진 로직 =====================
-from engine.shinsalDetector import detect_shinsal
+from engine.shinsal_detector import detect_shinsal
 
 from engine.shinsal_explainer import explain_shinsal_items, build_profile
 

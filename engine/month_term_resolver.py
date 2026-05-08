@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional, Tuple, Dict, Any, List
 from zoneinfo import ZoneInfo
 import json
+from .solar_terms import find_term_times
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -63,6 +64,32 @@ def _collect_year_jeolip(year_block: Dict[str, str]) -> List[Tuple[str, datetime
     return out
 
 
+def _collect_year_jeolip_from_csv(year: int) -> List[Tuple[str, datetime]]:
+    """
+    CSV(single source of truth)에서 해당 연도의 12절입만 추출.
+    실패하면 빈 리스트 반환.
+    """
+    out: List[Tuple[str, datetime]] = []
+    try:
+        rows = find_term_times(year)
+    except Exception:
+        return out
+
+    for r in rows:
+        name = r.get("name")
+        if name not in JEOLIP_NAMES:
+            continue
+        iso = r.get("time_kst")
+        if not isinstance(iso, str):
+            continue
+        dt = _parse_dt_kst(iso)
+        if dt is not None:
+            out.append((name, dt))
+
+    out.sort(key=lambda x: x[1])
+    return out
+
+
 def resolve_month_term(dt_kst: datetime) -> Tuple[Optional[str], Optional[datetime]]:
     """
     dt_kst 직전(<=)의 '절입(12절입)'을 찾아 반환
@@ -73,24 +100,26 @@ def resolve_month_term(dt_kst: datetime) -> Tuple[Optional[str], Optional[dateti
     else:
         dt_kst = dt_kst.astimezone(KST)
 
-    cache = _load_terms_cache()
-    years = cache.get("years")
-    if not isinstance(years, dict):
-        return None, None
-
     y = str(dt_kst.year)
     y_prev = str(dt_kst.year - 1)
 
-    # 후보: 올해 + (필요시) 전년도까지
+    # 1) CSV 우선: 올해 + 전년도
     candidates: List[Tuple[str, datetime]] = []
+    candidates.extend(_collect_year_jeolip_from_csv(dt_kst.year))
+    candidates.extend(_collect_year_jeolip_from_csv(dt_kst.year - 1))
 
-    block = years.get(y)
-    if isinstance(block, dict):
-        candidates.extend(_collect_year_jeolip(block))
+    # 2) CSV가 비었을 때만 JSON fallback
+    if not candidates:
+        cache = _load_terms_cache()
+        years = cache.get("years")
+        if isinstance(years, dict):
+            block = years.get(y)
+            if isinstance(block, dict):
+                candidates.extend(_collect_year_jeolip(block))
 
-    block_prev = years.get(y_prev)
-    if isinstance(block_prev, dict):
-        candidates.extend(_collect_year_jeolip(block_prev))
+            block_prev = years.get(y_prev)
+            if isinstance(block_prev, dict):
+                candidates.extend(_collect_year_jeolip(block_prev))
 
     if not candidates:
         return None, None

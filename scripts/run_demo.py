@@ -14,8 +14,8 @@ from typing import Any, Dict
 
 # 내부 엔진
 from engine.sajuCalculator import calculate_saju, _to_shinsal_pillars
-from engine.ohengAnalyzer import analyze_oheng
-from engine.shinsalDetector import detect_shinsal
+from engine.oheng_analyzer import analyze_oheng
+from engine.shinsal_detector import detect_shinsal
 from engine.hidden_stems import hidden_elements_count_for_pillars
 from engine.reporters import make_report
 from engine.types import SajuPillars

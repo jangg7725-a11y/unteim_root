@@ -41,9 +41,12 @@ J_EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉
 
 # 관용 앵커: 1984-02-02(KST) = 甲子(간지)일
 ANCHOR_JIAZI_DAY_KST = date(1984, 2, 2)
-# 실측 만세력(천을귀인 포함) 대조 시 일주가 2일 뒤로 어긋나던 문제 보정
-# idx60 = (days_delta + DAY_GANJI_OFFSET) % 60
-DAY_GANJI_OFFSET = 2
+# 앵커일이 甲子가 되도록 보정값.
+# 테스트 기준:
+# - 1984-02-02 12:00 => 甲子
+# - +1일 => 乙丑
+# - +60일 => 다시 甲子
+DAY_GANJI_OFFSET = 0
 
 # 절기 보정 (입춘 전이면 전년도 적용)
 from .solar_terms import is_before_ipchun_kst
@@ -107,8 +110,19 @@ def _hour_gan_start_from_day_gan(day_gan_idx: int) -> int:
 
 
 def hour_ganji(dt_kst: datetime, day_gan_idx: int) -> GanJi:
+    """
+    야자시(夜子時) 처리:
+    - 23:00~23:59 = 子시이지만 '다음날 일간' 기준으로 시간 천간 계산
+    - 00:00~00:59 = 子시, 당일 일간 기준(조자시)
+    """
     dt_kst = _ensure_kst(dt_kst)
     ji_idx = _hour_branch_idx(dt_kst)
-    start_gan = _hour_gan_start_from_day_gan(day_gan_idx)
+
+    effective_day_gan_idx = day_gan_idx
+    if dt_kst.hour == 23:
+        # 다음날 일간으로 1일 이동한 것과 동일하게 천간 인덱스를 +1 보정
+        effective_day_gan_idx = (day_gan_idx + 1) % 10
+
+    start_gan = _hour_gan_start_from_day_gan(effective_day_gan_idx)
     gan_idx = (start_gan + ji_idx) % 10
     return GanJi(gan=HEAVENLY_STEMS[gan_idx], ji=EARTHLY_BRANCHES[ji_idx])

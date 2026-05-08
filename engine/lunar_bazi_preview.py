@@ -15,7 +15,7 @@ import argparse
 from typing import Any, Dict, Tuple, Optional, cast
 
 # 프로젝트 내부 의존
-from .daewoonCalculator import Gender, YinYang
+from .daewoon_calculator import Gender, YinYang
 from .luckTimeline import build_daewoon_sewun_timeline, SewunBoundary
 
 

@@ -5,6 +5,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime, date
 from typing import Any, Dict, Optional, List, Tuple, cast
 from zoneinfo import ZoneInfo
+import logging
 from .month_term_resolver import resolve_month_term
 from .types import coerce_pillars
 import inspect
@@ -20,15 +21,30 @@ from engine.day_master_profiles import build_day_master_commentary
 from .flow_interactions_v1 import build_flow_summary_v1
 from engine.final_mapper import compose_final_mapping
 from reports.user_card import build_user_card
+from engine.narrative.report_narrative import (
+    narrative_year_bundle,
+    narrative_day_bundle,
+    narrative_life_bundle,
+)
 
 from .month_commentary import build_month_commentary
 from engine.dynamic_strength_engine_v1 import attach_dynamic_strength_v1
 from engine.monthly_patterns_v1_1 import attach_month_patterns_v1_1
 from engine.ten_gods_counter_v1 import count_ten_gods_from_sipsin
 from engine.tengods_element_link_v1 import attach_tengods_element_link_v1
-from engine.total_fortune_aggregator_v1 import enrich_report_with_total_fortune
+from engine.total_fortune_aggregator_v1 import (
+    enrich_report_with_total_fortune,
+    build_total_fortune_block,
+)
+from engine.samjae_engine_v1 import build_samjae_result
+from engine.sentences_v2_engine import attach_v2_sentences
+from engine.calendar_year_fortune import attach_calendar_year_fortunes
+from engine.selected_topic_reports import attach_selected_topic_reports
+from .monthly_reports_builder import attach_monthly_reports
+from engine.monthly_fortune_engine_report import attach_monthly_fortune_engine
 
 KST = ZoneInfo("Asia/Seoul")
+logger = logging.getLogger(__name__)
 
 def _safe(name, fn, default):
     try:
@@ -47,11 +63,11 @@ from .domain_expander import expand_domains
 from .timing_engine import refine_timing, _try_solar_to_lunar
 
 # 핵심 분석 모듈(실제 파일명 기준)
-from .ohengAnalyzer import analyze_oheng
+from .oheng_analyzer import analyze_oheng
 from .sipsin import compute_sipsin
 from .yongshin_analyzer import analyze_yongshin
 from .yongshin_luck import analyze_yongshin_luck
-from .shinsalDetector import detect_shinsal
+from .shinsal_detector import detect_shinsal
 # 흐름 코멘터리(대운/세운/월운)
 from .flow_commentary import (
     analyze_daewoon_commentary,
@@ -90,20 +106,14 @@ def _build_year_commentary(result: dict, when: dict) -> dict | None:
     result = analyze_full()의 결과 dict
     when   = result.get('when', {}) dict
     """
-    from engine.narrative.report_narrative import narrative_year_bundle
-
     return narrative_year_bundle(result, when)
 
 
 def _build_day_commentary(result: dict, when: dict) -> dict | None:
-    from engine.narrative.report_narrative import narrative_day_bundle
-
     return narrative_day_bundle(result, when)
 
 
 def _build_life_commentary(result: dict) -> dict | None:
-    from engine.narrative.report_narrative import narrative_life_bundle
-
     return narrative_life_bundle(result)
 
 def _pillars_to_shinsal_input(pillars: Any) -> Dict[str, Tuple[str, str]]:
@@ -216,6 +226,7 @@ def _call_daewoon_engine(
     birth_minute: int,
     num_cycles: int = 8,
     use_month_pillar: bool = True,
+    gender: str = "F",
 ) -> List[Any]:
     m = importlib.import_module("engine.daewoon_engine")
 
@@ -241,6 +252,8 @@ def _call_daewoon_engine(
         # 플래그
         "use_month_pillar": use_month_pillar,
         "useMonthPillar": use_month_pillar,
+        # 대운 순/역행 방향 결정
+        "gender": gender,
     }
     raw_kwargs = deep_norm(raw_kwargs)
     init_kwargs = _filter_kwargs(Engine.__init__, raw_kwargs)
@@ -271,6 +284,7 @@ def _call_daewoon_engine(
         "count": num_cycles,
         "dt_kst": dt_kst,
         "dt": dt_kst,
+        "gender": gender,
     }
     call_kwargs = _filter_kwargs(method, call_raw)
 
@@ -284,9 +298,7 @@ def _call_daewoon_engine(
 
     # DaewoonItem → dict 표준화 (용신 호환)
     if result and len(result) > 0 and hasattr(result[0], "pillar"):
-        from engine.daewoon_engine import DaewoonEngine as _DaewoonEngine
-
-        return _DaewoonEngine().to_public(result)
+        return DaewoonEngine().to_public(result)
     return result if result is not None else []
 
 
@@ -770,6 +782,7 @@ def analyze_full(
     verbosity: Any = "standard",
     preset: str = "app",
     selected_topics: Optional[List[str]] = None,
+    gender: str = "F",
 ) -> Dict[str, Any]:
     packed: Dict[str, Any] = {}
     result: Dict[str, Any] = {}
@@ -803,13 +816,30 @@ def analyze_full(
     # ==================================================
     # 0) pillars 표준 단일 형태로 고정 (핵심)
     # ==================================================
-    p = coerce_pillars(pillars)
+    _p = coerce_pillars(pillars)
+    # ✅ FIX-06: birth_str 파싱 1회 통합
+    _dt_kst: Optional[datetime] = None
+    _dt_kst_iso = ""
+    birth_year = birth_month = birth_day = birth_hour = birth_minute = None
+    if birth_str:
+        try:
+            _dt_kst = datetime.strptime(
+                birth_str.strip(), "%Y-%m-%d %H:%M"
+            ).replace(tzinfo=KST)
+            _dt_kst_iso = _dt_kst.isoformat()
+            birth_year = _dt_kst.year
+            birth_month = _dt_kst.month
+            birth_day = _dt_kst.day
+            birth_hour = _dt_kst.hour
+            birth_minute = _dt_kst.minute
+        except Exception:
+            logger.warning("birth_str 파싱 실패: %s", birth_str)
 
     pillars_std = {
-        "year":  {"gan": str(p.gan[0]), "ji": str(p.ji[0])},
-        "month": {"gan": str(p.gan[1]), "ji": str(p.ji[1])},
-        "day":   {"gan": str(p.gan[2]), "ji": str(p.ji[2])},
-        "hour":  {"gan": str(p.gan[3]), "ji": str(p.ji[3])},
+        "year":  {"gan": str(_p.gan[0]), "ji": str(_p.ji[0])},
+        "month": {"gan": str(_p.gan[1]), "ji": str(_p.ji[1])},
+        "day":   {"gan": str(_p.gan[2]), "ji": str(_p.ji[2])},
+        "hour":  {"gan": str(_p.gan[3]), "ji": str(_p.ji[3])},
     }
 
     pillars_for_yongshin = pillars_std
@@ -819,38 +849,45 @@ def analyze_full(
     # -----------------------------------------------------
     oheng = analyze_oheng(pillars_std)
     # 2) 격국(geukguk) 산출
-    geukguk = analyze_geukguk(pillars_std, oheng_summary=oheng)
-    ysh = analyze_yongshin_axis(geukguk=geukguk, oheng=oheng)
-    # 2-1) 일간 해설 (Day Master)
-    day_gan = str(p.gan[2])
-
-    oheng_counts = (oheng or {}).get("counts", {})
-    day_master = build_day_master_commentary(day_gan, oheng_counts)
-
-    base = analysis.setdefault("base_structure", {})
-    base["geukguk"] = geukguk
-    analysis["base_structure"] = base
+    geukguk = {}
+    ysh = {}
+    day_master = {}
 
     # -----------------------------------------------------
     # 2) 십신
     # -----------------------------------------------------
     
-    pillars_std = coerce_pillars(pillars)  # ✅ 십신/오행/신살 공통 표준
+    pillars_std = _p  # ✅ 십신/오행/신살 공통 표준
     try:
         sipsin = compute_sipsin(pillars_std)
     except Exception:
+        logger.warning("sipsin 계산 실패", exc_info=True)
         sipsin = {}
-    sipsin["summary"] = {"dominant": "정관", "excess": ["식상"], "lack": ["재성"]}
+    try:
+        _profiles = sipsin.get("profiles", {}) if isinstance(sipsin, dict) else {}
+        _counts = _profiles.get("counts", {}) if isinstance(_profiles, dict) else {}
+        if _counts:
+            _dominant = max(_counts, key=lambda k: _counts.get(k, 0))
+            _excess = [k for k, v in _counts.items() if v >= 3]
+            _lack = [k for k, v in _counts.items() if v == 0]
+            sipsin["summary"] = {
+                "dominant": _dominant,
+                "excess": _excess,
+                "lack": _lack,
+            }
+        else:
+            sipsin.setdefault("summary", {"dominant": "", "excess": [], "lack": []})
+    except Exception:
+        logger.warning("sipsin summary 생성 실패", exc_info=True)
+        sipsin.setdefault("summary", {"dominant": "", "excess": [], "lack": []})
 
     # 2-1) 공망
     try:
-        ps = coerce_pillars(pillars)
-
         natal_pillars = [
-            Pillar(kind="year", stem=str(ps.gan[0]), branch=str(ps.ji[0])),
-            Pillar(kind="month", stem=str(ps.gan[1]), branch=str(ps.ji[1])),
-            Pillar(kind="day", stem=str(ps.gan[2]), branch=str(ps.ji[2])),
-            Pillar(kind="hour", stem=str(ps.gan[3]), branch=str(ps.ji[3])),
+            Pillar(kind="year", stem=str(_p.gan[0]), branch=str(_p.ji[0])),
+            Pillar(kind="month", stem=str(_p.gan[1]), branch=str(_p.ji[1])),
+            Pillar(kind="day", stem=str(_p.gan[2]), branch=str(_p.ji[2])),
+            Pillar(kind="hour", stem=str(_p.gan[3]), branch=str(_p.ji[3])),
         ]
         # day_pillar는 생략 가능(내부에서 kind=="day" 찾아줌)
         kongmang = analyze_kongmang(natal_pillars)
@@ -859,21 +896,11 @@ def analyze_full(
 
     # 2-2) 십이운성 (일간 기준)
     try:
-        ps = coerce_pillars(pillars)
-
-        day_stem = str(ps.gan[2])  # 일간
-        branches = [
-            str(ps.ji[0]),  # year
-            str(ps.ji[1]),  # month
-            str(ps.ji[2]),  # day
-            str(ps.ji[3]),  # hour
-        ]
-
         twelve_fortunes = _map12({
-            "year":  {"stem": str(ps.gan[0]), "branch": str(ps.ji[0])},
-            "month": {"stem": str(ps.gan[1]), "branch": str(ps.ji[1])},
-            "day":   {"stem": str(ps.gan[2]), "branch": str(ps.ji[2])},
-            "hour":  {"stem": str(ps.gan[3]), "branch": str(ps.ji[3])},
+            "year":  {"stem": str(_p.gan[0]), "branch": str(_p.ji[0])},
+            "month": {"stem": str(_p.gan[1]), "branch": str(_p.ji[1])},
+            "day":   {"stem": str(_p.gan[2]), "branch": str(_p.ji[2])},
+            "hour":  {"stem": str(_p.gan[3]), "branch": str(_p.ji[3])},
         })
 
 
@@ -892,7 +919,18 @@ def analyze_full(
     try:
         geukguk = analyze_geukguk(pillars_std, oheng_summary=oheng)
     except Exception as e:
+        logger.warning("geukguk 계산 실패: %s", e)
         geukguk = {"error": str(e)}
+    ysh = analyze_yongshin_axis(geukguk=geukguk, oheng=oheng)
+    # 2-1) 일간 해설 (Day Master)
+    day_gan = str(_p.gan[2])
+
+    oheng_counts = (oheng or {}).get("counts", {})
+    day_master = build_day_master_commentary(day_gan, oheng_counts)
+
+    base = analysis.setdefault("base_structure", {})
+    base["geukguk"] = geukguk
+    analysis["base_structure"] = base
 
     # -----------------------------------------------------
     # 4) 용신
@@ -902,29 +940,12 @@ def analyze_full(
     except Exception as e:
         yongshin = {"error": str(e)}
     
-    # -----------------------------------------------------
-    # 5) birth_str 파싱
-    # -----------------------------------------------------
-    birth_year = birth_month = birth_day = None
-    birth_hour = birth_minute = None
-
-    if birth_str:
-        try:
-            dt = datetime.strptime(birth_str, "%Y-%m-%d %H:%M")
-            birth_year = dt.year
-            birth_month = dt.month
-            birth_day = dt.day
-            birth_hour = dt.hour
-            birth_minute = dt.minute
-        except Exception:
-            pass
-    
     _month_term = None
     _month_term_time_kst = None
 
     # coerce_pillars 결과 p에 meta가 있으면 우선
     try:
-        _pmeta = getattr(p, "meta", None)
+        _pmeta = getattr(_p, "meta", None)
     except Exception:
         _pmeta = None
 
@@ -943,12 +964,11 @@ def analyze_full(
             _month_term_time_kst = _month_term_time_kst or _ometa.get("month_term_time_kst")
     
     # 5-1) 신살 (사주 구조 완성 직후)
-    p_sh = coerce_pillars(pillars)
     pillars_shinsal = {
-        "year": (str(p_sh.gan[0]), str(p_sh.ji[0])),
-        "month": (str(p_sh.gan[1]), str(p_sh.ji[1])),
-        "day": (str(p_sh.gan[2]), str(p_sh.ji[2])),
-        "hour": (str(p_sh.gan[3]), str(p_sh.ji[3])),
+        "year": (str(_p.gan[0]), str(_p.ji[0])),
+        "month": (str(_p.gan[1]), str(_p.ji[1])),
+        "day": (str(_p.gan[2]), str(_p.ji[2])),
+        "hour": (str(_p.gan[3]), str(_p.ji[3])),
     }
 
     try:
@@ -978,59 +998,62 @@ def analyze_full(
                 birth_minute=birth_minute or 0,
                 num_cycles=8,
                 use_month_pillar=False,
+                gender=gender,
 
             )
             daewoon_list = deep_norm(daewoon_list)
         except Exception as e:
-            print("[WARN] 대운 계산 실패:", e, "| birth=", birth_year, birth_month, birth_day, birth_hour, birth_minute)
+            logger.warning(
+                "대운 계산 실패: %s | birth=%s %s %s %s %s",
+                e,
+                birth_year,
+                birth_month,
+                birth_day,
+                birth_hour,
+                birth_minute,
+            )
             daewoon_list = []
 
 
         # 6-2) 세운
         try:
-            try:
-                dt_kst = datetime(
-                    birth_year,
-                    birth_month or 1,
-                    birth_day or 1,
-                    birth_hour or 0,
-                    birth_minute or 0,
-                )
-            except Exception:
-                dt_kst = None
-
             # ✅ 현재년도 기준으로 세운 생성
             target_year = datetime.now(KST).year
 
             sewun_list = _call_sewun_engine(
                 birth_year=target_year,   # ← 여기만 변경
                 num_years=12,
-                dt_kst=dt_kst,
+                dt_kst=_dt_kst,
             )
             sewun_list = deep_norm(sewun_list)
         except Exception as e:
-            print("[WARN] 세운 계산 실패:", e)
+            logger.warning("세운 계산 실패: %s", e)
             sewun_list = []
 
         # 6-3) 월운 (출생월 기준 36개월)
         try:
             start_month = birth_month or 1
-            result = {}
-            # [FIX] result 생성 직후: analysis.base_structure에 geukguk 연결
-            analysis = result.setdefault("analysis", {})
-            base = analysis.setdefault("base_structure", {})
-            base["geukguk"] = geukguk
+            _wolwoon_ctx = {
+                "oheng": oheng if isinstance(oheng, dict) else {},
+                "sipsin": sipsin if isinstance(sipsin, dict) else {},
+                "yongshin": yongshin if isinstance(yongshin, dict) else {},
+                "kongmang": kongmang if isinstance(kongmang, dict) else {},
+                "twelve_fortunes": twelve_fortunes if isinstance(twelve_fortunes, dict) else {},
+                "analysis": {
+                    "base_structure": {"geukguk": geukguk}
+                },
+            }
 
             wolwoon_list = _call_wolwoon_engine(
                 birth_year=birth_year,
                 start_month=start_month,
                 num_months=36,
-                ctx=result,   # ← full_analyzer에서 누적 중인 결과 dict
+                ctx=_wolwoon_ctx,
             )
             wolwoon_list = deep_norm(wolwoon_list)
 
         except Exception as e:
-            print("[WARN] 월운 계산 실패:", e)
+            logger.warning("월운 계산 실패: %s", e)
             wolwoon_list = []
 
     # -----------------------------------------------------
@@ -1065,7 +1088,7 @@ def analyze_full(
             )
 
     except Exception as e:
-        print("[WARN] yongshin_luck 계산 실패:", e)
+        logger.warning("yongshin_luck 계산 실패: %s", e)
         luck_flow = _empty_luck_flow()
 
     # 8) 시기 정밀화(when) + birth_lunar(KASI) + 트리거 자동화
@@ -1093,11 +1116,8 @@ def analyze_full(
 
     birth_lunar = None
     try:
-        if birth_str:
-            s = birth_str.replace("T", " ").strip()
-            birth_dt = datetime.fromisoformat(s)
-            birth_dt_kst = birth_dt.replace(tzinfo=ZoneInfo("Asia/Seoul"))
-            t = _try_solar_to_lunar(birth_dt_kst.date())
+        if _dt_kst:
+            t = _try_solar_to_lunar(_dt_kst.date())
             if t:
                 ly, lm, ld, is_leap = t
                 birth_lunar = {"year": ly, "month": lm, "day": ld, "is_leap": is_leap}
@@ -1106,9 +1126,8 @@ def analyze_full(
         month_term = None
         month_term_time_kst = None
     try:
-        if birth_str:
-            dt_kst = datetime.strptime(birth_str, "%Y-%m-%d %H:%M").replace(tzinfo=KST)
-            month_term, month_term_time_kst = resolve_month_term(dt_kst)
+        if _dt_kst:
+            month_term, month_term_time_kst = resolve_month_term(_dt_kst)
     except Exception:
          pass
 
@@ -1193,16 +1212,11 @@ def analyze_full(
     )
 
 
-    # birth_str로 dt_kst 추정(없으면 빈 문자열)
-    dt_kst_iso = ""
-    if birth_str:
-        try:
-            dt_kst_iso = datetime.strptime(birth_str, "%Y-%m-%d %H:%M").replace(tzinfo=KST).isoformat()
-        except Exception:
-            dt_kst_iso = ""
+    # birth_str 파싱 1회 결과 사용
+    dt_kst_iso = _dt_kst_iso
     
     # 🔧 month_commentary용 dict 형태 pillars 준비
-    p = coerce_pillars(pillars)
+    p = _p
 
     pillars_pack = {
         "year": {"gan": str(p.gan[0]), "ji": str(p.ji[0])},
@@ -1358,8 +1372,6 @@ def analyze_full(
         flow_summary.setdefault("ui_view", {})
         
     # ✅ final_mapping 생성 (출력 직전 1회 합성)
-    from engine.final_mapper import compose_final_mapping
-
     final_mapping = compose_final_mapping(
         elements=oheng,                 # ← 이미 아래 pack_result_v1에도 쓰는 변수
         yong_meta=extra_payload.get("yong_meta", {}),
@@ -1403,10 +1415,13 @@ def analyze_full(
         warnings=[],
         errors=[],
     )
+    # ✅ gender 기록 (input/meta는 리포트/디버깅에 활용될 수 있음)
+    try:
+        packed.setdefault("input", {})["gender"] = gender
+        packed.setdefault("meta", {})["gender"] = gender
+    except Exception:
+        pass
     packed.setdefault("extra", {}).update(extra_payload)
-
-    from engine.total_fortune_aggregator_v1 import build_total_fortune_block
-    from engine.samjae_engine_v1 import build_samjae_result
 
     tf = build_total_fortune_block(packed)
 
@@ -1547,8 +1562,10 @@ def analyze_full(
         packed["oheng"] = oh
     packed["shinsal"] = packed.get("analysis", {}).get("shinsal")
     packed["kongmang"] = packed.get("analysis", {}).get("kongmang")
-    packed["twelve_fortunes"] = twelve_fortunes
-    packed["twelve_fortunes"] = packed.get("analysis", {}).get("twelve_fortunes")
+    packed["twelve_fortunes"] = (
+        packed.get("analysis", {}).get("twelve_fortunes")
+        or twelve_fortunes
+    )
     packed["day_master"] = packed.get("analysis", {}).get("day_master")
     # === include sewun / wolwoon / flow_summary in final output (safe) ===
     packed["sewun"] = packed.get("sewun")
@@ -1604,10 +1621,10 @@ def analyze_full(
         final_pillars = pillars_std
     else:
         final_pillars = {
-            "year": {"gan": str(p.gan[0]), "ji": str(p.ji[0])},
-            "month": {"gan": str(p.gan[1]), "ji": str(p.ji[1])},
-            "day": {"gan": str(p.gan[2]), "ji": str(p.ji[2])},
-            "hour": {"gan": str(p.gan[3]), "ji": str(p.ji[3])},
+            "year": {"gan": str(_p.gan[0]), "ji": str(_p.ji[0])},
+            "month": {"gan": str(_p.gan[1]), "ji": str(_p.ji[1])},
+            "day": {"gan": str(_p.gan[2]), "ji": str(_p.ji[2])},
+            "hour": {"gan": str(_p.gan[3]), "ji": str(_p.ji[3])},
         }
 
     packed["pillars"] = final_pillars
@@ -1703,38 +1720,28 @@ def analyze_full(
     attach_dynamic_strength_v1(packed)
     attach_month_patterns_v1_1(packed)
     
-    from engine.samjae_engine_v1 import build_samjae_result
     packed.setdefault("extra", {}).setdefault("total_fortune", {})["samjae"] = build_samjae_result(packed)
     
     # ✅ [v2] 자기이해 문장 + 실천 개운법 자동 매핑
-    from engine.sentences_v2_engine import attach_v2_sentences
     attach_v2_sentences(packed)
 
     try:
-        from engine.calendar_year_fortune import attach_calendar_year_fortunes
-
         attach_calendar_year_fortunes(packed)
     except Exception as e:
         packed.setdefault("meta", {})["calendar_year_fortune_error"] = f"{type(e).__name__}: {e}"
 
     try:
-        from engine.selected_topic_reports import attach_selected_topic_reports
-
         attach_selected_topic_reports(packed, selected_topics)
     except Exception as e:
         packed.setdefault("meta", {})["selected_topic_reports_error"] = f"{type(e).__name__}: {e}"
 
     try:
-        from .monthly_reports_builder import attach_monthly_reports
-
         attach_monthly_reports(packed)
     except Exception as e:
         packed.setdefault("meta", {})["monthly_reports_error"] = f"{type(e).__name__}: {e}"
         packed["monthly_reports"] = []
 
     try:
-        from engine.monthly_fortune_engine_report import attach_monthly_fortune_engine
-
         attach_monthly_fortune_engine(packed)
     except Exception as e:
         packed.setdefault("meta", {})["monthly_fortune_engine_error"] = f"{type(e).__name__}: {e}"

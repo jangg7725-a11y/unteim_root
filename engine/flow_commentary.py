@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 # 🔹 공용 유틸 / 데이터 접근용
-from .ohengAnalyzer import analyze_oheng
+from .oheng_analyzer import analyze_oheng
 from .types import GanJi
 
 # 🔹 문장 생성 보조 함수 (이미 존재하는 경우만)

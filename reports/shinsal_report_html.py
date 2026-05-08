@@ -11,7 +11,7 @@ import argparse, os
 from pathlib import Path
 from typing import Dict, Any, List
 
-from engine.shinsalDetector import detect_shinsal
+from engine.shinsal_detector import detect_shinsal
 from engine.shinsal_explainer import explain_shinsal_items
 
 from engine.hidden_stems import (

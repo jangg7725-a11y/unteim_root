@@ -83,7 +83,7 @@ def analyze_oheng(pillars):
     외부 공개용 오행 분석 함수.
     테스트/외부 호출에서 summary 키를 기대하므로 보정한다.
     """
-    from engine.ohengAnalyzer import analyze_oheng as _analyze_oheng
+    from engine.oheng_analyzer import analyze_oheng as _analyze_oheng
 
     try:
         result = _analyze_oheng(pillars)
@@ -101,7 +101,7 @@ def detect_shinsal(pillars):
     외부 공개용 신살 함수.
     내부 결과가 dict/기타여도 테스트 친화적으로 list 형태로 정규화한다.
     """
-    from engine.shinsalDetector import detect_shinsal as _detect_shinsal
+    from engine.shinsal_detector import detect_shinsal as _detect_shinsal
 
     try:
         result = _detect_shinsal(pillars)

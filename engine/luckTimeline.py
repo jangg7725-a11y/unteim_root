@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Tuple, TypedDict, Optional, Literal, cast
 from datetime import date, datetime, timedelta
 import calendar
-from .daewoonCalculator import (
+from .daewoon_calculator import (
     calculate_daewoon,
     HEAVENLY_STEMS,
     EARTHLY_BRANCHES,
@@ -25,7 +25,7 @@ from .daewoonCalculator import (
     year_stem_index,
     month_stem_index_from_year_stem,
 )
-from .daewoonCalculator import BRANCH_INDEX as BR_IDX
+from .daewoon_calculator import BRANCH_INDEX as BR_IDX
 from .kasi_client import (
     get_solar_terms_for_year,
     SOLAR_TERM_TO_BRANCH,

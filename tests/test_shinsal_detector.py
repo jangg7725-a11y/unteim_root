@@ -9,7 +9,7 @@ if ROOT not in sys.path:
 
 import pytest
 
-from engine.shinsalDetector import detect_shinsal, analyze_shinsal_with_enrichment
+from engine.shinsal_detector import detect_shinsal, analyze_shinsal_with_enrichment
 
 
 def _find(hits, name):

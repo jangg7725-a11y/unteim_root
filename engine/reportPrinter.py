@@ -23,7 +23,7 @@ except Exception:
     _COLOR_OK = False
 
 from .interpreter import interpret_day
-from .daewoonCalculator import Gender, YinYang
+from .daewoon_calculator import Gender, YinYang
 from .luckTimeline import build_daewoon_sewun_timeline, SewunBoundary
 
 # 🔗 이슈 태깅/천직 추천 모듈

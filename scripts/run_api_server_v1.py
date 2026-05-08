@@ -38,8 +38,8 @@ from engine.compatibility_analyzer import analyze_compatibility
 from engine.solo_love_insight import build_solo_love_insight
 from engine.hidden_stems import compute_hidden_stems
 from engine.sipsin import ten_god_stem
-from engine.ohengAnalyzer import analyze_oheng
-from engine.shinsalDetector import detect_shinsal
+from engine.oheng_analyzer import analyze_oheng
+from engine.shinsal_detector import detect_shinsal
 from engine.twelve_fortunes import map_twelve_fortunes
 from reports.monthly_report import build_monthly_report_pdf
 import traceback
