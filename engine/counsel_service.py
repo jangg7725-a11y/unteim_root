@@ -22,6 +22,8 @@ from engine.counsel_summary import summarize_report_for_counsel
 from engine.full_analyzer import analyze_full
 from engine.sajuCalculator import calculate_saju
 from engine.counsel_session_card import generate_session_card
+from engine.shinsal_psychology_interpreter import get_shinsal_psychology_slots
+from engine.twelve_fortunes_interpreter import get_fortune_stage_slots
 
 
 # 톤: 사용자 질문 키워드로 추론 → 프롬프트에 주입
@@ -206,6 +208,18 @@ def run_counsel_turn(
 
     intent = infer_counsel_intent(last_user)
     analysis_summary, _report = build_engine_analysis(birth_str, profile, intent=intent)
+    context: Dict[str, Any] = {}
+    _sh = get_shinsal_psychology_slots(_report)
+    if _sh["found"]:
+        context["shinsal_dominant_trait"] = _sh["dominant_trait"]
+        context["shinsal_behavior"] = _sh["behavior_pattern"]
+        context["shinsal_caution"] = _sh["caution"]
+
+    _tf = get_fortune_stage_slots(_report)
+    if _tf["found"]:
+        context["fortune_stage"] = _tf["label_ko"]
+        context["fortune_core_energy"] = _tf["core_energy"]
+        context["fortune_behavior"] = _tf["behavior_pattern"]
     tone_key = _infer_counsel_tone(last_user)
     tone_line = TONE_LINE.get(tone_key, TONE_LINE["comfort"])
     intent_block = _build_intent_block(intent)
@@ -232,6 +246,7 @@ def run_counsel_turn(
     return {
         "reply": reply,
         "analysisSummary": analysis_summary,
+        "context": context,
         "counselType": ctype,
         "character": character,
         "counselIntent": intent,

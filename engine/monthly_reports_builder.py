@@ -14,6 +14,9 @@ from .sipsin import BRANCH_TO_KOR
 from .wolwoon_feature_calc import CHUNG, HAP
 
 from .calendar_year_fortune import _find_sewun_pillar, resolve_pdf_target_year
+from engine.hap_chung_interpreter import get_relation_pattern_slots
+from engine.twelve_fortunes_interpreter import get_monthly_stage_slots
+from engine.shinsal_psychology_interpreter import get_shinsal_psychology_slots
 
 
 def _sewun_rows_for_lookup(sewun: Any) -> List[Dict[str, Any]]:
@@ -631,5 +634,14 @@ def attach_monthly_reports(packed: Dict[str, Any]) -> None:
         row["tips"] = row["tip"]
 
         out.append(row)
+
+    try:
+        packed["pattern_slots"] = {
+            "relation": get_relation_pattern_slots(packed),
+            "twelve": get_monthly_stage_slots(packed),
+            "shinsal": get_shinsal_psychology_slots(packed),
+        }
+    except Exception:
+        packed["pattern_slots"] = {}
 
     packed["monthly_reports"] = out

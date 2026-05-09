@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
 from .wolwoon_patterns import PATTERN_META
+from engine.hap_chung_interpreter import get_relation_pattern_slots as _get_relation_slots
 
 # -----------------------------
 # 0) 관계/충합 기본 테이블 (엔진용 최소셋)
@@ -197,7 +198,7 @@ def build_features_by_pattern(
         ten_sig = sig.get("ten") or {}
         sh_sig = sig.get("shinsal") or {}
 
-        out[pid] = {
+        features = {
             "ten_score": _ten_score(ten_sig, pid),
             "shinsal_score": _shinsal_score(sh_sig, pid),
             "clash_hap_score": clash_hap_score,
@@ -206,5 +207,12 @@ def build_features_by_pattern(
             "unseong_adj": un_adj,
             "gongmang_penalty": gm_pen,
         }
+        try:
+            _relation = _get_relation_slots({"wolwoon": {"features": features}})
+            if _relation["found"]:
+                features["relation_slots"] = _relation
+        except Exception:
+            pass
+        out[pid] = features
 
     return out

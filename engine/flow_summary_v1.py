@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from engine.hap_chung_interpreter import get_relation_pattern_slots
 
 def build_flow_summary_v1(
     base: Dict[str, Any],
@@ -54,6 +55,12 @@ def build_flow_summary_v1(
             for k in ("oheng", "sipsin", "yongshin", "shinsal", "kongmang"):
                 if k in base:
                     out[k] = base.get(k)
+
+    _rel = get_relation_pattern_slots(base if isinstance(base, dict) else {})
+    if _rel["found"]:
+        out["relation_pattern"] = _rel["relation_pattern"]
+        out["relation_reframe"] = _rel["reframe"]
+        out["relation_caution"] = _rel["caution"]
 
     return out
 
