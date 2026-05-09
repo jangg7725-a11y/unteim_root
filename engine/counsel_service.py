@@ -19,6 +19,7 @@ from engine.counsel_intent import (
     infer_counsel_intent,
 )
 from engine.counsel_summary import summarize_report_for_counsel
+from engine.prompt_context_builder import inject_into_summary
 from engine.full_analyzer import analyze_full
 from engine.sajuCalculator import calculate_saju
 from engine.counsel_session_card import generate_session_card
@@ -182,6 +183,7 @@ def build_engine_analysis(
     if not isinstance(report, dict):
         raise RuntimeError("ENGINE_REPORT_INVALID")
     summary = summarize_report_for_counsel(report, profile=profile, intent=intent)
+    summary = inject_into_summary(summary, report, profile, intent=intent)
     return summary, report
 
 
