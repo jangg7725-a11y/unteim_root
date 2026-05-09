@@ -31,6 +31,11 @@ from engine.healing_interpreter import (
     format_healing_prompt_block,
     get_healing_slots,
 )
+from engine import compatibility_interpreter as compat_interp
+from engine.compatibility_interpreter import (
+    get_compatibility_slots,
+    get_compatibility_summary,
+)
 
 # ── 색상 출력 유틸 ─────────────────────────────
 GREEN  = "\033[92m"
@@ -341,6 +346,84 @@ if not format_healing_prompt_block("사주 좋은 날"):
     ok("트리거 없음 → 빈 블록")
 else:
     fail("트리거 없는데 블록 생성")
+
+
+# ══════════════════════════════════════════════
+# 6) 천간 궁합(compatibility_matrix) 인터프리터
+# ══════════════════════════════════════════════
+section("6. 천간 궁합(compatibility_matrix) 인터프리터")
+
+cx = get_compatibility_slots("甲", "乙", seed=101)
+if (
+    cx.get("found")
+    and cx["lookup_key"] == "甲_乙"
+    and not cx.get("used_reverse_lookup")
+    and cx.get("label")
+    and cx.get("mingri_relation")
+    and cx.get("core_dynamic")
+    and cx.get("dynamic")
+    and cx.get("strength")
+    and cx.get("friction")
+    and cx.get("growth")
+    and cx.get("daily_hint")
+):
+    ok("甲×乙 순방향 매칭 · 5슬롯 + 메타")
+else:
+    fail("compatibility 순방향 실패", str(cx))
+
+cx_reverse_pov = get_compatibility_slots("乙", "甲", seed=101)
+if (
+    cx_reverse_pov.get("found")
+    and cx_reverse_pov["lookup_key"] == "乙_甲"
+    and cx_reverse_pov.get("label") != cx.get("label")
+):
+    ok("乙×甲 역학 엔트리 별도(시점 차이 반영)")
+else:
+    fail("乙×甲 별도 엔트리 실패", str(cx_reverse_pov))
+
+cx_alias = get_compatibility_slots("갑", "을", seed=42)
+if cx_alias.get("found") and cx_alias["lookup_key"] == "甲_乙":
+    ok("갑/을 → 甲/乙 정규화")
+else:
+    fail("간지 별명 실패", str(cx_alias))
+
+cx_none = get_compatibility_slots("甲", "")
+if not cx_none.get("found"):
+    ok("partner 비어있음 → found False")
+else:
+    fail("빈 partner에 found")
+
+sum_txt = get_compatibility_summary("甲", "乙", seed=5)
+if "천간 궁합" in sum_txt and "조합:" in sum_txt and "역학 요약:" in sum_txt:
+    ok("get_compatibility_summary 문자열 블록")
+else:
+    fail("summary 포맷 실패", sum_txt[:200])
+
+if get_compatibility_summary("XStem", "YStem") == "":
+    ok("알 수 없는 간지 → 빈 문자열")
+else:
+    fail("무효 간지인데 블록 생성")
+
+_COMPAT_SNAPSHOT = dict(compat_interp._combinations())
+
+
+def _patched_combos_no_jia_yi():
+    d = dict(_COMPAT_SNAPSHOT)
+    d.pop("甲_乙", None)
+    return d
+
+
+_orig_combinations_fn = compat_interp._combinations
+compat_interp._combinations = _patched_combos_no_jia_yi
+try:
+    cx_fb = get_compatibility_slots("甲", "乙", seed=7)
+finally:
+    compat_interp._combinations = _orig_combinations_fn
+
+if cx_fb.get("found") and cx_fb.get("used_reverse_lookup") and cx_fb.get("lookup_key") == "乙_甲":
+    ok("순방향 부재 시 역방향(乙_甲) 참조")
+else:
+    fail("역방향 fallback 실패", str(cx_fb))
 
 
 # ══════════════════════════════════════════════
