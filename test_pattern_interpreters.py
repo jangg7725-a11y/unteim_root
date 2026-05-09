@@ -44,6 +44,12 @@ from engine.vocation_narrative_interpreter import (
     get_daymaster_vocation_hint,
     get_vocation_slots,
 )
+from engine.monthly_action_guide_interpreter import (
+    get_daymaster_tip,
+    get_oheng_guide,
+    get_topic_guide,
+    get_week_guide,
+)
 
 # ── 색상 출력 유틸 ─────────────────────────────
 GREEN  = "\033[92m"
@@ -560,6 +566,117 @@ if get_daymaster_vocation_hint("없는간지") == {"found": False}:
     ok('get_daymaster_vocation_hint("없는간지") → {found: False}')
 else:
     fail("없는 간지 처리 실패", str(get_daymaster_vocation_hint("없는간지")))
+
+
+# ══════════════════════════════════════════════
+# 8) 월별 실천 가이드 인터프리터
+# ══════════════════════════════════════════════
+section("8. 월별 실천 가이드 인터프리터")
+
+# 8-1) oheng_monthly_strategy
+og = get_oheng_guide("목_강")
+if (
+    og.get("found")
+    and isinstance(og.get("strategy"), str)
+    and og["strategy"].strip()
+    and isinstance(og.get("caution"), str)
+    and og["caution"].strip()
+    and isinstance(og.get("action"), str)
+    and og["action"].strip()
+):
+    ok("get_oheng_guide(목_강) → strategy/caution/action 문자열")
+else:
+    fail("get_oheng_guide(목_강) 실패", str(og))
+
+og_seed = get_oheng_guide("화_강", seed=99)
+og_seed2 = get_oheng_guide("화_강", seed=99)
+if (
+    og_seed.get("found")
+    and og_seed2.get("found")
+    and og_seed["strategy"] == og_seed2["strategy"]
+    and og_seed["caution"] == og_seed2["caution"]
+    and og_seed["action"] == og_seed2["action"]
+):
+    ok("get_oheng_guide(화_강, seed=99) → 재현 가능")
+else:
+    fail("oheng seed 재현 실패", str(og_seed))
+
+if get_oheng_guide("없는오행키") == {"found": False}:
+    ok("get_oheng_guide(없는오행키) → {found: False}")
+else:
+    fail("없는 oheng_key 처리 실패", str(get_oheng_guide("없는오행키")))
+
+# 8-2) topic_monthly_guide × rising/stable/caution
+tg_r = get_topic_guide("career_work", "rising", seed=1)
+if tg_r.get("found") and tg_r.get("flow_type") == "rising" and isinstance(tg_r.get("guide"), str) and tg_r["guide"].strip():
+    ok("get_topic_guide(career_work, rising) → guide 문자열")
+else:
+    fail("topic rising 실패", str(tg_r))
+
+tg_s = get_topic_guide("health", "stable", seed=2)
+if tg_s.get("found") and tg_s["flow_type"] == "stable" and tg_s.get("guide"):
+    ok("get_topic_guide(health, stable) → guide")
+else:
+    fail("topic stable 실패", str(tg_s))
+
+tg_c = get_topic_guide("finance", "caution")
+if tg_c.get("found") and tg_c["flow_type"] == "caution" and tg_c.get("guide"):
+    ok("get_topic_guide(finance, caution) → guide")
+else:
+    fail("topic caution 실패", str(tg_c))
+
+if get_topic_guide("없는토픽", "rising") == {"found": False}:
+    ok("get_topic_guide(없는토픽) → {found: False}")
+else:
+    fail("없는 topic_id 실패", str(get_topic_guide("없는토픽", "rising")))
+
+if get_topic_guide("career_work", "wrong_flow") == {"found": False}:
+    ok("get_topic_guide(잘못된 flow_type) → {found: False}")
+else:
+    fail("잘못된 flow_type 실패", str(get_topic_guide("career_work", "wrong_flow")))
+
+# 8-3) daymaster_monthly_tip
+tip_ja = get_daymaster_tip("甲", seed=42)
+tip_ja2 = get_daymaster_tip("甲", seed=42)
+if (
+    tip_ja.get("found")
+    and tip_ja.get("gan") == "甲"
+    and isinstance(tip_ja.get("tip"), str)
+    and tip_ja["tip"].strip()
+    and tip_ja["tip"] == tip_ja2["tip"]
+):
+    ok('get_daymaster_tip("甲", seed=42) → tip 문자열·재현')
+else:
+    fail("get_daymaster_tip(甲) 실패", str(tip_ja))
+
+tip_gap = get_daymaster_tip("갑", seed=42)
+if tip_gap.get("found") and tip_gap.get("gan") == "甲" and tip_gap.get("tip") == tip_ja.get("tip"):
+    ok('get_daymaster_tip("갑", seed=42) → 甲 정규화·동일 tip')
+else:
+    fail("갑 별칭 daymaster tip 실패", str(tip_gap))
+
+if get_daymaster_tip("없는간지") == {"found": False}:
+    ok("get_daymaster_tip(없는간지) → {found: False}")
+else:
+    fail("없는 간지 tip 실패", str(get_daymaster_tip("없는간지")))
+
+# 8-4) week_rhythm_guide
+wg1 = get_week_guide(1, seed=0)
+if wg1.get("found") and wg1.get("week") == 1 and isinstance(wg1.get("guide"), str) and wg1["guide"].strip():
+    ok("get_week_guide(1) → guide 문자열")
+else:
+    fail("get_week_guide(1) 실패", str(wg1))
+
+wg4 = get_week_guide(4, seed=3)
+if wg4.get("found") and wg4.get("week_key") == "week4" and wg4.get("guide"):
+    ok("get_week_guide(4, seed=3) → week4 guide")
+else:
+    fail("get_week_guide(4) 실패", str(wg4))
+
+if get_week_guide(99) == {"found": False}:
+    ok("get_week_guide(99) → {found: False}")
+else:
+    fail("없는 주차 실패", str(get_week_guide(99)))
 
 
 # ══════════════════════════════════════════════
