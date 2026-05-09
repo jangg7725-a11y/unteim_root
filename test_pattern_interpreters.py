@@ -36,6 +36,14 @@ from engine.compatibility_interpreter import (
     get_compatibility_slots,
     get_compatibility_summary,
 )
+from engine.daewoon_narrative_interpreter import (
+    get_flow_slots,
+    get_sewun_overlay_slots,
+)
+from engine.vocation_narrative_interpreter import (
+    get_daymaster_vocation_hint,
+    get_vocation_slots,
+)
 
 # ── 색상 출력 유틸 ─────────────────────────────
 GREEN  = "\033[92m"
@@ -424,6 +432,134 @@ if cx_fb.get("found") and cx_fb.get("used_reverse_lookup") and cx_fb.get("lookup
     ok("순방향 부재 시 역방향(乙_甲) 참조")
 else:
     fail("역방향 fallback 실패", str(cx_fb))
+
+
+# ══════════════════════════════════════════════
+# 7) 대운·세운 / 직업 서사 인터프리터
+# ══════════════════════════════════════════════
+section("7. 대운·세운 / 직업 서사 인터프리터")
+
+# 7-1) daewoon_narrative_interpreter — flow
+flow_rs = get_flow_slots("rising_strong")
+slot6 = ("era", "energy", "opportunity", "caution", "action", "reframe")
+if (
+    flow_rs.get("found")
+    and all(isinstance(flow_rs.get(k), str) and flow_rs.get(k) for k in slot6)
+):
+    ok("get_flow_slots(rising_strong) → 6슬롯 모두 비어 있지 않은 문자열")
+else:
+    fail("rising_strong 6슬롯 문자열 검증 실패", str(flow_rs))
+
+flow_peak = get_flow_slots("peak", seed=42)
+if flow_peak.get("found") and isinstance(flow_peak.get("core_message"), str) and flow_peak["core_message"].strip():
+    ok("get_flow_slots(peak, seed=42) → core_message 포함")
+else:
+    fail("peak core_message 실패", str(flow_peak))
+
+flow_tr = get_flow_slots("transition")
+if flow_tr.get("found") and all(k in flow_tr for k in slot6):
+    ok("get_flow_slots(transition) → era~reframe 6키")
+else:
+    fail("transition 6키 실패", str(flow_tr))
+
+if get_flow_slots("존재하지않는ID") == {"found": False}:
+    ok("get_flow_slots(존재하지않는ID) → {found: False}")
+else:
+    fail("없는 flow_type_id 처리 실패", str(get_flow_slots("존재하지않는ID")))
+
+# 7-2) daewoon_narrative_interpreter — sewun overlay
+ov_boost = get_sewun_overlay_slots("boost")
+if ov_boost.get("found") and isinstance(ov_boost.get("hint"), str) and ov_boost["hint"].strip():
+    ok("get_sewun_overlay_slots(boost) → hint 문자열")
+else:
+    fail("boost hint 실패", str(ov_boost))
+
+ov_dc = get_sewun_overlay_slots("double_caution", seed=1)
+if ov_dc.get("found") and isinstance(ov_dc.get("label_ko"), str) and ov_dc["label_ko"].strip():
+    ok("get_sewun_overlay_slots(double_caution, seed=1) → label_ko 포함")
+else:
+    fail("double_caution label_ko 실패", str(ov_dc))
+
+if get_sewun_overlay_slots("없는타입") == {"found": False}:
+    ok("get_sewun_overlay_slots(없는타입) → {found: False}")
+else:
+    fail("없는 overlay 처리 실패", str(get_sewun_overlay_slots("없는타입")))
+
+# 7-3) vocation_narrative_interpreter — categories
+voc_slot6 = (
+    "identity",
+    "environment",
+    "strength",
+    "challenge",
+    "growth",
+    "action",
+)
+voc_ed = get_vocation_slots("education_research")
+if (
+    voc_ed.get("found")
+    and all(isinstance(voc_ed.get(k), str) and voc_ed.get(k) for k in voc_slot6)
+):
+    ok("get_vocation_slots(education_research) → 6슬롯 모두 비어 있지 않은 문자열")
+else:
+    fail("education_research 6슬롯 실패", str(voc_ed))
+
+voc_ce = get_vocation_slots("creative_expression", seed=42)
+if voc_ce.get("found") and isinstance(voc_ce.get("core_fit"), str) and voc_ce["core_fit"].strip():
+    ok("get_vocation_slots(creative_expression, seed=42) → core_fit 포함")
+else:
+    fail("creative_expression core_fit 실패", str(voc_ce))
+
+voc_ch = get_vocation_slots("care_healing")
+if voc_ch.get("found") and all(k in voc_ch for k in voc_slot6):
+    ok("get_vocation_slots(care_healing) → identity~action 6키")
+else:
+    fail("care_healing 6키 실패", str(voc_ch))
+
+if get_vocation_slots("없는카테고리") == {"found": False}:
+    ok("get_vocation_slots(없는카테고리) → {found: False}")
+else:
+    fail("없는 category 처리 실패", str(get_vocation_slots("없는카테고리")))
+
+# 7-4) vocation_narrative_interpreter — daymaster hint
+dm_ja = get_daymaster_vocation_hint("甲")
+if (
+    dm_ja.get("found")
+    and isinstance(dm_ja.get("primary"), list)
+    and len(dm_ja["primary"]) >= 1
+    and all(isinstance(x, str) for x in dm_ja["primary"])
+    and isinstance(dm_ja.get("hint"), str)
+    and dm_ja["hint"].strip()
+):
+    ok('get_daymaster_vocation_hint("甲") → primary 리스트 + hint 문자열')
+else:
+    fail("甲 daymaster vocation hint 실패", str(dm_ja))
+
+dm_gap = get_daymaster_vocation_hint("갑")
+if (
+    dm_gap.get("found")
+    and dm_gap.get("gan") == "甲"
+    and dm_gap.get("primary") == dm_ja.get("primary")
+    and dm_gap.get("hint") == dm_ja.get("hint")
+):
+    ok('get_daymaster_vocation_hint("갑") → 甲과 동일(primary/hint), gan 정규화')
+else:
+    fail("갑 별칭 정규화 실패", str(dm_gap))
+
+dm_gui = get_daymaster_vocation_hint("癸")
+if (
+    dm_gui.get("found")
+    and isinstance(dm_gui.get("primary"), list)
+    and len(dm_gui["primary"]) >= 1
+    and all(isinstance(x, str) for x in dm_gui["primary"])
+):
+    ok('get_daymaster_vocation_hint("癸") → primary 리스트')
+else:
+    fail("癸 primary 실패", str(dm_gui))
+
+if get_daymaster_vocation_hint("없는간지") == {"found": False}:
+    ok('get_daymaster_vocation_hint("없는간지") → {found: False}')
+else:
+    fail("없는 간지 처리 실패", str(get_daymaster_vocation_hint("없는간지")))
 
 
 # ══════════════════════════════════════════════
