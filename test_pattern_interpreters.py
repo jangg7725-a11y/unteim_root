@@ -23,6 +23,9 @@ from engine.shinsal_psychology_interpreter import (
     get_shinsal_psychology_slots,
     get_shinsal_slots_by_name,
 )
+from engine.daymaster_psychology_interpreter import get_daymaster_slots
+from engine.geukguk_narrative_interpreter import get_geukguk_slots
+from engine.kongmang_pattern_interpreter import get_kongmang_slots
 
 # ── 색상 출력 유틸 ─────────────────────────────
 GREEN  = "\033[92m"
@@ -245,6 +248,60 @@ if not s_none:
     ok("없는 신살 → 빈 dict 반환 (정상)")
 else:
     fail("없는 신살에 결과 반환됨")
+
+
+# ══════════════════════════════════════════════
+# 4) 일간 / 격국 / 공망 패턴 인터프리터
+# ══════════════════════════════════════════════
+section("4. 일간·격국·공망 패턴 인터프리터")
+
+dm = get_daymaster_slots("甲", seed=42)
+if dm.get("found") and dm.get("label") == "갑목" and dm.get("identity"):
+    ok("일간 甲 → 갑목 슬롯 (identity 등 랜덤 1문장)")
+else:
+    fail("일간 슬롯 실패", str(dm))
+
+dm_ko = get_daymaster_slots("갑목", seed=1)
+if dm_ko.get("found") and dm_ko.get("behavior"):
+    ok("key_map 갑목 → 한자 키 조회")
+else:
+    fail("갑목 매핑 실패", str(dm_ko))
+
+dm_bad = get_daymaster_slots("없는간")
+if not dm_bad.get("found"):
+    ok("없는 일간 → found False")
+else:
+    fail("없는 일간에 found True", str(dm_bad))
+
+gg = get_geukguk_slots("식신격", seed=42)
+if gg.get("found") and gg.get("label_ko") == "식신격" and gg.get("life_theme"):
+    ok("식신격 격국 → life_theme 등 풀 랜덤 선택")
+else:
+    fail("격국 슬롯 실패", str(gg))
+
+gg_map = get_geukguk_slots("식상격", seed=0)
+if gg_map.get("found") and gg_map.get("geukguk_id") == "식신격":
+    ok("식상격 → 식신격 key_map 매핑")
+else:
+    fail("식상격 매핑 실패", str(gg_map))
+
+km = get_kongmang_slots("year", seed=7)
+if km.get("found") and km.get("label_ko") == "년주 공망" and km.get("life_theme"):
+    ok("년주 공망 → 슬롯 풀 선택")
+else:
+    fail("공망 슬롯 실패", str(km))
+
+km_ko = get_kongmang_slots("시주", seed=2)
+if km_ko.get("found") and km_ko.get("pillar") == "hour":
+    ok("시주 → hour 패턴")
+else:
+    fail("시주 매핑 실패", str(km_ko))
+
+km_bad = get_kongmang_slots("invalid_pillar_xyz")
+if not km_bad.get("found"):
+    ok("잘못된 주 키 → found False")
+else:
+    fail("잘못된 주에 found True")
 
 
 # ══════════════════════════════════════════════
