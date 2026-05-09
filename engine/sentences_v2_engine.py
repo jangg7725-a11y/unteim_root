@@ -1,15 +1,15 @@
 # unteim/engine/sentences_v2_engine.py
 # -*- coding: utf-8 -*-
 """
-UNTEIM v2 문장 매핑 엔진
+UNTEIM v2 문장 매핑 엔진 (레거시 데이터)
 
-sentences_v2.json에 저장된 246개 문장을
-analyze_full() 결과(packed dict)에서 추출한 분석 데이터에 따라
-자동으로 매핑하여 리포트에 삽입할 수 있는 형태로 반환합니다.
+`data/sentence_archive/sentences_v2.json`은 보관본이며,
+제품 리포트 PDF / `analyze_full()` 기본 경로에는 연결하지 않습니다.
+`attach_v2_sentences`·`build_v2_sentences`는 로컬 테스트·스크립트용으로만 사용합니다.
 
-사용법:
+analyze_full 결과에 매핑 결과를 붙이려면(개발용):
     from engine.sentences_v2_engine import attach_v2_sentences
-    attach_v2_sentences(packed)  # packed dict에 "v2_sentences" 키 추가
+    attach_v2_sentences(packed)  # packed에 "v2_sentences" 키 추가
 """
 from __future__ import annotations
 
@@ -23,13 +23,14 @@ from typing import Any, Dict, List, Optional, Tuple
 # Repo root: engine/ -> parent.parent; data lives at repo root data/
 _ROOT = Path(__file__).resolve().parent.parent
 _DATA_DIR = _ROOT / "data"
-_SENTENCES_FILE = _DATA_DIR / "sentences_v2.json"
+_SENTENCE_ARCHIVE_DIR = _DATA_DIR / "sentence_archive"
+_SENTENCES_FILE = _SENTENCE_ARCHIVE_DIR / "sentences_v2.json"
 
 _CACHE: Optional[Dict[str, Any]] = None
 
 
 def _load_sentences() -> Dict[str, Any]:
-    """sentences_v2.json을 한 번만 로드하고 캐싱"""
+    """sentence_archive/sentences_v2.json을 한 번만 로드하고 캐싱"""
     global _CACHE
     if _CACHE is not None:
         return _CACHE
@@ -413,7 +414,7 @@ def map_c_closing(section: str = "all") -> List[Dict[str, Any]]:
 def build_v2_sentences(packed: Dict[str, Any]) -> Dict[str, Any]:
     """
     analyze_full()의 결과(packed dict)에서 분석 데이터를 추출하여
-    sentences_v2.json의 문장을 자동 매핑하고 구조화된 결과를 반환.
+    sentence_archive/sentences_v2.json의 문장을 자동 매핑하고 구조화된 결과를 반환.
     
     Args:
         packed: analyze_full() 반환 dict

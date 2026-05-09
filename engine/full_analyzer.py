@@ -37,7 +37,6 @@ from engine.total_fortune_aggregator_v1 import (
     build_total_fortune_block,
 )
 from engine.samjae_engine_v1 import build_samjae_result
-from engine.sentences_v2_engine import attach_v2_sentences
 from engine.calendar_year_fortune import attach_calendar_year_fortunes
 from engine.selected_topic_reports import attach_selected_topic_reports
 from .monthly_reports_builder import attach_monthly_reports
@@ -1722,9 +1721,6 @@ def analyze_full(
     
     packed.setdefault("extra", {}).setdefault("total_fortune", {})["samjae"] = build_samjae_result(packed)
     
-    # ✅ [v2] 자기이해 문장 + 실천 개운법 자동 매핑
-    attach_v2_sentences(packed)
-
     try:
         attach_calendar_year_fortunes(packed)
     except Exception as e:

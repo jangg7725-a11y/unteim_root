@@ -13,7 +13,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # 👉 JSON 파일 위치 (수정 필요하면 여기만 변경)
-JSON_PATH = os.path.join(BASE_DIR, "data", "sentence_db.json")
+JSON_PATH = os.path.join(BASE_DIR, "data", "sentence_archive", "sentence_db.json")
 
 
 # ------------------------------------------

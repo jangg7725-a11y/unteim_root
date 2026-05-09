@@ -674,4 +674,4 @@
 
 ---
 
-*Generated from `data\sentences_v2.json` (246 sentences). Regenerate: `python scripts/export_sentences_v2_to_markdown.py`*
+*Generated from `data\sentence_archive\sentences_v2.json` (246 sentences). Regenerate: `python scripts/export_sentences_v2_to_markdown.py`*

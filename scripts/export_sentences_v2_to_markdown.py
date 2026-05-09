@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Export data/sentences_v2.json to human-readable Markdown (reader companion)."""
+"""Export data/sentence_archive/sentences_v2.json to human-readable Markdown (reader companion)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-JSON_PATH = ROOT / "data" / "sentences_v2.json"
+JSON_PATH = ROOT / "data" / "sentence_archive" / "sentences_v2.json"
 OUT_PATH = ROOT / "data" / "sentences_v2_reader.md"
 
 # Manuscript-aligned tips (not stored as separate sentences in JSON)
