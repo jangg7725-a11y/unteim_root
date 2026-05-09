@@ -26,6 +26,11 @@ from engine.shinsal_psychology_interpreter import (
 from engine.daymaster_psychology_interpreter import get_daymaster_slots
 from engine.geukguk_narrative_interpreter import get_geukguk_slots
 from engine.kongmang_pattern_interpreter import get_kongmang_slots
+from engine.healing_interpreter import (
+    detect_situation,
+    format_healing_prompt_block,
+    get_healing_slots,
+)
 
 # ── 색상 출력 유틸 ─────────────────────────────
 GREEN  = "\033[92m"
@@ -302,6 +307,40 @@ if not km_bad.get("found"):
     ok("잘못된 주 키 → found False")
 else:
     fail("잘못된 주에 found True")
+
+
+# ══════════════════════════════════════════════
+# 5) 위로문(healing) 인터프리터
+# ══════════════════════════════════════════════
+section("5. 위로문(healing) 인터프리터")
+
+if detect_situation("요즘 번아웃이라 힘들어") == "burnout":
+    ok("detect_situation → burnout (키워드)")
+else:
+    fail("burnout 감지 실패", str(detect_situation("요즘 번아웃이라 힘들어")))
+
+hs = get_healing_slots("burnout", seed=99)
+if hs.get("found") and hs.get("label_ko") and hs.get("comfort") and hs.get("insight") and hs.get("action"):
+    ok("get_healing_slots(burnout) → comfort/insight/action")
+else:
+    fail("get_healing_slots 실패", str(hs))
+
+hs_bad = get_healing_slots("no_such_situation")
+if not hs_bad.get("found"):
+    ok("없는 situation_id → found False")
+else:
+    fail("없는 id에 found True")
+
+blk = format_healing_prompt_block("미래가 너무 불안해", seed=1)
+if "① 공감" in blk and "③ 원인" in blk and "④ 제안" in blk and "미래 불안" in blk:
+    ok("format_healing_prompt_block → ①③④ 라벨 + 상황명")
+else:
+    fail("힐링 블록 형식 실패", blk[:200] if blk else "")
+
+if not format_healing_prompt_block("사주 좋은 날"):
+    ok("트리거 없음 → 빈 블록")
+else:
+    fail("트리거 없는데 블록 생성")
 
 
 # ══════════════════════════════════════════════
