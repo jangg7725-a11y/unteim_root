@@ -71,8 +71,8 @@ class TestCalculateSaju:
         result = unteim.calculate_saju("1966-11-04 02:05")
         assert result["year"]["gan"] == "丙"
         assert result["year"]["ji"] == "午"
-        assert result["day"]["gan"] == "乙"
-        assert result["day"]["ji"] == "丑"
+        assert result["day"]["gan"] == "丁"
+        assert result["day"]["ji"] == "卯"
 
 
 # ============================================================

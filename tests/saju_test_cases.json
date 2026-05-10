@@ -3,35 +3,35 @@
     "birth": "1966-11-04 02:05",
     "expected_year": "丙午",
     "expected_month": "戊戌",
-    "expected_day": "乙丑",
-    "expected_hour": "丁丑"
+    "expected_day": "丁卯",
+    "expected_hour": "辛丑"
   },
   {
     "birth": "1990-01-01 09:30",
     "expected_year": "己巳",
     "expected_month": "丙子",
-    "expected_day": "甲子",
-    "expected_hour": "己巳"
+    "expected_day": "丙寅",
+    "expected_hour": "癸巳"
   },
   {
     "birth": "1984-02-02 12:00",
     "expected_year": "癸亥",
     "expected_month": "乙丑",
-    "expected_day": "甲子",
-    "expected_hour": "庚午"
+    "expected_day": "丙寅",
+    "expected_hour": "甲午"
   },
   {
     "birth": "2026-02-04 04:00",
     "expected_year": "乙巳",
     "expected_month": "己丑",
-    "expected_day": "丁未",
-    "expected_hour": "壬寅"
+    "expected_day": "己酉",
+    "expected_hour": "丙寅"
   },
   {
     "birth": "2026-02-04 06:00",
     "expected_year": "丙午",
     "expected_month": "庚寅",
-    "expected_day": "丁未",
-    "expected_hour": "癸卯"
+    "expected_day": "己酉",
+    "expected_hour": "丁卯"
   }
 ]

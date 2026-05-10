@@ -58,6 +58,9 @@ export default defineConfig(({ mode }) => {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2}"],
           navigateFallback: "/index.html",
           navigateFallbackDenylist: [/^\/api\//],
+          skipWaiting: true,
+          clientsClaim: true,
+          runtimeCaching: [],
         },
         devOptions: {
           enabled: false,

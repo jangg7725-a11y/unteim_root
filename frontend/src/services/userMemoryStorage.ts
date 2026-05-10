@@ -8,9 +8,15 @@ import type { CounselCharacterId, CounselTypeHint } from "@/types/counsel";
 import type { SajuReportData } from "@/types/report";
 
 const STORAGE_USER_ID = "unteim_user_id_v1";
-const STORAGE_MEMORY = "unteim_user_memory_v1";
+const STORAGE_MEMORY = "unteim_user_memory_v2"; // v2: narrative_slots 구조 도입으로 캐시 무효화
+const _STORAGE_MEMORY_LEGACY = "unteim_user_memory_v1";
 
-export const USER_MEMORY_VERSION = 1 as const;
+export const USER_MEMORY_VERSION = 2 as const;
+
+// 구버전 캐시 정리 (브라우저에 남아있는 v1 데이터 제거)
+if (typeof window !== "undefined" && window.localStorage) {
+  try { window.localStorage.removeItem(_STORAGE_MEMORY_LEGACY); } catch { /* ignore */ }
+}
 
 export type StoredCounselMessage = {
   id: string;
@@ -21,7 +27,7 @@ export type StoredCounselMessage = {
 };
 
 export type UserMemoryPayload = {
-  version: typeof USER_MEMORY_VERSION;
+  version: 1 | typeof USER_MEMORY_VERSION;
   userId: string;
   birth: BirthInputPayload | null;
   analysisSummary: string | null;
