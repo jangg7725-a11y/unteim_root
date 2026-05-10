@@ -186,22 +186,27 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     oheng_entry = (action_db.get("oheng_monthly_strategy") or {}).get(oheng_key, {})
     oheng_strategy_pool = oheng_entry.get("strategy_pool", []) if isinstance(oheng_entry, dict) else []
 
-    money_ctx = get_money_context_for_packed(slot_packed, seed=0)
-    health_ctx = get_health_context_for_packed(slot_packed, seed=0)
-    career_ctx = get_career_context_for_packed(slot_packed, seed=0)
-    relation_ctx = get_relation_context_for_packed(slot_packed, seed=0)
-
-    money_daymaster = money_ctx.get("daymaster", {}) if isinstance(money_ctx, dict) else {}
-    money_oheng = money_ctx.get("oheng", {}) if isinstance(money_ctx, dict) else {}
-    health_daymaster = health_ctx.get("daymaster", {}) if isinstance(health_ctx, dict) else {}
-    health_oheng = health_ctx.get("oheng", {}) if isinstance(health_ctx, dict) else {}
-    career_oheng = career_ctx.get("oheng", {}) if isinstance(career_ctx, dict) else {}
-    relation_oheng = relation_ctx.get("oheng", {}) if isinstance(relation_ctx, dict) else {}
+    base_seed = (sum(ord(c) for c in day_gan) * 17) if day_gan else 0
 
     for idx, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
         slot_idx = _month_slot_index(row, idx)
+        # 월마다 다른 시드를 줘서 인터프리터의 _pick()가 풀에서 다른 문장을 뽑도록 한다.
+        month_seed = base_seed + (slot_idx + 1) * 13
+
+        money_ctx = get_money_context_for_packed(slot_packed, seed=month_seed)
+        health_ctx = get_health_context_for_packed(slot_packed, seed=month_seed + 17)
+        career_ctx = get_career_context_for_packed(slot_packed, seed=month_seed + 31)
+        relation_ctx = get_relation_context_for_packed(slot_packed, seed=month_seed + 43)
+
+        money_daymaster = money_ctx.get("daymaster", {}) if isinstance(money_ctx, dict) else {}
+        money_oheng = money_ctx.get("oheng", {}) if isinstance(money_ctx, dict) else {}
+        health_daymaster = health_ctx.get("daymaster", {}) if isinstance(health_ctx, dict) else {}
+        health_oheng = health_ctx.get("oheng", {}) if isinstance(health_ctx, dict) else {}
+        career_oheng = career_ctx.get("oheng", {}) if isinstance(career_ctx, dict) else {}
+        relation_oheng = relation_ctx.get("oheng", {}) if isinstance(relation_ctx, dict) else {}
+
         if daymaster_tip_pool and not row.get("daymaster_monthly_tip"):
             row["daymaster_monthly_tip"] = str(daymaster_tip_pool[slot_idx % len(daymaster_tip_pool)]).strip()
         if oheng_strategy_pool and not row.get("oheng_monthly_strategy"):
