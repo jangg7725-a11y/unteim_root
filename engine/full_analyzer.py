@@ -41,9 +41,224 @@ from engine.calendar_year_fortune import attach_calendar_year_fortunes
 from engine.selected_topic_reports import attach_selected_topic_reports
 from .monthly_reports_builder import attach_monthly_reports
 from engine.monthly_fortune_engine_report import attach_monthly_fortune_engine
+from engine.money_pattern_interpreter import get_money_context_for_packed
+from engine.health_pattern_interpreter import get_health_context_for_packed
+from engine.career_exam_interpreter import get_career_context_for_packed
+from engine.relationship_marriage_interpreter import get_relation_context_for_packed
+from utils.narrative_loader import load_sentences
 
 KST = ZoneInfo("Asia/Seoul")
 logger = logging.getLogger(__name__)
+
+_MONTHLY_SLOT_KEYS = (
+    "daymaster_monthly_tip",
+    "oheng_monthly_strategy",
+    "oheng_monthly_core",
+    "money_trait",
+    "money_advice",
+    "money_monthly",
+    "health_tendency",
+    "health_care",
+    "health_monthly",
+    "career_strategy",
+    "career_strength",
+    "relation_trait",
+    "relation_advice",
+)
+
+
+def _first_text(*values: Any) -> str:
+    for value in values:
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _month_slot_index(row: Dict[str, Any], fallback_idx: int) -> int:
+    month = int(row.get("month") or fallback_idx + 1)
+    if 1 <= month <= 12:
+        return month - 1
+    return fallback_idx % 12
+
+
+def _dominant_element_ko(packed: Dict[str, Any]) -> str:
+    element = _first_text(
+        packed.get("day_element"),
+        ((packed.get("analysis") or {}).get("day_master") or {}).get("element")
+        if isinstance(packed.get("analysis"), dict)
+        else "",
+    )
+    element_map = {
+        "wood": "목",
+        "fire": "화",
+        "earth": "토",
+        "metal": "금",
+        "water": "수",
+        "木": "목",
+        "火": "화",
+        "土": "토",
+        "金": "금",
+        "水": "수",
+        "목": "목",
+        "화": "화",
+        "토": "토",
+        "금": "금",
+        "수": "수",
+    }
+    if element in element_map:
+        return element_map[element]
+
+    counts = packed.get("oheng", {}).get("counts") if isinstance(packed.get("oheng"), dict) else {}
+    if isinstance(counts, dict) and counts:
+        candidates = {
+            "목": int(counts.get("목", counts.get("木", 0)) or 0),
+            "화": int(counts.get("화", counts.get("火", 0)) or 0),
+            "토": int(counts.get("토", counts.get("土", 0)) or 0),
+            "금": int(counts.get("금", counts.get("金", 0)) or 0),
+            "수": int(counts.get("수", counts.get("水", 0)) or 0),
+        }
+        return max(candidates, key=candidates.get)
+    return ""
+
+
+def _day_gan_and_element_for_slots(packed: Dict[str, Any]) -> Tuple[str, str]:
+    pillars = packed.get("pillars") if isinstance(packed.get("pillars"), dict) else {}
+    day = pillars.get("day") if isinstance(pillars.get("day"), dict) else {}
+    analysis = packed.get("analysis") if isinstance(packed.get("analysis"), dict) else {}
+    day_master = analysis.get("day_master") if isinstance(analysis.get("day_master"), dict) else {}
+
+    gan = _first_text(day.get("gan"), packed.get("day_gan"), day_master.get("gan"))
+    gan_to_element = {
+        "甲": "목",
+        "乙": "목",
+        "丙": "화",
+        "丁": "화",
+        "戊": "토",
+        "己": "토",
+        "庚": "금",
+        "辛": "금",
+        "壬": "수",
+        "癸": "수",
+    }
+    element = _first_text(packed.get("day_element"), day_master.get("element"), gan_to_element.get(gan, ""))
+    return gan, element
+
+
+def _packed_for_monthly_slot_interpreters(packed: Dict[str, Any]) -> Dict[str, Any]:
+    """인터프리터들이 공통으로 찾는 day_gan/day_element 경로를 보강한다."""
+    gan, element = _day_gan_and_element_for_slots(packed)
+    enriched = dict(packed)
+    if gan:
+        enriched["day_gan"] = gan
+    if element:
+        enriched["day_element"] = element
+
+    analysis = dict(enriched.get("analysis") or {}) if isinstance(enriched.get("analysis"), dict) else {}
+    day_master = dict(analysis.get("day_master") or {}) if isinstance(analysis.get("day_master"), dict) else {}
+    if gan:
+        day_master.setdefault("gan", gan)
+    if element:
+        day_master.setdefault("element", element)
+    analysis["day_master"] = day_master
+    enriched["analysis"] = analysis
+    return enriched
+
+
+def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
+    """월별 row에 사주 맞춤 narrative 슬롯을 주입한다."""
+    rows = packed.get("monthly_reports")
+    if not isinstance(rows, list):
+        return
+
+    action_db = load_sentences("monthly_action_guide_db")
+    slot_packed = _packed_for_monthly_slot_interpreters(packed)
+    day_gan, _ = _day_gan_and_element_for_slots(slot_packed)
+    daymaster_tip_entry = (action_db.get("daymaster_monthly_tip") or {}).get(day_gan, {})
+    daymaster_tip_pool = (
+        daymaster_tip_entry.get("monthly_tip_pool", [])
+        if isinstance(daymaster_tip_entry, dict)
+        else []
+    )
+
+    element_ko = _dominant_element_ko(packed)
+    oheng_key = f"{element_ko}_강" if element_ko else ""
+    oheng_entry = (action_db.get("oheng_monthly_strategy") or {}).get(oheng_key, {})
+    oheng_strategy_pool = oheng_entry.get("strategy_pool", []) if isinstance(oheng_entry, dict) else []
+
+    money_ctx = get_money_context_for_packed(slot_packed, seed=0)
+    health_ctx = get_health_context_for_packed(slot_packed, seed=0)
+    career_ctx = get_career_context_for_packed(slot_packed, seed=0)
+    relation_ctx = get_relation_context_for_packed(slot_packed, seed=0)
+
+    money_daymaster = money_ctx.get("daymaster", {}) if isinstance(money_ctx, dict) else {}
+    money_oheng = money_ctx.get("oheng", {}) if isinstance(money_ctx, dict) else {}
+    health_daymaster = health_ctx.get("daymaster", {}) if isinstance(health_ctx, dict) else {}
+    health_oheng = health_ctx.get("oheng", {}) if isinstance(health_ctx, dict) else {}
+    career_oheng = career_ctx.get("oheng", {}) if isinstance(career_ctx, dict) else {}
+    relation_oheng = relation_ctx.get("oheng", {}) if isinstance(relation_ctx, dict) else {}
+
+    for idx, row in enumerate(rows):
+        if not isinstance(row, dict):
+            continue
+        slot_idx = _month_slot_index(row, idx)
+        if daymaster_tip_pool and not row.get("daymaster_monthly_tip"):
+            row["daymaster_monthly_tip"] = str(daymaster_tip_pool[slot_idx % len(daymaster_tip_pool)]).strip()
+        if oheng_strategy_pool and not row.get("oheng_monthly_strategy"):
+            row["oheng_monthly_strategy"] = str(oheng_strategy_pool[slot_idx % len(oheng_strategy_pool)]).strip()
+        if isinstance(oheng_entry, dict) and not row.get("oheng_monthly_core"):
+            row["oheng_monthly_core"] = str(oheng_entry.get("core", "") or "").strip()
+
+        if not row.get("money_trait"):
+            row["money_trait"] = _first_text(money_daymaster.get("money_trait"))
+        if not row.get("money_advice"):
+            row["money_advice"] = _first_text(money_oheng.get("advice"))
+        if not row.get("money_monthly"):
+            row["money_monthly"] = _first_text(money_oheng.get("monthly"))
+        if not row.get("health_tendency"):
+            row["health_tendency"] = _first_text(health_daymaster.get("health_tendency"))
+        if not row.get("health_care"):
+            row["health_care"] = _first_text(health_oheng.get("care"))
+        if not row.get("health_monthly"):
+            row["health_monthly"] = _first_text(health_oheng.get("monthly_hint"))
+        if not row.get("career_strategy"):
+            row["career_strategy"] = _first_text(career_oheng.get("strategy"))
+        if not row.get("career_strength"):
+            row["career_strength"] = _first_text(career_oheng.get("strength"))
+        if not row.get("relation_trait"):
+            row["relation_trait"] = _first_text(relation_oheng.get("trait"))
+        if not row.get("relation_advice"):
+            row["relation_advice"] = _first_text(relation_oheng.get("advice"))
+
+
+def _merge_monthly_slots_into_fortune(packed: Dict[str, Any]) -> None:
+    """프론트가 읽는 monthly_fortune.months에 monthly_reports 슬롯을 복사한다."""
+    monthly_fortune = packed.get("monthly_fortune")
+    monthly_reports = packed.get("monthly_reports")
+    if not isinstance(monthly_fortune, dict) or not isinstance(monthly_reports, list):
+        return
+    months = monthly_fortune.get("months")
+    if not isinstance(months, list):
+        return
+
+    by_month: Dict[int, Dict[str, Any]] = {}
+    for row in monthly_reports:
+        if not isinstance(row, dict):
+            continue
+        month = int(row.get("month") or 0)
+        if 1 <= month <= 12:
+            by_month[month] = row
+
+    for month_row in months:
+        if not isinstance(month_row, dict):
+            continue
+        source = by_month.get(int(month_row.get("month") or 0))
+        if not source:
+            continue
+        for key in _MONTHLY_SLOT_KEYS:
+            value = source.get(key)
+            if value and not month_row.get(key):
+                month_row[key] = value
 
 def _safe(name, fn, default):
     try:
@@ -1733,12 +1948,14 @@ def analyze_full(
 
     try:
         attach_monthly_reports(packed)
+        _inject_monthly_narrative_slots(packed)
     except Exception as e:
         packed.setdefault("meta", {})["monthly_reports_error"] = f"{type(e).__name__}: {e}"
         packed["monthly_reports"] = []
 
     try:
         attach_monthly_fortune_engine(packed)
+        _merge_monthly_slots_into_fortune(packed)
     except Exception as e:
         packed.setdefault("meta", {})["monthly_fortune_engine_error"] = f"{type(e).__name__}: {e}"
 
