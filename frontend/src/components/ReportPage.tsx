@@ -343,19 +343,34 @@ export function ReportPage({
               id="report-section-work"
               title="직업운"
               body={report.work}
-              supplementaryLine={reportFortune?.work ?? null}
+              supplementaryLine={
+                report.narrativeSlots?.career?.oheng?.strategy
+                ?? report.narrativeSlots?.career?.oheng?.strength
+                ?? reportFortune?.work
+                ?? null
+              }
             />
             <ReportSection
               id="report-section-money"
               title="재물운"
               body={report.money}
-              supplementaryLine={reportFortune?.money ?? null}
+              supplementaryLine={
+                report.narrativeSlots?.money?.daymaster?.money_trait
+                ?? report.narrativeSlots?.money?.oheng?.advice
+                ?? reportFortune?.money
+                ?? null
+              }
             />
             <ReportSection
               id="report-section-health"
               title="건강운"
               body={report.health}
-              supplementaryLine={reportFortune?.health ?? null}
+              supplementaryLine={
+                report.narrativeSlots?.health?.daymaster?.health_tendency
+                ?? report.narrativeSlots?.health?.oheng?.care
+                ?? reportFortune?.health
+                ?? null
+              }
             />
           </div>
 

@@ -1,3 +1,19 @@
+/** 사주 기반 narrative DB 슬롯 — /api/analyze 응답의 narrative_slots */
+export type NarrativeSlot = {
+  found: boolean;
+  label_ko?: string;
+  daymaster?: { found: boolean; label_ko?: string; money_trait?: string; health_tendency?: string; care_tip?: string; element?: string };
+  oheng?: { found: boolean; label_ko?: string; core_theme?: string; strength?: string; weakness?: string; advice?: string; care?: string; monthly?: string; monthly_hint?: string; organ_system?: string };
+};
+
+export type NarrativeSlots = {
+  money?: NarrativeSlot;
+  health?: NarrativeSlot;
+  career?: NarrativeSlot;
+  relation?: NarrativeSlot;
+  risk?: { shinsal_risks?: Array<{ found: boolean; label_ko?: string; core_message?: string; warning?: string; action?: string }> };
+};
+
 export type SajuReportData = {
   total: string;
   personality: string;
@@ -8,6 +24,8 @@ export type SajuReportData = {
   /** 엔진 기반 월별 상세(있으면 월별 카드에 우선 사용) */
   monthlyFortune?: MonthlyFortuneEnginePayload | null;
   raw?: Record<string, unknown>;
+  /** 사주 맞춤 narrative DB 슬롯 */
+  narrativeSlots?: NarrativeSlots | null;
 };
 
 export type SajuOverviewPillar = {

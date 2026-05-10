@@ -42,6 +42,11 @@ from engine.sipsin import ten_god_stem
 from engine.oheng_analyzer import analyze_oheng
 from engine.shinsal_detector import detect_shinsal
 from engine.twelve_fortunes import map_twelve_fortunes
+from engine.money_pattern_interpreter import get_money_context_for_packed
+from engine.risk_fortune_interpreter import get_shinsal_risk_slots
+from engine.career_exam_interpreter import get_career_context_for_packed
+from engine.relationship_marriage_interpreter import get_relation_context_for_packed
+from engine.health_pattern_interpreter import get_health_context_for_packed
 from reports.monthly_report import build_monthly_report_pdf
 import traceback
 
@@ -798,6 +803,35 @@ def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
     result = _clean(engine_result)
     if isinstance(result, dict):
         result["saju_overview"] = _clean(_build_saju_overview(engine_result if isinstance(engine_result, dict) else {}))
+
+    # narrative DB 슬롯 주입
+    if isinstance(result, dict):
+        try:
+            _packed = engine_result if isinstance(engine_result, dict) else {}
+            _sh_items = (
+                (_packed.get("analysis") or {}).get("shinsal", {}).get("items", [])
+                if isinstance(_packed.get("analysis"), dict) else []
+            )
+            _shinsal_names = [
+                str(it.get("name", "")).strip()
+                for it in (_sh_items or [])
+                if isinstance(it, dict) and it.get("name")
+                and not str(it.get("name", "")).startswith("12운성:")
+            ]
+            result["narrative_slots"] = {
+                "money": _clean(get_money_context_for_packed(_packed, seed=0)),
+                "health": _clean(get_health_context_for_packed(_packed, seed=0)),
+                "career": _clean(get_career_context_for_packed(_packed, seed=0)),
+                "relation": _clean(get_relation_context_for_packed(_packed, seed=0)),
+                "risk": _clean({
+                    "shinsal_risks": [
+                        slot for s in _shinsal_names
+                        for slot in get_shinsal_risk_slots(s, seed=0)
+                    ][:3]
+                }),
+            }
+        except Exception:
+            result["narrative_slots"] = {}
 
     if isinstance(result, dict):
         result["request"] = {

@@ -513,6 +513,9 @@ function pickSection(raw: Record<string, unknown>): SajuReportData {
   const monthlyFortune = parseMonthlyFortune(raw);
   const sajuOverview = parseSajuOverview(raw);
 
+  // narrative_slots 파싱
+  const narrativeSlots = asRecord(raw.narrative_slots) ?? null;
+
   const total2 = simplifyReportCopy(enrichHealingCard(total, dominantTenGod, "total"));
   const personality2 = simplifyReportCopy(enrichHealingCard(personality, dominantTenGod, "personality"));
   const work2 = simplifyReportCopy(enrichHealingCard(work, dominantTenGod, "work"));
@@ -528,6 +531,7 @@ function pickSection(raw: Record<string, unknown>): SajuReportData {
     sajuOverview,
     monthlyFortune,
     raw,
+    narrativeSlots: narrativeSlots as import("@/types/report").NarrativeSlots | null,
   };
 }
 
