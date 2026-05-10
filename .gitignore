@@ -54,3 +54,6 @@ cache/
 # 폰트 디렉터리(로컬 설치본)
 assets/fonts/
 **/fonts/
+
+# 상담 피드백 데이터 (로컬 수집본)
+data/feedback/
