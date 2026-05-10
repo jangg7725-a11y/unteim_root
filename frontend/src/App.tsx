@@ -10,6 +10,8 @@ import { AppShellDrawer } from "./components/AppShellDrawer";
 import { AuthModal } from "./components/auth/AuthModal";
 import { ExploreHubPage } from "./components/explore/ExploreHubPage";
 import { PwaInstallHint } from "./components/PwaInstallHint";
+import { DailyReturnBanner } from "./components/DailyReturnBanner";
+import { useDailyReturnLoop } from "./hooks/useDailyReturnLoop";
 import { hasStoredBirth } from "./services/userMemoryStorage";
 import { fetchSajuReport } from "./services/reportApi";
 import type { BirthInputPayload } from "./types/birthInput";
@@ -32,6 +34,9 @@ function AppShell() {
   const feedMonthPendingRef = useRef<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+
+  // 재방문 루프 — 오늘 운세 알림
+  const { showDailyBanner, dismissBanner, markFortuneSeen, lastVisitDate } = useDailyReturnLoop();
 
   const selectTabFromMenu = (t: "explore" | "input" | "report" | "counsel") => {
     if (t === "input") feedMonthPendingRef.current = null;
@@ -256,6 +261,13 @@ function AppShell() {
       />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <PwaInstallHint />
+      {showDailyBanner && (
+        <DailyReturnBanner
+          lastVisitDate={lastVisitDate}
+          onViewFortune={() => { selectTabFromMenu("report"); markFortuneSeen(); }}
+          onDismiss={dismissBanner}
+        />
+      )}
     </div>
   );
 }
