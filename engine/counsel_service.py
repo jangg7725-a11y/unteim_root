@@ -26,6 +26,10 @@ from engine.sajuCalculator import calculate_saju
 from engine.counsel_session_card import generate_session_card
 from engine.shinsal_psychology_interpreter import get_shinsal_psychology_slots
 from engine.twelve_fortunes_interpreter import get_fortune_stage_slots
+from engine.money_pattern_interpreter import format_money_prompt_block
+from engine.risk_fortune_interpreter import format_risk_prompt_block, detect_risk_type
+from engine.career_exam_interpreter import format_career_prompt_block
+from engine.relationship_marriage_interpreter import format_relation_prompt_block
 
 
 # 톤: 사용자 질문 키워드로 추론 → 프롬프트에 주입
@@ -227,12 +231,52 @@ def run_counsel_turn(
     tone_line = TONE_LINE.get(tone_key, TONE_LINE["comfort"])
     intent_block = _build_intent_block(intent)
     healing_block = format_healing_prompt_block(last_user)
+
+    # ── 인텐트별 narrative DB 블록 주입 ──────────────────
+    _packed = _report if isinstance(_report, dict) else {}
+    _extra_blocks: List[str] = []
+
+    if intent in ("wealth",):
+        _mb = format_money_prompt_block(_packed, seed=0)
+        if _mb:
+            _extra_blocks.append(_mb)
+        _rb = format_risk_prompt_block(user_text=last_user, seed=0)
+        if _rb:
+            _extra_blocks.append(_rb)
+
+    elif intent in ("relationship",):
+        _rel = format_relation_prompt_block(_packed, user_text=last_user, seed=0)
+        if _rel:
+            _extra_blocks.append(_rel)
+
+    elif intent in ("work", "exam"):
+        _ce = format_career_prompt_block(_packed, user_text=last_user, seed=0)
+        if _ce:
+            _extra_blocks.append(_ce)
+
+    elif intent in ("health",):
+        _risk = format_risk_prompt_block(user_text=last_user, seed=0)
+        if _risk:
+            _extra_blocks.append(_risk)
+
+    elif intent in ("general", "personality"):
+        # 텍스트에서 위험 유형 감지 시 추가
+        _rt = detect_risk_type(last_user)
+        if _rt:
+            _rb2 = format_risk_prompt_block(user_text=last_user, seed=0)
+            if _rb2:
+                _extra_blocks.append(_rb2)
+
+    _extra_block_str = "\n\n".join(_extra_blocks)
+
     system_content = SYSTEM_TEMPLATE.format(
         analysis_summary=analysis_summary,
         tone_line=tone_line,
         intent_block=intent_block,
         healing_block=healing_block,
     )
+    if _extra_block_str:
+        system_content += f"\n\n[추가 참고 — 주제별 패턴]\n{_extra_block_str}"
 
     openai_messages: List[Dict[str, str]] = [{"role": "system", "content": system_content}]
 
