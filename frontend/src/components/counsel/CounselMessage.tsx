@@ -2,6 +2,7 @@ import type { CounselMessage as CounselMessageModel } from "@/types/counsel";
 import type { VoiceId } from "@/services/ttsService";
 import { useCharacterCounselOptional } from "@/counsel/CharacterCounselContext";
 import { VoicePlayer } from "./VoicePlayer";
+import { CounselFeedback } from "./CounselFeedback";
 import "./counsel.css";
 
 type Props = {
@@ -9,9 +10,12 @@ type Props = {
   voice?: VoiceId;
   /** Provider 없을 때만 사용 */
   onPlaybackChange?: (playing: boolean) => void;
+  /** 피드백용 세션 ID */
+  sessionId?: string;
+  counselIntent?: string;
 };
 
-export function CounselMessage({ message, voice, onPlaybackChange }: Props) {
+export function CounselMessage({ message, voice, onPlaybackChange, sessionId, counselIntent }: Props) {
   const counsel = useCharacterCounselOptional();
   const v: VoiceId = voice ?? message.character ?? "undol";
   const isUser = message.role === "user";
@@ -43,6 +47,14 @@ export function CounselMessage({ message, voice, onPlaybackChange }: Props) {
               onEnded={counsel ? () => counsel.notifyTtsEnd() : undefined}
               onPlaybackChange={counsel ? undefined : onPlaybackChange}
             />
+            {sessionId && (
+              <CounselFeedback
+                messageId={message.id}
+                sessionId={sessionId}
+                counselIntent={counselIntent}
+                character={message.character}
+              />
+            )}
           </div>
         )}
       </div>

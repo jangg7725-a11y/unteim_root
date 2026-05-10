@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field  # type: ignore[import-untyped
 from engine.sajuCalculator import calculate_saju
 from engine.full_analyzer import analyze_full
 from engine.counsel_service import run_counsel_turn
+from engine.counsel_feedback import save_feedback, get_feedback_stats
 from engine.compatibility_analyzer import analyze_compatibility
 from engine.solo_love_insight import build_solo_love_insight
 from engine.hidden_stems import compute_hidden_stems
@@ -239,6 +240,18 @@ class PillarsRequest(BaseModel):
 class CounselChatMessage(BaseModel):
     role: str = Field(..., description="user | assistant")
     text: str = ""
+
+
+class CounselFeedbackRequest(BaseModel):
+    """상담 메시지 피드백 (👍 / 👎)"""
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    session_id: str = Field(..., description="상담 세션 ID")
+    message_id: str = Field(..., description="피드백 대상 메시지 ID")
+    rating: str = Field(..., description="up | down")
+    counsel_intent: Optional[str] = None
+    character: Optional[str] = None
+    user_comment: Optional[str] = None
 
 
 class CounselRequest(BaseModel):
@@ -640,6 +653,35 @@ def counsel_chat(req: CounselRequest):
         ) from e
 
     return JSONResponse(content=out)
+
+
+@app.post("/api/counsel/feedback")
+def counsel_feedback(req: CounselFeedbackRequest):
+    """상담 메시지 피드백 저장 (👍 up / 👎 down)."""
+    try:
+        record = save_feedback(
+            session_id=req.session_id,
+            message_id=req.message_id,
+            rating=req.rating,
+            counsel_intent=req.counsel_intent,
+            character=req.character,
+            user_comment=req.user_comment,
+        )
+        return JSONResponse(content={"ok": True, "record": record})
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/api/counsel/feedback/stats")
+def counsel_feedback_stats():
+    """피드백 통계 조회."""
+    try:
+        stats = get_feedback_stats()
+        return JSONResponse(content=stats)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/compatibility")

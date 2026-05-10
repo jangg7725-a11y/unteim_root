@@ -1,0 +1,116 @@
+/* frontend/src/components/counsel/counsel-feedback.css */
+
+.counsel-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.counsel-feedback__label {
+  font-size: 0.72rem;
+  color: var(--muted, #6b6578);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.counsel-feedback__icon {
+  background: none;
+  border: 1px solid rgba(110, 90, 140, 0.18);
+  border-radius: 8px;
+  padding: 0.18rem 0.45rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.counsel-feedback__icon:hover {
+  background: rgba(110, 90, 140, 0.08);
+  opacity: 1;
+}
+
+.counsel-feedback__icon.selected {
+  background: rgba(110, 90, 140, 0.13);
+  border-color: rgba(110, 90, 140, 0.35);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.counsel-feedback__icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* 완료 상태 */
+.counsel-feedback--done .counsel-feedback__thanks {
+  font-size: 0.72rem;
+  color: var(--muted, #6b6578);
+}
+
+/* 코멘트 입력 */
+.counsel-feedback--comment {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.counsel-feedback__textarea {
+  width: 100%;
+  max-width: 22rem;
+  border: 1px solid rgba(110, 90, 140, 0.22);
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.8rem;
+  resize: none;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text, #1e1b2e);
+  line-height: 1.45;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.counsel-feedback__textarea:focus {
+  border-color: rgba(110, 90, 140, 0.45);
+}
+
+.counsel-feedback__comment-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.counsel-feedback__btn {
+  border: none;
+  border-radius: 7px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.counsel-feedback__btn--skip {
+  background: rgba(110, 90, 140, 0.08);
+  color: var(--muted, #6b6578);
+}
+
+.counsel-feedback__btn--skip:hover {
+  background: rgba(110, 90, 140, 0.14);
+}
+
+.counsel-feedback__btn--submit {
+  background: rgba(99, 102, 241, 0.15);
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.counsel-feedback__btn--submit:hover {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+.counsel-feedback__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
