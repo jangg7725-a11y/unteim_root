@@ -374,17 +374,6 @@ function parseMonthlyFortune(raw: Record<string, unknown>): MonthlyFortuneEngine
         luckScore: typeof x.luckScore === "number" ? x.luckScore : undefined,
         daymaster_monthly_tip: simplifyReportCopy(pickText(x.daymaster_monthly_tip), moArg),
         oheng_monthly_strategy: simplifyReportCopy(pickText(x.oheng_monthly_strategy), moArg),
-        oheng_monthly_core: simplifyReportCopy(pickText(x.oheng_monthly_core), moArg),
-        money_trait: simplifyReportCopy(pickText(x.money_trait), moArg),
-        money_advice: simplifyReportCopy(pickText(x.money_advice), moArg),
-        money_monthly: simplifyReportCopy(pickText(x.money_monthly), moArg),
-        health_tendency: simplifyReportCopy(pickText(x.health_tendency), moArg),
-        health_care: simplifyReportCopy(pickText(x.health_care), moArg),
-        health_monthly: simplifyReportCopy(pickText(x.health_monthly), moArg),
-        career_strategy: simplifyReportCopy(pickText(x.career_strategy), moArg),
-        career_strength: simplifyReportCopy(pickText(x.career_strength), moArg),
-        relation_trait: simplifyReportCopy(pickText(x.relation_trait), moArg),
-        relation_advice: simplifyReportCopy(pickText(x.relation_advice), moArg),
       };
     })
     .filter((m): m is NonNullable<typeof m> => m !== null && m.month >= 1 && m.month <= 12);

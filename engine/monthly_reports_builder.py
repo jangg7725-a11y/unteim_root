@@ -649,71 +649,33 @@ def attach_monthly_reports(packed: Dict[str, Any]) -> None:
     except Exception:
         packed["pattern_slots"] = {}
 
-    # ── 새 narrative DB 슬롯 주입 ──────────────────────────────
+    # ── narrative DB 슬롯 주입 (월별 인덱스 순환만) ──────────────
+    # 정책 (운트임 '근거 매핑' 비가역 룰):
+    # - 차트 단위 슬롯(money_*, health_*, career_*, relation_*, oheng_monthly_core)은
+    #   월별 row에 주입하지 않는다. 12개월 동일 노출이 도배가 되고, 그 정보는 차트 카드에 별도 노출된다.
+    # - 일간 풀과 지배 오행 풀에서 '월별 인덱스로 순환'시켜 매월 다른 한 줄을 주입한다.
     try:
         _action_db = _load_db("monthly_action_guide_db")
         _dmt = _action_db.get("daymaster_monthly_tip", {})
         _oms = _action_db.get("oheng_monthly_strategy", {})
         _day_gan = str((packed.get("pillars") or {}).get("day", {}).get("gan") or "")
-        _dom_en = dom_en  # 이미 계산된 지배 오행
-
-        # 일간별 이달 팁
         _dm_tip_entry = _dmt.get(_day_gan, {})
         _dm_tip_pool = _dm_tip_entry.get("monthly_tip_pool", []) if isinstance(_dm_tip_entry, dict) else []
 
-        # 오행별 전략 (지배 오행 강/약)
         _oheng_ko_map = {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"}
-        _dom_ko = _oheng_ko_map.get(_dom_en, "")
+        _dom_ko = _oheng_ko_map.get(dom_en, "")
+        _oheng_key = f"{_dom_ko}_강" if _dom_ko else ""
+        _oheng_entry = _oms.get(_oheng_key, {})
+        _oheng_pool = _oheng_entry.get("strategy_pool", []) if isinstance(_oheng_entry, dict) else []
 
-        # packed 기반 슬롯
-        _money_ctx = get_money_context_for_packed(packed, seed=0)
-        _health_ctx = get_health_context_for_packed(packed, seed=0)
-        _career_ctx = get_career_context_for_packed(packed, seed=0)
-        _relation_ctx = get_relation_context_for_packed(packed, seed=0)
-
-        # 각 월 row에 슬롯 추가
         for _row in out:
             _m_idx = _row["month"] - 1
-            _seed = _row["month"] * 7 + len(_day_gan)
-
-            # 이달 팁 (일간 기반, 월마다 다른 문장)
             if _dm_tip_pool:
                 _row["daymaster_monthly_tip"] = _dm_tip_pool[_m_idx % len(_dm_tip_pool)]
-            else:
-                _row["daymaster_monthly_tip"] = ""
-
-            # 오행 전략 (지배 오행 기반)
-            _oheng_key = f"{_dom_ko}_강" if _dom_ko else ""
-            _oheng_entry = _oms.get(_oheng_key, {})
-            _oheng_pool = _oheng_entry.get("strategy_pool", []) if isinstance(_oheng_entry, dict) else []
-            _row["oheng_monthly_strategy"] = _oheng_pool[_m_idx % len(_oheng_pool)] if _oheng_pool else ""
-            _row["oheng_monthly_core"] = _oheng_entry.get("core", "") if isinstance(_oheng_entry, dict) else ""
-
-            # 재물 슬롯
-            _money_oh = _money_ctx.get("oheng", {})
-            _money_dm = _money_ctx.get("daymaster", {})
-            _row["money_trait"] = _money_dm.get("money_trait", "") if _money_dm.get("found") else ""
-            _row["money_advice"] = _money_oh.get("advice", "") if _money_oh.get("found") else ""
-            _row["money_monthly"] = _money_oh.get("monthly", "") if _money_oh.get("found") else ""
-
-            # 건강 슬롯
-            _health_oh = _health_ctx.get("oheng", {})
-            _health_dm = _health_ctx.get("daymaster", {})
-            _row["health_tendency"] = _health_dm.get("health_tendency", "") if _health_dm.get("found") else ""
-            _row["health_care"] = _health_oh.get("care", "") if _health_oh.get("found") else ""
-            _row["health_monthly"] = _health_oh.get("monthly_hint", "") if _health_oh.get("found") else ""
-
-            # 취업/직업 슬롯
-            _career_oh = _career_ctx.get("oheng", {})
-            _row["career_strategy"] = _career_oh.get("strategy", "") if _career_oh.get("found") else ""
-            _row["career_strength"] = _career_oh.get("strength", "") if _career_oh.get("found") else ""
-
-            # 관계 슬롯
-            _rel_oh = _relation_ctx.get("oheng", {})
-            _row["relation_trait"] = _rel_oh.get("trait", "") if _rel_oh.get("found") else ""
-            _row["relation_advice"] = _rel_oh.get("advice", "") if _rel_oh.get("found") else ""
+            if _oheng_pool:
+                _row["oheng_monthly_strategy"] = _oheng_pool[_m_idx % len(_oheng_pool)]
 
     except Exception:
-        pass  # 새 슬롯 실패 시 기존 로직 유지
+        pass
 
     packed["monthly_reports"] = out

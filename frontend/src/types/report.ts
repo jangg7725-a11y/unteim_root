@@ -105,20 +105,9 @@ export type MonthlyFortuneEngineMonth = {
   aiCounselBridge?: string;
   score: 1 | 2 | 3 | 4 | 5;
   luckScore?: number;
-  /** narrative DB 슬롯 — 사주 맞춤 문장 */
+  /** 월별 narrative 슬롯 — 일간 풀과 지배 오행 풀의 월별 인덱스 순환 결과 (월별 사주값에 직결) */
   daymaster_monthly_tip?: string;
   oheng_monthly_strategy?: string;
-  oheng_monthly_core?: string;
-  money_trait?: string;
-  money_advice?: string;
-  money_monthly?: string;
-  health_tendency?: string;
-  health_care?: string;
-  health_monthly?: string;
-  career_strategy?: string;
-  career_strength?: string;
-  relation_trait?: string;
-  relation_advice?: string;
 };
 
 export type MonthlyFortuneEnginePayload = {

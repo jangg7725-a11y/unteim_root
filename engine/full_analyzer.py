@@ -53,17 +53,6 @@ logger = logging.getLogger(__name__)
 _MONTHLY_SLOT_KEYS = (
     "daymaster_monthly_tip",
     "oheng_monthly_strategy",
-    "oheng_monthly_core",
-    "money_trait",
-    "money_advice",
-    "money_monthly",
-    "health_tendency",
-    "health_care",
-    "health_monthly",
-    "career_strategy",
-    "career_strength",
-    "relation_trait",
-    "relation_advice",
 )
 
 
@@ -166,7 +155,14 @@ def _packed_for_monthly_slot_interpreters(packed: Dict[str, Any]) -> Dict[str, A
 
 
 def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
-    """월별 row에 사주 맞춤 narrative 슬롯을 주입한다."""
+    """월별 row에 사주 근거가 있는 슬롯만 주입한다.
+
+    정책 (운트임 '근거 매핑' 비가역 룰):
+    - 차트 단위(사주 전체) 슬롯(money_*, health_*, career_*, relation_*, oheng_monthly_core)은
+      월별 row에 주입하지 않는다. 12개월 동일 노출이 도배가 되고, 그 정보는 별도 차트 카드에서 제공된다.
+    - 월별 인덱스 순환 슬롯(daymaster_monthly_tip, oheng_monthly_strategy)만 유지한다.
+      이 둘은 월별로 인덱스가 다르므로 매월 다른 문장이 사주값(일간/지배 오행)에 근거해 결정된다.
+    """
     rows = packed.get("monthly_reports")
     if not isinstance(rows, list):
         return
@@ -186,54 +182,14 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     oheng_entry = (action_db.get("oheng_monthly_strategy") or {}).get(oheng_key, {})
     oheng_strategy_pool = oheng_entry.get("strategy_pool", []) if isinstance(oheng_entry, dict) else []
 
-    base_seed = (sum(ord(c) for c in day_gan) * 17) if day_gan else 0
-
     for idx, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
         slot_idx = _month_slot_index(row, idx)
-        # 월마다 다른 시드를 줘서 인터프리터의 _pick()가 풀에서 다른 문장을 뽑도록 한다.
-        month_seed = base_seed + (slot_idx + 1) * 13
-
-        money_ctx = get_money_context_for_packed(slot_packed, seed=month_seed)
-        health_ctx = get_health_context_for_packed(slot_packed, seed=month_seed + 17)
-        career_ctx = get_career_context_for_packed(slot_packed, seed=month_seed + 31)
-        relation_ctx = get_relation_context_for_packed(slot_packed, seed=month_seed + 43)
-
-        money_daymaster = money_ctx.get("daymaster", {}) if isinstance(money_ctx, dict) else {}
-        money_oheng = money_ctx.get("oheng", {}) if isinstance(money_ctx, dict) else {}
-        health_daymaster = health_ctx.get("daymaster", {}) if isinstance(health_ctx, dict) else {}
-        health_oheng = health_ctx.get("oheng", {}) if isinstance(health_ctx, dict) else {}
-        career_oheng = career_ctx.get("oheng", {}) if isinstance(career_ctx, dict) else {}
-        relation_oheng = relation_ctx.get("oheng", {}) if isinstance(relation_ctx, dict) else {}
-
         if daymaster_tip_pool and not row.get("daymaster_monthly_tip"):
             row["daymaster_monthly_tip"] = str(daymaster_tip_pool[slot_idx % len(daymaster_tip_pool)]).strip()
         if oheng_strategy_pool and not row.get("oheng_monthly_strategy"):
             row["oheng_monthly_strategy"] = str(oheng_strategy_pool[slot_idx % len(oheng_strategy_pool)]).strip()
-        if isinstance(oheng_entry, dict) and not row.get("oheng_monthly_core"):
-            row["oheng_monthly_core"] = str(oheng_entry.get("core", "") or "").strip()
-
-        if not row.get("money_trait"):
-            row["money_trait"] = _first_text(money_daymaster.get("money_trait"))
-        if not row.get("money_advice"):
-            row["money_advice"] = _first_text(money_oheng.get("advice"))
-        if not row.get("money_monthly"):
-            row["money_monthly"] = _first_text(money_oheng.get("monthly"))
-        if not row.get("health_tendency"):
-            row["health_tendency"] = _first_text(health_daymaster.get("health_tendency"))
-        if not row.get("health_care"):
-            row["health_care"] = _first_text(health_oheng.get("care"))
-        if not row.get("health_monthly"):
-            row["health_monthly"] = _first_text(health_oheng.get("monthly_hint"))
-        if not row.get("career_strategy"):
-            row["career_strategy"] = _first_text(career_oheng.get("strategy"))
-        if not row.get("career_strength"):
-            row["career_strength"] = _first_text(career_oheng.get("strength"))
-        if not row.get("relation_trait"):
-            row["relation_trait"] = _first_text(relation_oheng.get("trait"))
-        if not row.get("relation_advice"):
-            row["relation_advice"] = _first_text(relation_oheng.get("advice"))
 
 
 def _merge_monthly_slots_into_fortune(packed: Dict[str, Any]) -> None:
