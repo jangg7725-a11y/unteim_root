@@ -1,0 +1,111 @@
+/* frontend/src/components/risk-caution-card.css */
+
+.risk-card {
+  border-color: rgba(180, 120, 60, 0.18);
+  background: rgba(255, 251, 244, 0.88);
+}
+
+.risk-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #b45309;
+}
+
+.risk-card__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.risk-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+/* 주의 아이템 */
+.risk-card__item {
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.risk-card__item--caution {
+  background: rgba(180, 83, 9, 0.06);
+  border-left: 3px solid rgba(180, 83, 9, 0.3);
+}
+
+.risk-card__item--positive {
+  background: rgba(5, 150, 105, 0.06);
+  border-left: 3px solid rgba(5, 150, 105, 0.3);
+}
+
+.risk-card__item-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.risk-card__item-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.risk-card__item-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.risk-card__item--positive .risk-card__item-label {
+  color: #065f46;
+}
+
+.risk-card__core {
+  margin: 0;
+  font-size: 0.77rem;
+  line-height: 1.5;
+  color: #3f3a50;
+  font-weight: 500;
+}
+
+.risk-card__row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.risk-card__row-label {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.1);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  margin-top: 0.15rem;
+  line-height: 1.3;
+}
+
+.risk-card__item--positive .risk-card__row-label {
+  color: #065f46;
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.risk-card__row-text {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #3f3a50;
+}
+
+.risk-card__note {
+  margin: 0;
+  font-size: 0.67rem;
+  color: #9b8ab0;
+  text-align: right;
+}

@@ -1,0 +1,55 @@
+/* frontend/src/components/relation-fortune-card.css */
+
+.relation-card {
+  border-color: rgba(134, 97, 193, 0.18);
+  background: rgba(248, 244, 255, 0.82);
+}
+
+.relation-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #7c3aed;
+}
+
+.relation-card__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.relation-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 0.6rem;
+}
+
+.relation-card__item {
+  padding: 0.45rem 0.55rem;
+  border-radius: 9px;
+  background: rgba(124, 58, 237, 0.06);
+  border-left: 3px solid rgba(124, 58, 237, 0.25);
+}
+
+.relation-card__label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #7c3aed;
+  margin-bottom: 0.18rem;
+  letter-spacing: 0.02em;
+}
+
+.relation-card__text {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.55;
+  color: #3f3a50;
+}
+
+.relation-card__note {
+  margin: 0;
+  font-size: 0.67rem;
+  color: #9b8ab0;
+  text-align: right;
+}

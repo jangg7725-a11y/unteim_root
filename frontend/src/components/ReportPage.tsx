@@ -14,6 +14,8 @@ import { MicroPointOffers } from "./MicroPointOffers";
 import { PartnerInputModal } from "./PartnerInputModal";
 import { MicroPointSingleModal } from "./MicroPointSingleModal";
 import { AICounselPreview } from "./AICounselPreview";
+import { RelationFortuneCard } from "./RelationFortuneCard";
+import { RiskCautionCard } from "./RiskCautionCard";
 import { postCompatibility, type CompatibilityResult } from "@/services/compatibilityApi";
 import {
   postSoloLoveInsight,
@@ -373,6 +375,12 @@ export function ReportPage({
               }
             />
           </div>
+
+          {/* 인연운 카드 */}
+          <RelationFortuneCard narrativeSlots={report.narrativeSlots} />
+
+          {/* 위험 주의 카드 — 신살 기반 */}
+          <RiskCautionCard narrativeSlots={report.narrativeSlots} />
 
           {report.sajuOverview ? <DaewoonSnippet ov={report.sajuOverview} /> : null}
 
