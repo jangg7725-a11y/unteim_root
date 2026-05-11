@@ -216,58 +216,99 @@ def run_counsel_turn(
 
     intent = infer_counsel_intent(last_user)
     analysis_summary, _report = build_engine_analysis(birth_str, profile, intent=intent)
+
+    # 날짜+생년월일 기반 시드 (seed=0 고정 방지 → 상담마다 다른 문장 노출)
+    import hashlib as _hl
+    from datetime import date as _date_cls
+    _seed_src = f"{_date_cls.today().isoformat()}|{birth_str}"
+    _counsel_seed = int(_hl.md5(_seed_src.encode()).hexdigest(), 16) % (2**31)
+
     context: Dict[str, Any] = {}
     _sh = get_shinsal_psychology_slots(_report)
     if _sh["found"]:
-        context["shinsal_dominant_trait"] = _sh["dominant_trait"]
-        context["shinsal_behavior"] = _sh["behavior_pattern"]
-        context["shinsal_caution"] = _sh["caution"]
+        context["shinsal_dominant_trait"] = _sh.get("dominant_trait", "")
+        context["shinsal_behavior"] = _sh.get("behavior_pattern", "")
+        context["shinsal_caution"] = _sh.get("caution", "")
 
     _tf = get_fortune_stage_slots(_report)
     if _tf["found"]:
-        context["fortune_stage"] = _tf["label_ko"]
-        context["fortune_core_energy"] = _tf["core_energy"]
-        context["fortune_behavior"] = _tf["behavior_pattern"]
+        context["fortune_stage"] = _tf.get("label_ko", "")
+        context["fortune_core_energy"] = _tf.get("core_energy", "")
+        context["fortune_behavior"] = _tf.get("behavior_pattern", "")
+
+    # 패턴 슬롯 → GPT 프롬프트 컨텍스트 블록 조립
+    from engine.hap_chung_interpreter import get_relation_pattern_slots
+    from engine.shinsal_psychology_interpreter import get_shinsal_psychology_slots as _get_sh_slots
+    from engine.twelve_fortunes_interpreter import get_monthly_stage_slots
+    _packed = _report if isinstance(_report, dict) else {}
+    _pattern_lines: List[str] = []
+
+    _rel = get_relation_pattern_slots(_packed)
+    if _rel.get("found"):
+        _items = _rel.get("items") or []
+        if _items:
+            _pattern_lines.append(f"[관계 작용] {_items[0].get('label','')}: {_rel.get('behavior_pattern','')}")
+        if _rel.get("inner_state"):
+            _pattern_lines.append(f"[관계 내면] {_rel.get('inner_state','')}")
+
+    _sh2 = _get_sh_slots(_packed)
+    if _sh2.get("found"):
+        for _item in (_sh2.get("items") or []):
+            if _item.get("dominant_trait"):
+                _pattern_lines.append(f"[{_item.get('label_ko','')}] {_item['dominant_trait']}")
+        if _sh2.get("combination_hint"):
+            _pattern_lines.append(f"[신살조합] {_sh2['combination_hint']}")
+
+    _ms = get_monthly_stage_slots(_packed)
+    if _ms.get("found"):
+        _mo = _ms.get("monthly") or {}
+        if _mo:
+            _pattern_lines.append(
+                f"[월운 운성] {_mo.get('label_ko','')} ({_mo.get('phase','')}): {_mo.get('core_energy','')}"
+            )
+        if _ms.get("combination_hint"):
+            _pattern_lines.append(f"[운성 조합] {_ms['combination_hint']}")
+
+    _pattern_context_str = "\n".join(_pattern_lines)
+
     tone_key = _infer_counsel_tone(last_user)
     tone_line = TONE_LINE.get(tone_key, TONE_LINE["comfort"])
     intent_block = _build_intent_block(intent)
     healing_block = format_healing_prompt_block(last_user)
 
     # ── 인텐트별 narrative DB 블록 주입 ──────────────────
-    _packed = _report if isinstance(_report, dict) else {}
     _extra_blocks: List[str] = []
 
     if intent in ("wealth",):
-        _mb = format_money_prompt_block(_packed, seed=0)
+        _mb = format_money_prompt_block(_packed, seed=_counsel_seed)
         if _mb:
             _extra_blocks.append(_mb)
-        _rb = format_risk_prompt_block(user_text=last_user, seed=0)
+        _rb = format_risk_prompt_block(user_text=last_user, seed=_counsel_seed)
         if _rb:
             _extra_blocks.append(_rb)
 
     elif intent in ("relationship",):
-        _rel = format_relation_prompt_block(_packed, user_text=last_user, seed=0)
-        if _rel:
-            _extra_blocks.append(_rel)
+        _rel_b = format_relation_prompt_block(_packed, user_text=last_user, seed=_counsel_seed)
+        if _rel_b:
+            _extra_blocks.append(_rel_b)
 
     elif intent in ("work", "exam"):
-        _ce = format_career_prompt_block(_packed, user_text=last_user, seed=0)
+        _ce = format_career_prompt_block(_packed, user_text=last_user, seed=_counsel_seed)
         if _ce:
             _extra_blocks.append(_ce)
 
     elif intent in ("health",):
-        _health = format_health_prompt_block(_packed, user_text=last_user, seed=0)
+        _health = format_health_prompt_block(_packed, user_text=last_user, seed=_counsel_seed)
         if _health:
             _extra_blocks.append(_health)
-        _risk = format_risk_prompt_block(user_text=last_user, seed=0)
+        _risk = format_risk_prompt_block(user_text=last_user, seed=_counsel_seed)
         if _risk:
             _extra_blocks.append(_risk)
 
     elif intent in ("general", "personality"):
-        # 텍스트에서 위험 유형 감지 시 추가
         _rt = detect_risk_type(last_user)
         if _rt:
-            _rb2 = format_risk_prompt_block(user_text=last_user, seed=0)
+            _rb2 = format_risk_prompt_block(user_text=last_user, seed=_counsel_seed)
             if _rb2:
                 _extra_blocks.append(_rb2)
 
@@ -279,6 +320,9 @@ def run_counsel_turn(
         intent_block=intent_block,
         healing_block=healing_block,
     )
+    # 패턴 슬롯 컨텍스트 주입 (합충·신살심리·운성)
+    if _pattern_context_str:
+        system_content += f"\n\n[사주 패턴 참고]\n{_pattern_context_str}"
     if _extra_block_str:
         system_content += f"\n\n[추가 참고 — 주제별 패턴]\n{_extra_block_str}"
 
