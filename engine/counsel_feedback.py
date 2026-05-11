@@ -77,9 +77,17 @@ def save_feedback(
     if meta:
         record["meta"] = meta
 
-    _ensure_dir()
-    with open(_FEEDBACK_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    # Render 무료 플랜은 재배포 시 파일시스템 초기화 — 파일 저장 실패해도 로그에는 남김
+    try:
+        _ensure_dir()
+        with open(_FEEDBACK_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception as write_err:
+        import sys
+        print(
+            f"[FEEDBACK] 파일 저장 실패({write_err}) — 로그 백업: {json.dumps(record, ensure_ascii=False)}",
+            file=sys.stderr,
+        )
 
     return record
 

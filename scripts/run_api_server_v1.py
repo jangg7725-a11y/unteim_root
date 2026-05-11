@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, cast
 import threading
 
-from fastapi import FastAPI, HTTPException  # type: ignore[import-untyped]
+from fastapi import FastAPI, HTTPException, Header  # type: ignore[import-untyped]
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore[import-untyped]
 from fastapi.responses import FileResponse, JSONResponse  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field  # type: ignore[import-untyped]
@@ -61,6 +61,12 @@ OUT_PDF = Path("out") / "monthly_report.pdf"
 def _calculate_saju_cached(birth: str):
     """동일 birth 입력 반복 시 원국 계산 결과를 재사용한다."""
     return calculate_saju(birth)
+
+
+def _sex_to_gender(sex: str) -> str:
+    """남자/여자/male/female 등 다양한 표기를 'M'/'F'로 정규화."""
+    s = str(sex or "").strip().lower()
+    return "M" if s in ("m", "male", "남", "남자") else "F"
 
 _STEM_EL_YY: dict[str, tuple[str, str]] = {
     "甲": ("목", "+"), "乙": ("목", "-"), "丙": ("화", "+"), "丁": ("화", "-"),
@@ -629,7 +635,7 @@ def counsel_chat(req: CounselRequest):
     from engine.counsel_birth import birth_request_to_profile, normalize_birth_string
 
     d = req.model_dump(by_alias=True)
-    cal_api = (d.get("calendarApi") or "solar").strip().lower()
+    cal_api = (d.get("calendarApi") or d.get("calendar") or "solar").strip().lower()
     try:
         birth = normalize_birth_string(d["date"], d["time"], cal_api)
     except ValueError as e:
@@ -680,8 +686,11 @@ def counsel_feedback(req: CounselFeedbackRequest):
 
 
 @app.get("/api/counsel/feedback/stats")
-def counsel_feedback_stats():
-    """피드백 통계 조회."""
+def counsel_feedback_stats(x_admin_key: str = Header(default="")):
+    """피드백 통계 조회 — ADMIN_STATS_KEY 헤더 필요."""
+    required = (os.environ.get("ADMIN_STATS_KEY") or "").strip()
+    if required and x_admin_key != required:
+        raise HTTPException(status_code=403, detail="관리자 키가 필요합니다.")
     try:
         stats = get_feedback_stats()
         return JSONResponse(content=stats)
@@ -730,10 +739,10 @@ def solo_love_insight(req: SoloLoveInsightRequest):
         out = build_solo_love_insight(birth, req.gender, req.topic)
         return JSONResponse(content=out)
     except Exception as e:
-        tb = traceback.format_exc()
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
-            detail=f"solo love insight failed: {type(e).__name__}: {e}\n{tb}",
+            detail=f"solo love insight failed: {type(e).__name__}: {e}",
         ) from e
 
 
@@ -750,7 +759,8 @@ def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
     analyze_timeout_sec = float(os.getenv("ANALYZE_FULL_TIMEOUT_SEC", "420"))
     timed_out = False
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-    future = executor.submit(analyze_full, cast(Any, pillars), birth_str=birth)
+    _gender = _sex_to_gender(req.sex)
+    future = executor.submit(analyze_full, cast(Any, pillars), birth_str=birth, gender=_gender)
     try:
         engine_result = future.result(timeout=analyze_timeout_sec)
     except concurrent.futures.TimeoutError:
@@ -1006,15 +1016,15 @@ def make_monthly_report(req: AnalyzeRequest):
 
     try:
         pillars = _calculate_saju_cached(birth)
-        report = analyze_full(cast(Any, pillars), birth_str=birth)
+        report = analyze_full(cast(Any, pillars), birth_str=birth, gender=_sex_to_gender(req.sex))
         print(report.get("pillars"))
         print(report.get("analysis", {}).get("pillars"))
 
     except Exception as e:
-        tb = traceback.format_exc()
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
-            detail=f"engine failed: {type(e).__name__}: {e}\n\n--- TRACEBACK ---\n{tb}",
+            detail=f"engine failed: {type(e).__name__}: {e}",
         )
 
     if not isinstance(report, dict):
@@ -1076,7 +1086,7 @@ def make_monthly_report_meta(req: AnalyzeRequest):
 
     try:
         pillars = _calculate_saju_cached(birth)
-        report = analyze_full(cast(Any, pillars), birth_str=birth)
+        report = analyze_full(cast(Any, pillars), birth_str=birth, gender=_sex_to_gender(req.sex))
 
     except Exception as e:
         traceback.print_exc()
