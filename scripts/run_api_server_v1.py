@@ -818,15 +818,20 @@ def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
                 if isinstance(it, dict) and it.get("name")
                 and not str(it.get("name", "")).startswith("12운성:")
             ]
+            # 날짜+생년월일 기반 시드 — 같은 사주도 날마다 다른 문장 노출
+            import hashlib as _hl
+            from datetime import date as _date_cls
+            _seed_src = f"{_date_cls.today().isoformat()}|{birth}"
+            _slot_seed = int(_hl.md5(_seed_src.encode()).hexdigest(), 16) % (2**31)
             result["narrative_slots"] = {
-                "money": _clean(get_money_context_for_packed(_packed, seed=0)),
-                "health": _clean(get_health_context_for_packed(_packed, seed=0)),
-                "career": _clean(get_career_context_for_packed(_packed, seed=0)),
-                "relation": _clean(get_relation_context_for_packed(_packed, seed=0)),
+                "money": _clean(get_money_context_for_packed(_packed, seed=_slot_seed)),
+                "health": _clean(get_health_context_for_packed(_packed, seed=_slot_seed)),
+                "career": _clean(get_career_context_for_packed(_packed, seed=_slot_seed)),
+                "relation": _clean(get_relation_context_for_packed(_packed, seed=_slot_seed)),
                 "risk": _clean({
                     "shinsal_risks": [
                         slot for s in _shinsal_names
-                        for slot in get_shinsal_risk_slots(s, seed=0)
+                        for slot in get_shinsal_risk_slots(s, seed=_slot_seed)
                     ][:3]
                 }),
             }

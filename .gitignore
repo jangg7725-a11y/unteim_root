@@ -39,6 +39,7 @@ out/
 *.zip
 *.bsp
 *.ephem
+*.diff
 
 # 환경·비밀 (배포 준비)
 .env

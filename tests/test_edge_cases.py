@@ -200,23 +200,26 @@ class TestAnalyzeEdgeCases:
 
 class TestDayPillarAnchor:
     """
-    일주 계산의 앵커(1984-02-02 = 甲子)가 맞는지 확인.
+    일주 계산 정합성 테스트.
+    실질 甲子 기준일 = 1984-01-31 (만세력).
+    계산 앵커 1984-02-02 는 DAY_GANJI_OFFSET=2 로 보정됨.
+    교차검증: 1984-02-02 = 丙寅, 1984-01-31 = 甲子.
     """
 
-    def test_anchor_date_is_jiazi(self):
-        """1984-02-02 12:00 → 일주가 甲子"""
+    def test_anchor_date_is_bingyin(self):
+        """1984-02-02 12:00 → 만세력 기준 丙寅"""
         pillars = calculate_saju("1984-02-02 12:00")
-        assert pillars.gan[2] == "甲", f"앵커 일간이 甲이 아님: {pillars.gan[2]}"
-        assert pillars.ji[2] == "子", f"앵커 일지가 子가 아님: {pillars.ji[2]}"
+        assert pillars.gan[2] == "丙", f"1984-02-02 일간이 丙이 아님: {pillars.gan[2]}"
+        assert pillars.ji[2] == "寅", f"1984-02-02 일지가 寅이 아님: {pillars.ji[2]}"
 
-    def test_next_day_is_eulchuk(self):
-        """1984-02-03 12:00 → 일주가 乙丑"""
-        pillars = calculate_saju("1984-02-03 12:00")
-        assert pillars.gan[2] == "乙", f"앵커+1일 일간이 乙이 아님: {pillars.gan[2]}"
-        assert pillars.ji[2] == "丑", f"앵커+1일 일지가 丑이 아님: {pillars.ji[2]}"
+    def test_jiazi_actual_anchor(self):
+        """1984-01-31 12:00 → 만세력 기준 甲子"""
+        pillars = calculate_saju("1984-01-31 12:00")
+        assert pillars.gan[2] == "甲", f"甲子 기준일 일간이 甲이 아님: {pillars.gan[2]}"
+        assert pillars.ji[2] == "子", f"甲子 기준일 일지가 子가 아님: {pillars.ji[2]}"
 
-    def test_60_days_later_is_jiazi_again(self):
-        """1984-02-02 + 60일 = 1984-04-02 → 일주가 다시 甲子"""
-        pillars = calculate_saju("1984-04-02 12:00")
+    def test_60_days_from_jiazi_is_jiazi_again(self):
+        """1984-01-31 + 60일 = 1984-03-31 → 일주가 다시 甲子"""
+        pillars = calculate_saju("1984-03-31 12:00")
         assert pillars.gan[2] == "甲", f"60일 후 일간이 甲이 아님: {pillars.gan[2]}"
         assert pillars.ji[2] == "子", f"60일 후 일지가 子가 아님: {pillars.ji[2]}"

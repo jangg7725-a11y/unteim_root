@@ -166,18 +166,22 @@ def _packed_for_monthly_slot_interpreters(packed: Dict[str, Any]) -> Dict[str, A
 
 
 def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
-    """월별 row에 사주 근거가 있는 슬롯만 주입한다.
+    """월별 row에 사주 근거 슬롯을 주입한다.
 
-    정책 (운트임 '근거 매핑' 비가역 룰):
-    - 차트 단위(사주 전체) 슬롯(money_*, health_*, career_*, relation_*, oheng_monthly_core)은
-      월별 row에 주입하지 않는다. 12개월 동일 노출이 도배가 되고, 그 정보는 별도 차트 카드에서 제공된다.
-    - 월별 인덱스 순환 슬롯(daymaster_monthly_tip, oheng_monthly_strategy)만 유지한다.
-      이 둘은 월별로 인덱스가 다르므로 매월 다른 문장이 사주값(일간/지배 오행)에 근거해 결정된다.
+    슬롯 우선순위:
+    1. daymaster_monthly_tip  : 일간별 맞춤 팁 (월 인덱스 순환)
+    2. oheng_monthly_strategy : 오행 전략 (월 인덱스 순환)
+    3. oheng_monthly_core     : 오행 핵심 메시지 (고정, 1회)
+    4. money_monthly          : 재물 이달 힌트 (월 인덱스 순환)
+    5. health_monthly         : 건강 이달 힌트 (월 인덱스 순환)
+    6. relation_advice        : 관계 조언 (월 인덱스 순환)
+    7. career_strategy        : 직업 전략 (월 인덱스 순환)
     """
     rows = packed.get("monthly_reports")
     if not isinstance(rows, list):
         return
 
+    # ── 1·2. daymaster_monthly_tip / oheng_monthly_strategy ──────────
     action_db = load_sentences("monthly_action_guide_db")
     slot_packed = _packed_for_monthly_slot_interpreters(packed)
     day_gan, _ = _day_gan_and_element_for_slots(slot_packed)
@@ -192,15 +196,92 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     oheng_key = f"{element_ko}_강" if element_ko else ""
     oheng_entry = (action_db.get("oheng_monthly_strategy") or {}).get(oheng_key, {})
     oheng_strategy_pool = oheng_entry.get("strategy_pool", []) if isinstance(oheng_entry, dict) else []
+    oheng_core = oheng_entry.get("core", "") if isinstance(oheng_entry, dict) else ""
 
+    # ── 3. money_monthly (재물 이달 힌트, 오행별 pool 순환) ─────────
+    try:
+        money_db = load_sentences("money_pattern_db")
+        _oheng_ko_map = {"wood":"목","fire":"화","earth":"토","metal":"금","water":"수"}
+        _dom_ko = _oheng_ko_map.get(element_ko, "")
+        money_oh_entry = (money_db.get("oheng_money") or {}).get(_dom_ko, {})
+        money_monthly_pool = money_oh_entry.get("monthly_pool", []) if isinstance(money_oh_entry, dict) else []
+        money_advice_pool = money_oh_entry.get("advice_pool", []) if isinstance(money_oh_entry, dict) else []
+    except Exception:
+        money_monthly_pool = []
+        money_advice_pool = []
+
+    # ── 4. health_monthly (건강 이달 힌트, 오행별 pool 순환) ─────────
+    try:
+        health_db = load_sentences("health_pattern_db")
+        health_oh_entry = (health_db.get("oheng_health") or {}).get(_dom_ko, {})
+        health_monthly_pool = health_oh_entry.get("monthly_hint_pool", []) if isinstance(health_oh_entry, dict) else []
+        health_care_pool = health_oh_entry.get("care_pool", []) if isinstance(health_oh_entry, dict) else []
+    except Exception:
+        health_monthly_pool = []
+        health_care_pool = []
+
+    # ── 5. relation_advice (관계 조언, 오행별 pool 순환) ─────────────
+    try:
+        rel_db = load_sentences("relationship_marriage_db")
+        rel_oh_entry = (rel_db.get("oheng_relation") or {}).get(_dom_ko, {})
+        relation_advice_pool = rel_oh_entry.get("advice_pool", []) if isinstance(rel_oh_entry, dict) else []
+        relation_trait_pool = rel_oh_entry.get("trait_pool", []) if isinstance(rel_oh_entry, dict) else []
+    except Exception:
+        relation_advice_pool = []
+        relation_trait_pool = []
+
+    # ── 6. career_strategy (직업 전략, 오행별 pool 순환) ─────────────
+    try:
+        career_db = load_sentences("career_exam_db")
+        _oheng_hanja_map = {"목":"목","화":"화","토":"토","금":"금","수":"수"}
+        _oheng_en_to_ko = {"wood":"목","fire":"화","earth":"토","metal":"금","water":"수"}
+        _career_key = _oheng_en_to_ko.get(element_ko, "")
+        career_oh_entry = (career_db.get("oheng_career") or {}).get(_career_key, {})
+        career_strategy_pool = career_oh_entry.get("strategy_pool", []) if isinstance(career_oh_entry, dict) else []
+        career_strength_pool = career_oh_entry.get("strength_pool", []) if isinstance(career_oh_entry, dict) else []
+    except Exception:
+        career_strategy_pool = []
+        career_strength_pool = []
+
+    # ── 각 월 row에 주입 ─────────────────────────────────────────────
     for idx, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
         slot_idx = _month_slot_index(row, idx)
+
+        def _pick(pool, si):
+            return str(pool[si % len(pool)]).strip() if pool else ""
+
         if daymaster_tip_pool and not row.get("daymaster_monthly_tip"):
-            row["daymaster_monthly_tip"] = str(daymaster_tip_pool[slot_idx % len(daymaster_tip_pool)]).strip()
+            row["daymaster_monthly_tip"] = _pick(daymaster_tip_pool, slot_idx)
         if oheng_strategy_pool and not row.get("oheng_monthly_strategy"):
-            row["oheng_monthly_strategy"] = str(oheng_strategy_pool[slot_idx % len(oheng_strategy_pool)]).strip()
+            row["oheng_monthly_strategy"] = _pick(oheng_strategy_pool, slot_idx)
+        if oheng_core and not row.get("oheng_monthly_core"):
+            row["oheng_monthly_core"] = oheng_core
+
+        # 재물 힌트 (월마다 다른 문장)
+        if money_monthly_pool and not row.get("money_monthly"):
+            row["money_monthly"] = _pick(money_monthly_pool, slot_idx)
+        if money_advice_pool and not row.get("money_advice"):
+            row["money_advice"] = _pick(money_advice_pool, slot_idx)
+
+        # 건강 힌트 (월마다 다른 문장)
+        if health_monthly_pool and not row.get("health_monthly"):
+            row["health_monthly"] = _pick(health_monthly_pool, slot_idx)
+        if health_care_pool and not row.get("health_care"):
+            row["health_care"] = _pick(health_care_pool, slot_idx)
+
+        # 관계 조언 (월마다 다른 문장)
+        if relation_advice_pool and not row.get("relation_advice"):
+            row["relation_advice"] = _pick(relation_advice_pool, slot_idx)
+        if relation_trait_pool and not row.get("relation_trait"):
+            row["relation_trait"] = _pick(relation_trait_pool, slot_idx)
+
+        # 직업 전략 (월마다 다른 문장)
+        if career_strategy_pool and not row.get("career_strategy"):
+            row["career_strategy"] = _pick(career_strategy_pool, slot_idx)
+        if career_strength_pool and not row.get("career_strength"):
+            row["career_strength"] = _pick(career_strength_pool, slot_idx)
 
 
 def _merge_monthly_slots_into_fortune(packed: Dict[str, Any]) -> None:

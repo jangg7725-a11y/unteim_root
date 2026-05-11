@@ -124,40 +124,40 @@
       "id": "day_anchor_19840202",
       "input": {"birth_str": "1984-02-02 12:00", "calendar": "solar"},
       "expected": {
-        "pillars": {"year": null, "month": null, "day": "甲子", "hour": null},
+        "pillars": {"year": null, "month": null, "day": "丙寅", "hour": null},
         "oheng_counts": null,
         "shinsal_contains": [],
         "twelve_fortunes_contains": [],
         "kongmang": null,
         "yongshin": null
       },
-      "basis": {"day_pillar": "tests/test_edge_cases.py::test_anchor_date_is_jiazi"}
+      "basis": {"day_pillar": "만세력 기준 DAY_GANJI_OFFSET=2, 실질 甲子=1984-01-31"}
     },
     {
       "id": "day_anchor_19840203",
       "input": {"birth_str": "1984-02-03 12:00", "calendar": "solar"},
       "expected": {
-        "pillars": {"year": null, "month": null, "day": "乙丑", "hour": null},
+        "pillars": {"year": null, "month": null, "day": "丁卯", "hour": null},
         "oheng_counts": null,
         "shinsal_contains": [],
         "twelve_fortunes_contains": [],
         "kongmang": null,
         "yongshin": null
       },
-      "basis": {"day_pillar": "tests/test_edge_cases.py::test_next_day_is_eulchuk"}
+      "basis": {"day_pillar": "만세력 기준 DAY_GANJI_OFFSET=2, 실질 甲子=1984-01-31"}
     },
     {
       "id": "day_anchor_19840402",
       "input": {"birth_str": "1984-04-02 12:00", "calendar": "solar"},
       "expected": {
-        "pillars": {"year": null, "month": null, "day": "甲子", "hour": null},
+        "pillars": {"year": null, "month": null, "day": "丙寅", "hour": null},
         "oheng_counts": null,
         "shinsal_contains": [],
         "twelve_fortunes_contains": [],
         "kongmang": null,
         "yongshin": null
       },
-      "basis": {"day_pillar": "tests/test_edge_cases.py::test_60_days_later_is_jiazi_again"}
+      "basis": {"day_pillar": "만세력 기준 DAY_GANJI_OFFSET=2, 실질 甲子=1984-01-31"}
     },
     {
       "id": "integrity_20001231",
