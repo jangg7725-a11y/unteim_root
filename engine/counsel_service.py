@@ -30,6 +30,7 @@ from engine.money_pattern_interpreter import format_money_prompt_block
 from engine.risk_fortune_interpreter import format_risk_prompt_block, detect_risk_type
 from engine.career_exam_interpreter import format_career_prompt_block
 from engine.relationship_marriage_interpreter import format_relation_prompt_block
+from engine.health_pattern_interpreter import format_health_prompt_block
 
 
 # 톤: 사용자 질문 키워드로 추론 → 프롬프트에 주입
@@ -255,6 +256,9 @@ def run_counsel_turn(
             _extra_blocks.append(_ce)
 
     elif intent in ("health",):
+        _health = format_health_prompt_block(_packed, user_text=last_user, seed=0)
+        if _health:
+            _extra_blocks.append(_health)
         _risk = format_risk_prompt_block(user_text=last_user, seed=0)
         if _risk:
             _extra_blocks.append(_risk)

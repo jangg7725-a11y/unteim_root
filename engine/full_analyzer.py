@@ -53,6 +53,17 @@ logger = logging.getLogger(__name__)
 _MONTHLY_SLOT_KEYS = (
     "daymaster_monthly_tip",
     "oheng_monthly_strategy",
+    "oheng_monthly_core",
+    "money_monthly",
+    "money_advice",
+    "money_trait",
+    "health_monthly",
+    "health_care",
+    "health_tendency",
+    "relation_advice",
+    "relation_trait",
+    "career_strategy",
+    "career_strength",
 )
 
 
