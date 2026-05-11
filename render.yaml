@@ -9,6 +9,8 @@ services:
     runtime: python
     plan: free
     rootDir: .
+    branch: master          # push 감지할 브랜치
+    autoDeploy: true        # git push 시 자동배포
     buildCommand: pip install -r requirements.txt
     startCommand: python scripts/run_api_server_v1.py
     healthCheckPath: /api/health
@@ -34,6 +36,8 @@ services:
     runtime: static
     plan: free
     rootDir: frontend
+    branch: master          # push 감지할 브랜치
+    autoDeploy: true        # git push 시 자동배포
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     envVars:
