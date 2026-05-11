@@ -100,8 +100,11 @@ def _extract_relation_signals(
     signals: List[Tuple[str, Tuple[str, str]]] = []
 
     # ── 방법 A: wolwoon features dict ──
+    _wolwoon = packed.get("wolwoon", {})
+    if not isinstance(_wolwoon, dict):
+        _wolwoon = {}
     features: Dict[str, Any] = (
-        packed.get("wolwoon", {}).get("features", {})
+        _wolwoon.get("features", {})
         or packed.get("features", {})
         or {}
     )
