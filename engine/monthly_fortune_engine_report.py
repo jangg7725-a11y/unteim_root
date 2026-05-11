@@ -23,6 +23,7 @@ from engine.monthly_reports_builder import (
     _month_luck_score,
     _natal_branches_kor,
 )
+from engine.risk_fortune_interpreter import get_shinsal_risk_slots
 from engine.shinsal_score import summarize_shinsal
 from engine.shinsal_rules import BRANCH_KO2HZ, twelve_lifestage
 from engine.sipsin import (
@@ -990,24 +991,13 @@ def _build_counsel_sections(
             "급격한 전환보다 생활 리듬을 다듬는 쪽으로 흐르기 쉽습니다.",
         ]
 
-    good_bullets = [
-        f"- {month_focus}",
-        "- 일정은 짧게 나눠 끝내고, 완료 체크를 자주 하세요.",
-        "- 중요한 결정은 근거를 적어두고 현실적인 판단을 유지하세요.",
-    ]
-    risk_bullets = [
-        "- 성급한 결정으로 일정을 한꺼번에 늘리는 선택",
-        "- 감정이 올라온 상태에서 바로 답하거나 확정하는 행동",
-        "- 체력 저하 신호를 무시하고 무리하게 밀어붙이는 운영",
-    ]
-
     return {
         "overallFlow": "\n".join(core_flow),
         "mingliInterpretation": "\n".join(change_flow[:3]),
         "realityChanges": "\n".join(change_flow[:3]),
         "coreEvents": _core_events_story(seed, month),
-        "opportunity": "\n".join(good_bullets),
-        "riskPoints": "\n".join(risk_bullets),
+        "opportunity": opportunity,
+        "riskPoints": risk,
         "actionGuide": action,
         "behaviorGuide": _behavior_guide(seed),
         "emotionCoaching": emotion,
@@ -1215,6 +1205,26 @@ def _shinsal_month_chips(packed: Dict[str, Any], month_branch_hanja: str) -> Lis
     return chips[:2]
 
 
+def _risk_shinsal_for_month(packed: Dict[str, Any], month_branch_hanja: str) -> List[str]:
+    """
+    월지와 실제로 일치하는 위험·주의 신살 이름 목록을 반환한다.
+    사주 원국에 해당 신살이 있더라도 이 달의 월지와 branch가 맞는 경우에만 포함.
+    """
+    items = _extract_shinsal_items(packed)
+    mb = str(month_branch_hanja or "").strip()
+    risk_names: List[str] = []
+    for it in items:
+        name = str(it.get("name") or "").strip()
+        if not name or name.startswith("12운성:"):
+            continue
+        br = str(it.get("branch") or "").strip()
+        if br != mb:
+            continue
+        if name in _SHINSAL_RISK_SET or name in _SHINSAL_CAUTION_SET:
+            risk_names.append(name)
+    return list(dict.fromkeys(risk_names))
+
+
 def _flow_good_caution_action(
     *,
     seed: str,
@@ -1377,6 +1387,15 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
         sh_ctx = _shinsal_month_context(packed, var_seed, mb_hanja or month_branch, m)
         sh_chips = _shinsal_month_chips(packed, mb_hanja or month_branch)
 
+        # 이 달에 실제 작용하는 위험 신살 → DB 슬롯 계산
+        _month_risk_shinsal = _risk_shinsal_for_month(packed, mb_hanja or month_branch)
+        _month_risk_seed = int(hashlib.md5(f"{target_year}|{m}|risk".encode()).hexdigest(), 16) % (2**31)
+        _month_risk_slots = [
+            slot
+            for sname in _month_risk_shinsal
+            for slot in get_shinsal_risk_slots(sname, seed=_month_risk_seed)
+        ][:3]
+
         counsel = _build_counsel_sections(
             packed=packed,
             seed=var_seed,
@@ -1420,6 +1439,7 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
                 "yongshinLine": yong_line,
                 "patternTop": labels,
                 "shinsalHighlights": sh_chips,
+                "monthRiskSlots": _month_risk_slots,
                 "narrative": narrative,
                 "overallFlow": counsel["overallFlow"],
                 "mingliInterpretation": counsel["mingliInterpretation"],

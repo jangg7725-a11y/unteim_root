@@ -286,11 +286,13 @@ def analyze_saju(dt_or_birth: Any, gender: str = "F", calendar: str = "solar") -
     if isinstance(dt_or_birth, datetime):
         dt_kst = _ensure_kst(dt_or_birth)
         birth_str = dt_kst.strftime("%Y-%m-%d %H:%M")
+        # datetime 객체는 이미 양력이므로 calendar 파라미터 무시
+        cal = "solar"
     else:
         birth_str = str(dt_or_birth)
         dt_kst = None
+        cal = _normalize_calendar(calendar)
 
-    cal = _normalize_calendar(calendar)
     birth_solar = _to_solar_birth_str(birth_str, cal)
 
     validate_birth_input(birth_solar, gender)

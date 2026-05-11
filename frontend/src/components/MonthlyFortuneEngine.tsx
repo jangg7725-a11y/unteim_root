@@ -91,7 +91,6 @@ export function MonthlyFortuneEngine({
   const coreEvents = (m.coreEvents || "").trim();
   const hasCounselSections = Boolean(mingli);
   const opportunityText = (m.opportunity || m.good).trim();
-  const riskText = (m.riskPoints || m.caution).trim();
   const actionText = (m.actionGuide || m.action).trim();
   const behaviorGuide = (m.behaviorGuide || "").trim();
   const emotionText = (m.emotionCoaching || "").trim();
@@ -107,11 +106,6 @@ export function MonthlyFortuneEngine({
     : [];
   const friendlyParagraphs = useMemo(() => buildMonthlyFriendlyParagraphs(m), [m]);
   const goodBullets = (m.opportunity || m.good)
-    .split(/\n+/)
-    .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
-    .filter(Boolean)
-    .slice(0, 3);
-  const riskBullets = (m.riskPoints || m.caution)
     .split(/\n+/)
     .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
     .filter(Boolean)
@@ -284,12 +278,6 @@ export function MonthlyFortuneEngine({
                   <li key={`good-${i}`}>{line}</li>
                 ))}
               </ul>
-              <p className="mfb__section-title">주의할 점</p>
-              <ul className="mfb__bullet-list">
-                {(riskBullets.length ? riskBullets : [riskText]).map((line, i) => (
-                  <li key={`risk-${i}`}>{line}</li>
-                ))}
-              </ul>
               <p>
                 <strong>한 줄 정리</strong> {oneLineConclusion || actionText}
               </p>
@@ -328,6 +316,31 @@ export function MonthlyFortuneEngine({
               <p className="mfb__one-line">
                 <strong>한 줄 결론</strong> {oneLineConclusion}
               </p>
+            ) : null}
+
+            {m.monthRiskSlots && m.monthRiskSlots.length > 0 ? (
+              <div className="mfb__month-risk">
+                <p className="mfb__section-title">이 달 주의 패턴</p>
+                {m.monthRiskSlots.map((slot, i) => (
+                  <div key={i} className="mfb__risk-slot">
+                    <p className="mfb__risk-slot-label">{slot.label_ko}</p>
+                    {slot.core_message && (
+                      <p className="mfb__risk-slot-core">{slot.core_message}</p>
+                    )}
+                    {slot.warning && (
+                      <p className="mfb__risk-slot-warning">
+                        <span className="mfb__risk-tag">주의</span> {slot.warning}
+                      </p>
+                    )}
+                    {slot.action && (
+                      <p className="mfb__risk-slot-action">
+                        <span className="mfb__risk-tag mfb__risk-tag--action">행동</span> {slot.action}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                <p className="mfb__risk-note">사주 월지 신살 기반 경향 안내 — 단정이 아닌 참고 정보입니다.</p>
+              </div>
             ) : null}
 
             {bridgeText ? (

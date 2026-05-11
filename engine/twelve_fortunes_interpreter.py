@@ -42,11 +42,20 @@ def _stage_map() -> Dict[str, str]:
     return _db().get("engine_mapping", {}).get("stage_map", {})
 
 
+_HANJA_TO_KO: Dict[str, str] = {
+    "長生": "장생", "沐浴": "목욕", "冠帶": "관대", "臨官": "건록",
+    "帝旺": "제왕", "衰": "쇠", "病": "병", "死": "사",
+    "墓": "묘", "絶": "절", "胎": "태", "養": "양",
+}
+
+
 def _resolve_code(stage_label: str) -> Optional[str]:
     """
-    '장생', '목욕', ... 또는 이미 'CHANGSHENG' 형태인 경우 모두 처리.
+    '장생', '목욕', ... 또는 '長生', '沐浴'(한자) 또는 이미 'CHANGSHENG' 형태인 경우 모두 처리.
     """
     label = str(stage_label).strip()
+    # 한자 → 한국어 변환
+    label = _HANJA_TO_KO.get(label, label)
     smap = _stage_map()
     # 한국어로 들어온 경우
     if label in smap:
@@ -85,8 +94,11 @@ def _extract_stage(packed: Dict[str, Any], pillar: str = "day") -> Optional[str]
                 break
         if isinstance(cur, str) and cur:
             return cur
-        if isinstance(cur, dict) and "label" in cur:
-            return str(cur["label"])
+        if isinstance(cur, dict):
+            for key in ("label_ko", "label", "fortune", "name"):
+                v = cur.get(key)
+                if isinstance(v, str) and v:
+                    return v
     return None
 
 

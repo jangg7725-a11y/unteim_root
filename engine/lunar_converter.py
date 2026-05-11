@@ -256,42 +256,48 @@ def to_lunar(dt: datetime) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     print(to_lunar(KST.localize(datetime(1966, 11, 4, 2, 5))))
-def lunar_to_solar(lunar_year: int, lunar_month: int, lunar_day: int, hour: int, minute: int, leap: bool=False):
+def lunar_to_solar(lunar_year: int, lunar_month: int, lunar_day: int, hour: int, minute: int, leap: bool = False):
     """
     음력 (년-월-일, 윤달여부, KST 시분) -> 양력 datetime(KST)
-    - 동지-기준 테이블에서 month_no & leap가 일치하는 음력월을 찾아서 계산
+    - korean_lunar_calendar 패키지를 사용해 정확한 변환 수행
     - KST '시간' 보존
     """
-    # 음력연도 주변의 테이블 두 벌을 만들어 경계 안전
-    tables = _assign_lunar_months(lunar_year) + _assign_lunar_months(lunar_year + 1)
-
-    target = None
-    for m in tables:
-        if int(m["month_no"]) == int(lunar_month) and bool(m["leap"]) == bool(leap):
-            # 후보 중 lunar_year에 더 가까운 start_kst를 선택
-            if (m["start_kst"].year == lunar_year) or (target is None):
-                target = m
-                # 완전 일치 우선
-                if m["start_kst"].year == lunar_year:
-                    break
-
-    if target is None:
+    try:
+        from korean_lunar_calendar import KoreanLunarCalendar
+    except Exception as e:
         return {
             "solar_kst": None,
             "solar_str": None,
-            "meta": {"note": "해당 (년,월,윤달) 조합을 찾을 수 없음"}
+            "meta": {"note": f"korean-lunar-calendar 패키지 로드 실패: {e}"}
         }
 
-    base = target["start_kst"].replace(hour=0, minute=0, second=0, microsecond=0)
-    solar_kst = base + timedelta(days=int(lunar_day) - 1, hours=int(hour), minutes=int(minute))
+    kcal = KoreanLunarCalendar()
+    ok = kcal.setLunarDate(int(lunar_year), int(lunar_month), int(lunar_day), bool(leap))
+    if not ok:
+        return {
+            "solar_kst": None,
+            "solar_str": None,
+            "meta": {"note": f"유효하지 않은 음력 날짜: {lunar_year}-{lunar_month:02d}-{lunar_day:02d} (leap={leap})"}
+        }
+
+    solar_iso = (kcal.SolarIsoFormat() or "").split()[0].strip()
+    if len(solar_iso) != 10:
+        return {
+            "solar_kst": None,
+            "solar_str": None,
+            "meta": {"note": "음력→양력 변환 결과를 읽을 수 없습니다."}
+        }
+
+    sy, sm, sd = [int(x) for x in solar_iso.split("-")]
+    solar_kst = KST.localize(datetime(sy, sm, sd, int(hour), int(minute)))
 
     return {
         "solar_kst": solar_kst,
         "solar_str": solar_kst.strftime("%Y-%m-%d %H:%M"),
         "meta": {
-            "month_start": target["start_kst"].strftime("%Y-%m-%d %H:%M"),
-            "has_principal": bool(target["has_principal"]),
-            "leap": bool(target["leap"])
+            "month_start": solar_kst.replace(hour=0, minute=0).strftime("%Y-%m-%d %H:%M"),
+            "has_principal": True,
+            "leap": bool(leap),
         }
     }
 

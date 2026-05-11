@@ -103,7 +103,7 @@ def _extract_shinsal_names(packed: Dict[str, Any]) -> List[str]:
     candidates = [
         packed.get("shinsal"),
         packed.get("shinsal_list"),
-        packed.get("analysis", {}).get("shinsal"),
+        (packed.get("analysis") or {}).get("shinsal"),
         packed.get("shinsal_result"),
     ]
     for c in candidates:

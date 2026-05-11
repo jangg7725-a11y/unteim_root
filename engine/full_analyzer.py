@@ -76,7 +76,10 @@ def _first_text(*values: Any) -> str:
 
 
 def _month_slot_index(row: Dict[str, Any], fallback_idx: int) -> int:
-    month = int(row.get("month") or fallback_idx + 1)
+    try:
+        month = int(row.get("month") or fallback_idx + 1)
+    except (ValueError, TypeError):
+        month = fallback_idx + 1
     if 1 <= month <= 12:
         return month - 1
     return fallback_idx % 12
@@ -201,8 +204,7 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     # ── 3. money_monthly (재물 이달 힌트, 오행별 pool 순환) ─────────
     try:
         money_db = load_sentences("money_pattern_db")
-        _oheng_ko_map = {"wood":"목","fire":"화","earth":"토","metal":"금","water":"수"}
-        _dom_ko = _oheng_ko_map.get(element_ko, "")
+        _dom_ko = element_ko  # _dominant_element_ko()는 이미 한글(목·화·토·금·수) 반환
         money_oh_entry = (money_db.get("oheng_money") or {}).get(_dom_ko, {})
         money_monthly_pool = money_oh_entry.get("monthly_pool", []) if isinstance(money_oh_entry, dict) else []
         money_advice_pool = money_oh_entry.get("advice_pool", []) if isinstance(money_oh_entry, dict) else []
@@ -233,9 +235,7 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     # ── 6. career_strategy (직업 전략, 오행별 pool 순환) ─────────────
     try:
         career_db = load_sentences("career_exam_db")
-        _oheng_hanja_map = {"목":"목","화":"화","토":"토","금":"금","수":"수"}
-        _oheng_en_to_ko = {"wood":"목","fire":"화","earth":"토","metal":"금","water":"수"}
-        _career_key = _oheng_en_to_ko.get(element_ko, "")
+        _career_key = element_ko  # _dominant_element_ko()는 이미 한글(목·화·토·금·수) 반환
         career_oh_entry = (career_db.get("oheng_career") or {}).get(_career_key, {})
         career_strategy_pool = career_oh_entry.get("strategy_pool", []) if isinstance(career_oh_entry, dict) else []
         career_strength_pool = career_oh_entry.get("strength_pool", []) if isinstance(career_oh_entry, dict) else []
@@ -298,14 +298,21 @@ def _merge_monthly_slots_into_fortune(packed: Dict[str, Any]) -> None:
     for row in monthly_reports:
         if not isinstance(row, dict):
             continue
-        month = int(row.get("month") or 0)
+        try:
+            month = int(row.get("month") or 0)
+        except (ValueError, TypeError):
+            month = 0
         if 1 <= month <= 12:
             by_month[month] = row
 
     for month_row in months:
         if not isinstance(month_row, dict):
             continue
-        source = by_month.get(int(month_row.get("month") or 0))
+        try:
+            _mkey = int(month_row.get("month") or 0)
+        except (ValueError, TypeError):
+            _mkey = 0
+        source = by_month.get(_mkey)
         if not source:
             continue
         for key in _MONTHLY_SLOT_KEYS:

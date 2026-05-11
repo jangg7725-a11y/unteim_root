@@ -47,6 +47,7 @@ from engine.risk_fortune_interpreter import get_shinsal_risk_slots
 from engine.career_exam_interpreter import get_career_context_for_packed
 from engine.relationship_marriage_interpreter import get_relation_context_for_packed
 from engine.health_pattern_interpreter import get_health_context_for_packed
+from engine.separation_movement_interpreter import get_sep_mov_context_for_packed
 from reports.monthly_report import build_monthly_report_pdf
 import traceback
 
@@ -833,6 +834,7 @@ def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
             from datetime import date as _date_cls
             _seed_src = f"{_date_cls.today().isoformat()}|{birth}"
             _slot_seed = int(_hl.md5(_seed_src.encode()).hexdigest(), 16) % (2**31)
+            _sep_mov = get_sep_mov_context_for_packed(_packed, seed=_slot_seed)
             result["narrative_slots"] = {
                 "money": _clean(get_money_context_for_packed(_packed, seed=_slot_seed)),
                 "health": _clean(get_health_context_for_packed(_packed, seed=_slot_seed)),
@@ -844,6 +846,8 @@ def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
                         for slot in get_shinsal_risk_slots(s, seed=_slot_seed)
                     ][:3]
                 }),
+                "separation": _clean(_sep_mov.get("separation", {})),
+                "movement": _clean(_sep_mov.get("movement", {})),
             }
         except Exception:
             result["narrative_slots"] = {}

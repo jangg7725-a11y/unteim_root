@@ -374,6 +374,19 @@ function parseMonthlyFortune(raw: Record<string, unknown>): MonthlyFortuneEngine
         luckScore: typeof x.luckScore === "number" ? x.luckScore : undefined,
         daymaster_monthly_tip: simplifyReportCopy(pickText(x.daymaster_monthly_tip), moArg),
         oheng_monthly_strategy: simplifyReportCopy(pickText(x.oheng_monthly_strategy), moArg),
+        monthRiskSlots: Array.isArray(x.monthRiskSlots)
+          ? (x.monthRiskSlots as unknown[])
+              .filter((r): r is Record<string, unknown> => !!r && typeof r === "object")
+              .map((r) => ({
+                found: Boolean(r.found),
+                risk_type: String(r.risk_type ?? ""),
+                label_ko: String(r.label_ko ?? ""),
+                core_message: String(r.core_message ?? ""),
+                warning: String(r.warning ?? ""),
+                action: String(r.action ?? ""),
+              }))
+              .filter((r) => r.found && r.label_ko)
+          : undefined,
       };
     })
     .filter((m): m is NonNullable<typeof m> => m !== null && m.month >= 1 && m.month <= 12);

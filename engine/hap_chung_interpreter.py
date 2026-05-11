@@ -123,7 +123,7 @@ def _extract_relation_signals(
         "AMPLIFY": "hap",
     }
     interactions: List[Dict[str, Any]] = (
-        packed.get("flow", {}).get("interactions", [])
+        (packed.get("flow") or {}).get("interactions", [])
         or []
     )
     for ix in interactions:

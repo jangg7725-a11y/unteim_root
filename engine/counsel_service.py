@@ -184,8 +184,10 @@ def build_engine_analysis(
     profile: Dict[str, Any],
     intent: str = "general",
 ) -> tuple[str, Dict[str, Any]]:
-    pillars = calculate_saju(birth_str)
-    report = analyze_full(cast(Any, pillars), birth_str=birth_str)
+    _gender_raw = profile.get("gender") or profile.get("sex") or "F"
+    _gender = "M" if str(_gender_raw).lower() in ("male", "m", "남", "남자") else "F"
+    pillars = calculate_saju(birth_str, gender=_gender)
+    report = analyze_full(cast(Any, pillars), birth_str=birth_str, gender=_gender)
     if not isinstance(report, dict):
         raise RuntimeError("ENGINE_REPORT_INVALID")
     summary = summarize_report_for_counsel(report, profile=profile, intent=intent)

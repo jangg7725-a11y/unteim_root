@@ -554,6 +554,77 @@
   line-height: 1.6;
 }
 
+/* 이 달 주의 패턴 — 월별 신살 위험 슬롯 */
+.mfb__month-risk {
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(180, 83, 9, 0.04);
+  border: 1px solid rgba(180, 83, 9, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.mfb__risk-slot {
+  background: rgba(255, 255, 255, 0.7);
+  border-left: 3px solid rgba(180, 83, 9, 0.28);
+  border-radius: 0 8px 8px 0;
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mfb__risk-slot-label {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.mfb__risk-slot-core {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #3f3a50;
+}
+
+.mfb__risk-slot-warning,
+.mfb__risk-slot-action {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: #4b3d6a;
+  display: flex;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+
+.mfb__risk-tag {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.1);
+  border-radius: 4px;
+  padding: 0.08rem 0.32rem;
+  margin-top: 0.14rem;
+  line-height: 1.3;
+}
+
+.mfb__risk-tag--action {
+  color: #1d4ed8;
+  background: rgba(29, 78, 216, 0.1);
+}
+
+.mfb__risk-note {
+  margin: 0;
+  font-size: 0.65rem;
+  color: #9b8ab0;
+  text-align: right;
+}
+
 @media (max-width: 720px) {
   .mfb__book-inner {
     padding: 1.1rem 1rem 1.25rem 1.35rem;

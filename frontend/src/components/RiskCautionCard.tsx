@@ -1,7 +1,7 @@
 // frontend/src/components/RiskCautionCard.tsx
-// 신살 기반 위험 패턴 주의 카드 — narrative_slots.risk 데이터 출력
+// 신살 기반 위험 패턴 주의 카드 — narrative_slots.risk + health + relation + separation + movement 데이터 출력
 
-import type { NarrativeSlots } from "@/types/report";
+import type { NarrativeSlots, SepMovSlot } from "@/types/report";
 import "./risk-caution-card.css";
 
 type RiskSlot = {
@@ -34,12 +34,61 @@ function isPositive(label: string): boolean {
   return label.includes("횡재");
 }
 
+function SepMovBox({ slot, icon, colorClass }: { slot: SepMovSlot; icon: string; colorClass: string }) {
+  const mainText = slot.warning || slot.guidance || "";
+  return (
+    <div className={`risk-card__item ${colorClass}`}>
+      <div className="risk-card__item-head">
+        <span className="risk-card__item-icon" aria-hidden>{icon}</span>
+        <span className="risk-card__item-label">{slot.label_ko}</span>
+      </div>
+      {slot.context && <p className="risk-card__core">{slot.context}</p>}
+      {slot.core_message && !slot.context && (
+        <p className="risk-card__core">{slot.core_message}</p>
+      )}
+      {mainText && (
+        <div className="risk-card__row">
+          <span className="risk-card__row-label">안내</span>
+          <p className="risk-card__row-text">{mainText}</p>
+        </div>
+      )}
+      {slot.action && (
+        <div className="risk-card__row">
+          <span className="risk-card__row-label">행동</span>
+          <p className="risk-card__row-text">{slot.action}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function RiskCautionCard({ narrativeSlots }: Props) {
   const risks = narrativeSlots?.risk?.shinsal_risks;
-  if (!risks || risks.length === 0) return null;
+  const health = narrativeSlots?.health;
+  const relation = narrativeSlots?.relation;
+  const separation = narrativeSlots?.separation;
+  const movement = narrativeSlots?.movement;
 
-  const validRisks = risks.filter((r): r is RiskSlot & { found: true } => !!r.found);
-  if (validRisks.length === 0) return null;
+  const validRisks = (risks ?? []).filter(
+    (r): r is RiskSlot & { found: true } => !!r.found,
+  );
+
+  const healthTendency =
+    health?.daymaster?.health_tendency || health?.oheng?.care || "";
+  const healthCareTip = health?.daymaster?.care_tip || "";
+  const healthOrgan = health?.oheng?.organ_system || "";
+
+  const relationAdvice =
+    relation?.oheng?.advice || relation?.oheng?.strategy || "";
+  const relationMonthly = relation?.oheng?.monthly || "";
+
+  const hasHealth = !!(healthTendency || healthCareTip || healthOrgan);
+  const hasRelation = !!(relationAdvice || relationMonthly);
+  const hasShinsal = validRisks.length > 0;
+  const hasSeparation = !!separation?.found;
+  const hasMovement = !!movement?.found;
+
+  if (!hasShinsal && !hasHealth && !hasRelation && !hasSeparation && !hasMovement) return null;
 
   return (
     <section
@@ -53,6 +102,61 @@ export function RiskCautionCard({ narrativeSlots }: Props) {
       </h3>
 
       <div className="risk-card__body">
+        {/* 건강 박스 */}
+        {hasHealth && (
+          <div className="risk-card__item risk-card__item--health">
+            <div className="risk-card__item-head">
+              <span className="risk-card__item-icon" aria-hidden>🌿</span>
+              <span className="risk-card__item-label">건강</span>
+            </div>
+            {healthTendency && (
+              <p className="risk-card__core">{healthTendency}</p>
+            )}
+            {healthOrgan && (
+              <div className="risk-card__row">
+                <span className="risk-card__row-label">관련 기관</span>
+                <p className="risk-card__row-text">{healthOrgan}</p>
+              </div>
+            )}
+            {healthCareTip && (
+              <div className="risk-card__row">
+                <span className="risk-card__row-label">관리 팁</span>
+                <p className="risk-card__row-text">{healthCareTip}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 관계 박스 */}
+        {hasRelation && (
+          <div className="risk-card__item risk-card__item--relation">
+            <div className="risk-card__item-head">
+              <span className="risk-card__item-icon" aria-hidden>🤝</span>
+              <span className="risk-card__item-label">관계</span>
+            </div>
+            {relationAdvice && (
+              <p className="risk-card__core">{relationAdvice}</p>
+            )}
+            {relationMonthly && (
+              <div className="risk-card__row">
+                <span className="risk-card__row-label">이번 달</span>
+                <p className="risk-card__row-text">{relationMonthly}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 이별수 박스 */}
+        {hasSeparation && separation && (
+          <SepMovBox slot={separation} icon="💔" colorClass="risk-card__item--separation" />
+        )}
+
+        {/* 이동수 박스 */}
+        {hasMovement && movement && (
+          <SepMovBox slot={movement} icon="🚀" colorClass="risk-card__item--movement" />
+        )}
+
+        {/* 신살 위험 패턴 */}
         {validRisks.map((risk, i) => {
           const label = risk.label_ko ?? "";
           const positive = isPositive(label);
@@ -89,7 +193,7 @@ export function RiskCautionCard({ narrativeSlots }: Props) {
       </div>
 
       <p className="risk-card__note">
-        신살 구조 기반 경향 안내입니다. 단정이 아닌 참고 정보로 활용하세요.
+        사주 구조 기반 경향 안내입니다. 단정이 아닌 참고 정보로 활용하세요.
       </p>
     </section>
   );

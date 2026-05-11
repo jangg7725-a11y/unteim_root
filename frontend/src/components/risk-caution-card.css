@@ -43,6 +43,62 @@
   border-left: 3px solid rgba(5, 150, 105, 0.3);
 }
 
+.risk-card__item--health {
+  background: rgba(16, 130, 80, 0.06);
+  border-left: 3px solid rgba(16, 130, 80, 0.3);
+}
+
+.risk-card__item--health .risk-card__item-label {
+  color: #065f46;
+}
+
+.risk-card__item--health .risk-card__row-label {
+  color: #065f46;
+  background: rgba(16, 130, 80, 0.1);
+}
+
+.risk-card__item--relation {
+  background: rgba(99, 102, 241, 0.06);
+  border-left: 3px solid rgba(99, 102, 241, 0.3);
+}
+
+.risk-card__item--relation .risk-card__item-label {
+  color: #4338ca;
+}
+
+.risk-card__item--relation .risk-card__row-label {
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.risk-card__item--separation {
+  background: rgba(219, 39, 119, 0.05);
+  border-left: 3px solid rgba(219, 39, 119, 0.3);
+}
+
+.risk-card__item--separation .risk-card__item-label {
+  color: #9d174d;
+}
+
+.risk-card__item--separation .risk-card__row-label {
+  color: #9d174d;
+  background: rgba(219, 39, 119, 0.1);
+}
+
+.risk-card__item--movement {
+  background: rgba(37, 99, 235, 0.05);
+  border-left: 3px solid rgba(37, 99, 235, 0.28);
+}
+
+.risk-card__item--movement .risk-card__item-label {
+  color: #1d4ed8;
+}
+
+.risk-card__item--movement .risk-card__row-label {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+}
+
 .risk-card__item-head {
   display: flex;
   align-items: center;

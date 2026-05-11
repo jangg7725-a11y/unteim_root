@@ -25,6 +25,8 @@ _RISK_SECTIONS = {
     "accident_su": "사고수",
     "sonjaesu": "손재수",
     "hwongjaesu": "횡재수",
+    "guseolsu": "구설수",
+    "ohae": "오해",
 }
 
 
@@ -81,6 +83,16 @@ def get_risk_slots(
         result["recovery"] = _pick(section.get("recovery_pool", []), rng)
 
     return result
+
+
+def has_risk_type(risk_type: str) -> bool:
+    """
+    DB에 해당 위험 유형 섹션이 존재하는지 확인.
+    신살 매핑 결과가 실제 데이터를 가지는지 검증할 때 사용.
+    """
+    tmap = _db().get("engine_mapping", {}).get("risk_type_map", {})
+    resolved = tmap.get(risk_type, risk_type)
+    return bool(_db().get(resolved))
 
 
 def get_shinsal_risk_slots(
