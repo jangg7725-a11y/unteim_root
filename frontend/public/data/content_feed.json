@@ -3,27 +3,14 @@
   "feedVersion": "2026-04",
   "updatedAt": "2026-04-09",
   "categories": [
-    { "id": "all", "label": "전체", "icon": "sparkle" },
+    { "id": "all",     "label": "전체",    "icon": "sparkle"  },
     { "id": "monthly", "label": "이번 달", "icon": "calendar" },
-    { "id": "saju", "label": "사주", "icon": "saju" },
-    { "id": "love", "label": "연애·인연", "icon": "heart" },
-    { "id": "work", "label": "일·재물", "icon": "work" },
-    { "id": "mind", "label": "마음·성향", "icon": "mind" }
+    { "id": "saju",    "label": "사주",    "icon": "saju"     },
+    { "id": "love",    "label": "연애·인연","icon": "heart"   },
+    { "id": "work",    "label": "일·재물", "icon": "work"     },
+    { "id": "mind",    "label": "마음·성향","icon": "mind"    }
   ],
   "items": [
-    {
-      "id": "m202604-01",
-      "categoryIds": ["monthly", "saju"],
-      "theme": "violet",
-      "badge": "사주",
-      "bannerTitle": "4월, 나의 흐름",
-      "title": "4월 월운·세운이 만나는 지점",
-      "description": "입력하신 생시를 바탕으로 이번 달 월주·세운·대운이 겹치는 흐름을 요약합니다. 엔진 근거 위주로 읽습니다.",
-      "likes": 128,
-      "views": 4200,
-      "points": null,
-      "action": { "type": "tab", "target": "input", "focusMonth": 4 }
-    },
     {
       "id": "m202604-02",
       "categoryIds": ["monthly", "love"],
@@ -32,8 +19,8 @@
       "bannerTitle": "사람 앞의 나",
       "title": "대인·연애에서 드러나는 패턴",
       "description": "원국·십성·신살 요약을 바탕으로 관계에서 반복되기 쉬운 반응을 짚습니다. 단정이 아닌 경향 안내입니다.",
-      "likes": 256,
-      "views": 8100,
+      "likes": null,
+      "views": null,
       "points": null,
       "action": { "type": "tab", "target": "input", "focusMonth": 4 }
     },
@@ -45,49 +32,10 @@
       "bannerTitle": "일과 재물의 리듬",
       "title": "업무·재물 흐름을 보는 관점",
       "description": "십성·용신 요약이 있을 때 직업·재물 주제와 연결해 읽는 코칭형 안내입니다.",
-      "likes": 89,
-      "views": 3100,
+      "likes": null,
+      "views": null,
       "points": null,
       "action": { "type": "tab", "target": "report" }
-    },
-    {
-      "id": "m202604-04",
-      "categoryIds": ["mind", "saju"],
-      "theme": "slate",
-      "badge": "성향",
-      "bannerTitle": "오늘의 마음 날씨",
-      "title": "일간·십성으로 보는 기본 성향",
-      "description": "일간을 중심으로 감정·결정 스타일의 경향을 정리합니다. 과장된 단정 없이 가능성 위주입니다.",
-      "likes": 412,
-      "views": 12000,
-      "points": null,
-      "action": { "type": "tab", "target": "input" }
-    },
-    {
-      "id": "m202604-05",
-      "categoryIds": ["monthly", "mind"],
-      "theme": "teal",
-      "badge": "이번 달",
-      "bannerTitle": "한 걸음 실천",
-      "title": "이번 달에 시도해 볼 작은 행동",
-      "description": "월운 요약과 맞물려 지금 단계에서 부담 없이 시도할 수 있는 행동 아이디어를 제안합니다.",
-      "likes": 67,
-      "views": 2100,
-      "points": null,
-      "action": { "type": "tab", "target": "report", "focusMonth": 4 }
-    },
-    {
-      "id": "m202604-06",
-      "categoryIds": ["love", "mind"],
-      "theme": "pink",
-      "badge": "대화",
-      "bannerTitle": "AI와 대화하기",
-      "title": "궁금한 주제를 골라 상담",
-      "description": "리포트를 만든 뒤 AI 상담에서 질문 주제별로 해석을 이어 갈 수 있습니다.",
-      "likes": 190,
-      "views": 5600,
-      "points": null,
-      "action": { "type": "tab", "target": "counsel" }
     }
   ]
 }

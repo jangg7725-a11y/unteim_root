@@ -46,6 +46,11 @@ export function exploreActionForCategoryId(id: string): ExploreCategoryAction {
       return { type: "report", meta: { reportAnchor: "report-section-health" } };
     case "l4":
       return { type: "report", meta: { reportAnchor: "report-section-personality" } };
+    // 피드 카드에서 이전된 항목
+    case "f1":
+      return { type: "report", meta: { reportAnchor: "report-anchor-compatibility" } };
+    case "f2":
+      return { type: "report", meta: { reportAnchor: "report-section-work" } };
 
     case "q1":
       return { type: "counsel" };
