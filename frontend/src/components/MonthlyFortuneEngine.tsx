@@ -85,7 +85,6 @@ export function MonthlyFortuneEngine({
   const mingli = (m.mingliInterpretation || "").trim();
   const hasCounselSections = Boolean(mingli);
   const opportunityText = (m.opportunity || m.good).trim();
-  const actionText = (m.actionGuide || m.action).trim();
   const behaviorGuide = (m.behaviorGuide || "").trim();
   const emotionText = (m.emotionCoaching || "").trim();
   const elementPractice = (m.elementPractice || "").trim();
@@ -230,9 +229,11 @@ export function MonthlyFortuneEngine({
                   <li key={`good-${i}`}>{line}</li>
                 ))}
               </ul>
-              <p>
-                <strong>한 줄 정리</strong> {oneLineConclusion || actionText}
-              </p>
+              {oneLineConclusion ? (
+                <p className="mfb__one-line">
+                  <strong>이달의 한줄 결론</strong> {oneLineConclusion}
+                </p>
+              ) : null}
             </div>
 
             {behaviorGuide ? (
@@ -262,12 +263,6 @@ export function MonthlyFortuneEngine({
                   ))}
                 </div>
               </div>
-            ) : null}
-
-            {oneLineConclusion ? (
-              <p className="mfb__one-line">
-                <strong>한 줄 결론</strong> {oneLineConclusion}
-              </p>
             ) : null}
 
             {m.monthRiskSlots && m.monthRiskSlots.length > 0 ? (
