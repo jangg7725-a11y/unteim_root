@@ -71,28 +71,74 @@ const SIPSIN_MONEY: Record<string, CategoryScore> = {
   정인: 3, 비견: 2, 편관: 2, 편인: 2, 겁재: 1,
 };
 
+// ── 건강운 전용 테이블 ────────────────────────────────────────
+
 // 12운성 → 건강 점수
-const STAGE_HEALTH: Record<string, CategoryScore> = {
+const STAGE_HEALTH_SCORE: Record<string, CategoryScore> = {
   제왕: 5, 임관: 5, 관대: 4, 장생: 4,
   양: 3, 태: 3,
   쇠: 2, 목욕: 2, 묘: 2, 절: 2,
   병: 1, 사: 1,
 };
 
-// 12운성 → 건강 본문 메시지 (월별 변동 보장)
-const HEALTH_MSG: Record<string, string> = {
-  제왕:  "체력·활력이 최고조인 달입니다. 활동적인 스케줄을 잡아도 잘 버팁니다.",
-  임관:  "건강 흐름이 상승 중입니다. 새로운 건강 루틴을 시작하기에 적합합니다.",
-  관대:  "활기차고 자신감이 있는 달입니다. 꾸준한 운동 루틴으로 체력을 비축하세요.",
-  장생:  "회복력이 좋고 활기찬 달입니다. 기초 체력 관리를 유지하세요.",
-  양:    "회복과 준비 에너지의 달입니다. 과소비보다 축적에 집중하세요.",
-  태:    "새 출발 기운이 있지만 체력 변동이 생기기 쉽습니다. 수면 리듬을 지키세요.",
-  쇠:    "흐름이 잦아드는 달입니다. 새 활동보다 기존 루틴 유지에 집중하세요.",
-  목욕:  "에너지가 불규칙할 수 있습니다. 감정 기복과 피로감을 함께 주의하세요.",
-  묘:    "에너지를 아끼는 흐름입니다. 과로를 피하고 규칙적 휴식을 확보하세요.",
-  절:    "신체 리듬이 흔들리기 쉬운 구간입니다. 스트레스 관리를 최우선으로 하세요.",
-  병:    "체력이 쉽게 떨어지는 달입니다. 무리한 일정을 줄이고 수면·식사를 챙기세요.",
-  사:    "활력이 낮은 시기입니다. 큰 활동보다 회복에 집중하는 것이 유리합니다.",
+/**
+ * 12운성 → 건강 경보 (직설적 주의 문구)
+ * 단정이 아닌 "~하기 쉬운", "~가능성" 표현 사용
+ */
+const STAGE_HEALTH_WARN: Record<string, string> = {
+  병:   "면역력이 크게 떨어지기 쉬운 달입니다. 잔병치레·통증 신호를 가볍게 넘기지 마세요.",
+  사:   "에너지가 바닥으로 떨어지는 구간입니다. 과로·수면 부족이 큰 탈로 이어질 수 있습니다.",
+  묘:   "만성 피로와 소화기 부담이 쌓이기 쉬운 달입니다. 속 불편함·무기력 신호를 주의하세요.",
+  절:   "신체 리듬이 무너지기 쉬운 구간입니다. 수면 불규칙과 호르몬 이상 신호에 주의하세요.",
+  목욕: "피부·호흡기·감정 기복이 올라오기 쉬운 달입니다. 예민해진 몸 신호에 귀 기울이세요.",
+  쇠:   "체력이 점진적으로 떨어지는 구간입니다. 피로가 누적되기 전에 미리 회복 루틴을 챙기세요.",
+  태:   "체력 변동이 생기기 쉬운 달입니다. 갑작스러운 컨디션 저하에 유의하세요.",
+  양:   "에너지를 비축하는 흐름입니다. 무리한 활동보다 재충전에 집중하세요.",
+  관대: "활기는 좋지만 에너지를 과소비하기 쉽습니다. 무리한 스케줄을 조심하세요.",
+  장생: "회복력이 좋은 달입니다. 기초 체력 루틴으로 이 흐름을 유지하세요.",
+  임관: "건강 흐름이 상승 중입니다. 새 운동 루틴을 시작하기 좋은 달입니다.",
+  제왕: "체력이 최고조입니다. 과신하지 말고 꾸준히 관리하면 이 흐름이 오래 이어집니다.",
+};
+
+/** 월지 오행 → 담당 장기·부위 (五行 장기 배속) */
+const BRANCH_OHAENG: Record<string, string> = {
+  // 木 (목) — 간·담·눈·근육
+  寅: "목", 卯: "목", 인: "목", 묘: "목",
+  // 火 (화) — 심장·혈관·심리
+  巳: "화", 午: "화", 사: "화", 오: "화",
+  // 土 (토) — 비위·소화기·면역
+  辰: "토", 戌: "토", 丑: "토", 未: "토",
+  진: "토", 술: "토", 축: "토", 미: "토",
+  // 金 (금) — 폐·대장·피부·호흡기
+  申: "금", 酉: "금", 신: "금", 유: "금",
+  // 水 (수) — 신장·방광·뼈·허리
+  亥: "수", 子: "수", 해: "수", 자: "수",
+};
+
+/** 오행 → 이달 집중 건강 위험 요소 */
+const OHAENG_HEALTH_RISK: Record<string, string> = {
+  목: "간·담 기능 저하와 눈 피로·근육 뭉침이 생기기 쉬운 달입니다.",
+  화: "혈압·심장 두근거림·열감이 올라오기 쉬운 달입니다. 심리 스트레스도 심혈관에 영향을 줄 수 있습니다.",
+  토: "소화기 부담이 커지기 쉬운 달입니다. 속 더부룩함·식욕 저하·위장 이상 신호를 주의하세요.",
+  금: "호흡기·폐 약화와 피부 트러블이 생기기 쉬운 달입니다. 건조한 환경·먼지에 주의하세요.",
+  수: "신장·방광 부담과 허리·무릎 통증이 올 수 있는 달입니다. 냉기와 수분 부족을 조심하세요.",
+};
+
+/** 오행 → 건강 루틴 제안 */
+const OHAENG_ROUTINE: Record<string, string> = {
+  목: "알코올·기름진 음식을 줄이고, 눈 피로 해소(온찜질·멀리 보기)와 스트레칭 루틴을 챙기세요.",
+  화: "격렬한 운동보다 가벼운 유산소·명상을 선택하고, 카페인·매운 음식 섭취를 줄이세요.",
+  토: "밀가루·단음식·야식을 줄이고, 규칙적인 식사 시간과 따뜻한 음식으로 속을 달래세요.",
+  금: "환기·가습기로 호흡 환경을 관리하고, 마스크 착용과 충분한 수분 섭취를 습관화하세요.",
+  수: "따뜻한 무릎·허리 보온을 챙기고, 물을 하루 1.5L 이상 마시며 무리한 야간 활동을 피하세요.",
+};
+
+/** 십성 → 건강 관련 스트레스 유형 */
+const SIPSIN_HEALTH_STRESS: Record<string, string> = {
+  겁재:  "경쟁·갈등 스트레스가 심혈관과 소화기에 영향을 줄 수 있습니다.",
+  편관:  "외부 압박·과부하로 두통·목 결림·불면이 생기기 쉬운 달입니다.",
+  상관:  "에너지를 과소비하기 쉬운 달입니다. 목·후두와 신경 피로에 유의하세요.",
+  편인:  "고독·반추 스트레스가 수면의 질을 떨어뜨릴 수 있습니다.",
 };
 
 // 십성 → 애정 본문 메시지
@@ -141,33 +187,82 @@ const CAUTION_STAGE: Record<string, string> = {
 
 // ── 카테고리 도출 함수 ────────────────────────────────────────
 
-/** 이달의 건강운 — 근거: twelveStage (매달 변동 보장) */
+/**
+ * 이달의 건강운
+ * ─ 월지 오행 → 담당 장기·부위별 위험 요소 (달마다 다름)
+ * ─ 12운성 → 에너지 단계·경보 수준 (달마다 다름)
+ * ─ 십성 → 스트레스 유형 추가 (해당 유형일 때)
+ * ─ 충·형 발생 → 신체 충격 신호 경고
+ * ─ 합성 결과: 구체적 주의 문구 + 루틴 제안
+ */
 function deriveHealth(m: MonthlyFortuneEngineMonth): MonthCategory {
   const stage = (m.twelveStage || "").trim();
-  const score: CategoryScore = STAGE_HEALTH[stage] ?? luckToScore(m.luckScore);
+  const sipsin = (m.stemTenGod || "").trim();
+  const score: CategoryScore =
+    STAGE_HEALTH_SCORE[stage] ?? luckToScore(m.luckScore);
 
-  // 1순위: 12운성 기반 건강 메시지 (매달 반드시 다름)
-  const stageLine =
-    HEALTH_MSG[stage] ??
-    "이달 건강 관리는 일상 루틴을 유지하는 것이 핵심입니다.";
+  // ── 월지 오행 추출 ──────────────────────────────────────────
+  // monthBranch: 예) "자", "子", "인", "寅" 등
+  const branchRaw = (m.monthBranch || "").trim();
+  // 월주에서 뒤 한 글자가 지지인 경우도 대비 (예: "경자" → "자")
+  const branchChar =
+    BRANCH_OHAENG[branchRaw] !== undefined
+      ? branchRaw
+      : branchRaw.slice(-1); // 마지막 글자 시도
+  const ohaeng = BRANCH_OHAENG[branchChar] ?? BRANCH_OHAENG[branchRaw];
 
-  const lines: string[] = [stageLine];
+  const lines: string[] = [];
 
-  // 2순위: 일간 월별 팁에 건강 관련 내용이 있으면 보조
-  if (m.daymaster_monthly_tip) {
-    const tip = m.daymaster_monthly_tip.trim();
-    if (/건강|체력|몸|피로|수면|식사|운동/.test(tip)) {
-      lines.push(clip(tip, 85));
-    }
+  // ── 1. 12운성 경보 (매달 반드시 다름) ──────────────────────
+  const stageWarn =
+    STAGE_HEALTH_WARN[stage] ??
+    "이달 건강 흐름은 큰 이상 없이 유지 가능합니다.";
+  lines.push(stageWarn);
+
+  // ── 2. 월지 오행 기반 장기·부위 위험 요소 ──────────────────
+  if (ohaeng) {
+    const ohaengRisk = OHAENG_HEALTH_RISK[ohaeng];
+    if (ohaengRisk) lines.push(ohaengRisk);
   }
 
-  // monthRiskSlots에서 건강 관련 경고
-  const healthSlot = (m.monthRiskSlots ?? []).find(
-    (r) => r.found && /건강|질병|부상|체력/.test(r.label_ko ?? "") && r.warning
-  );
-  const caution = healthSlot?.warning;
+  // ── 3. 십성 스트레스 유형 (겁재·편관·상관·편인만 추가) ──────
+  const stressMsg = SIPSIN_HEALTH_STRESS[sipsin];
+  if (stressMsg && lines.length < 3) {
+    lines.push(stressMsg);
+  }
 
-  return { key: "health", title: "이달의 건강운", emoji: "🌿", score, lines, caution };
+  // ── 4. 충·형 발생 시 신체 충격 경고 ────────────────────────
+  const hasConflict = (m.interactionHints ?? []).some((h) =>
+    /충|형/.test(h)
+  );
+  if (hasConflict && lines.length < 3) {
+    lines.push(
+      "이달 충·형 작용으로 갑작스러운 신체 신호나 부상 위험에 주의가 필요합니다."
+    );
+  }
+
+  // ── 5. 오행 기반 루틴 제안 (caution 영역에 배치) ────────────
+  const routine = ohaeng
+    ? OHAENG_ROUTINE[ohaeng]
+    : undefined;
+
+  // ── 6. monthRiskSlots 건강 신살 경고 ─────────────────────────
+  const healthSlot = (m.monthRiskSlots ?? []).find(
+    (r) =>
+      r.found &&
+      /건강|질병|부상|체력|혈/.test(r.label_ko ?? "") &&
+      r.warning
+  );
+  const caution = healthSlot?.warning ?? routine;
+
+  return {
+    key: "health",
+    title: "이달의 건강운",
+    emoji: "🌿",
+    score,
+    lines,
+    caution,
+  };
 }
 
 /** 이달의 애정운 — 근거: stemTenGod + interactionHints 합·충 */
