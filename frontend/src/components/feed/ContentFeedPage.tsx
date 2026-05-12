@@ -164,23 +164,6 @@ export function ContentFeedPage({ hasBirth, hasReport, onNavigateTab, embedded }
             </div>
             <div className="feed-card__body">
               <p className="feed-card__title">{item.title}</p>
-              <div className="feed-card__meta">
-                {item.views != null && item.views > 0 && (
-                  <span aria-label="조회">
-                    👁 {item.views.toLocaleString("ko-KR")}
-                  </span>
-                )}
-                {item.likes != null && item.likes > 0 && (
-                  <span aria-label="좋아요">
-                    ♥ {item.likes.toLocaleString("ko-KR")}
-                  </span>
-                )}
-                {item.points != null && item.points > 0 && (
-                  <span aria-label="포인트">
-                    🪙 {item.points.toLocaleString("ko-KR")}
-                  </span>
-                )}
-              </div>
             </div>
           </button>
         ))}
