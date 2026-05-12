@@ -625,6 +625,163 @@
   text-align: right;
 }
 
+/* ── 이달의 카테고리별 운세 ──────────────────────────────── */
+
+.mfb__cat-section {
+  margin: 1.35rem 0 0.5rem;
+}
+
+.mfb__cat-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #6b5e8a;
+  text-transform: uppercase;
+}
+
+.mfb__cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+/* 공통 카드 */
+.mfb__cat-card {
+  border-radius: 14px;
+  padding: 0.85rem 0.85rem 0.75rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+
+.mfb__cat-card:hover,
+.mfb__cat-card:focus-visible {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
+}
+
+/* 카테고리별 색상 */
+.mfb__cat-card--health {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f4faf5 100%);
+  border-color: rgba(56, 142, 60, 0.15);
+}
+.mfb__cat-card--love {
+  background: linear-gradient(135deg, #fce4ec 0%, #fdf7f9 100%);
+  border-color: rgba(233, 30, 99, 0.12);
+}
+.mfb__cat-card--money {
+  background: linear-gradient(135deg, #fff8e1 0%, #fffdf5 100%);
+  border-color: rgba(245, 158, 11, 0.16);
+}
+.mfb__cat-card--shinsal {
+  background: linear-gradient(135deg, #ede7f6 0%, #f6f3fc 100%);
+  border-color: rgba(103, 58, 183, 0.13);
+}
+.mfb__cat-card--badluck {
+  background: linear-gradient(135deg, #fbe9e7 0%, #fdf5f3 100%);
+  border-color: rgba(229, 57, 53, 0.12);
+}
+.mfb__cat-card--goodluck {
+  background: linear-gradient(135deg, #e0f2f1 0%, #f2faf9 100%);
+  border-color: rgba(0, 150, 136, 0.14);
+}
+
+/* 카드 헤더 (이모지 + 제목 + 점수) */
+.mfb__cat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
+.mfb__cat-card-ico {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mfb__cat-card-name {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2d2040;
+  line-height: 1.25;
+}
+
+.mfb__cat-card-stars {
+  font-size: 0.7rem;
+  color: #f59e0b;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* 펼치기 화살표 */
+.mfb__cat-card-arrow {
+  font-size: 0.72rem;
+  color: #9b8ab0;
+  transition: transform 0.18s;
+  flex-shrink: 0;
+}
+.mfb__cat-card--open .mfb__cat-card-arrow {
+  transform: rotate(180deg);
+}
+
+/* 칩 */
+.mfb__cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  margin-bottom: 0.4rem;
+}
+
+.mfb__cat-chip {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #3b2a5f;
+}
+
+/* 본문 (펼쳐질 때) */
+.mfb__cat-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.22s ease, opacity 0.18s;
+  opacity: 0;
+}
+.mfb__cat-card--open .mfb__cat-body {
+  max-height: 260px;
+  opacity: 1;
+}
+
+.mfb__cat-line {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #433855;
+}
+
+.mfb__cat-line:last-child {
+  margin-bottom: 0;
+}
+
+.mfb__cat-caution {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #b45309;
+  padding: 0.35rem 0.5rem;
+  background: rgba(180, 83, 9, 0.07);
+  border-radius: 7px;
+  border-left: 3px solid rgba(180, 83, 9, 0.35);
+}
+
+/* ── 반응형 ── */
 @media (max-width: 720px) {
   .mfb__book-inner {
     padding: 1.1rem 1rem 1.25rem 1.35rem;

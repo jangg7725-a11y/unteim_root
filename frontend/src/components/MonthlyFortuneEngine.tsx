@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MonthlyFortuneEnginePayload } from "@/types/report";
 import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
+import {
+  deriveMonthlyCategories,
+  type MonthCategory,
+} from "@/utils/deriveMonthlyCategories";
 import "./monthly-fortune-book.css";
 
 function BoldInline({ text }: { text: string }) {
@@ -26,6 +30,52 @@ type Props = {
 function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
   const filled = "★".repeat(score) + "☆".repeat(5 - score);
   return <span className="mfb__stars">{filled}</span>;
+}
+
+function CategoryCard({ cat }: { cat: MonthCategory }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      type="button"
+      className={`mfb__cat-card mfb__cat-card--${cat.key}${open ? " mfb__cat-card--open" : ""}`}
+      onClick={() => setOpen((v) => !v)}
+      aria-expanded={open}
+    >
+      <div className="mfb__cat-card-header">
+        <span className="mfb__cat-card-ico" aria-hidden="true">
+          {cat.emoji}
+        </span>
+        <span className="mfb__cat-card-name">{cat.title}</span>
+        {cat.score != null && (
+          <span className="mfb__cat-card-stars" aria-label={`${cat.score}점`}>
+            {"★".repeat(cat.score) + "☆".repeat(5 - cat.score)}
+          </span>
+        )}
+        <span className="mfb__cat-card-arrow" aria-hidden="true">▾</span>
+      </div>
+
+      {cat.chips && cat.chips.length > 0 && (
+        <div className="mfb__cat-chips">
+          {cat.chips.map((chip) => (
+            <span key={chip} className="mfb__cat-chip">
+              {chip}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mfb__cat-body">
+        {cat.lines.map((line, i) => (
+          <p key={i} className="mfb__cat-line">
+            {line}
+          </p>
+        ))}
+        {cat.caution && (
+          <p className="mfb__cat-caution">{cat.caution}</p>
+        )}
+      </div>
+    </button>
+  );
 }
 
 export function MonthlyFortuneEngine({
@@ -90,6 +140,7 @@ export function MonthlyFortuneEngine({
   const elementPractice = (m.elementPractice || "").trim();
   const oneLineConclusion = (m.oneLineConclusion || "").trim();
   const bridgeText = (m.aiCounselBridge || "").trim();
+  const monthCategories = useMemo(() => deriveMonthlyCategories(m), [m]);
   const bridgeLines = bridgeText
     .split(/\n+/)
     .map((line) => line.trim())
@@ -234,6 +285,16 @@ export function MonthlyFortuneEngine({
                   <strong>이달의 한줄 결론</strong> {oneLineConclusion}
                 </p>
               ) : null}
+            </div>
+
+            {/* 이달의 카테고리별 운세 */}
+            <div className="mfb__cat-section">
+              <p className="mfb__cat-title">이달의 카테고리별 운세</p>
+              <div className="mfb__cat-grid">
+                {monthCategories.map((cat) => (
+                  <CategoryCard key={cat.key} cat={cat} />
+                ))}
+              </div>
             </div>
 
             {behaviorGuide ? (
