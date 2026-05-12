@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MonthlyFortuneEnginePayload } from "@/types/report";
 import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
+import { warmifyEmotionCoaching } from "@/utils/warmifyEmotionCoaching";
 import {
   deriveMonthlyCategories,
   type MonthCategory,
@@ -170,7 +171,7 @@ export function MonthlyFortuneEngine({
   const hasCounselSections = Boolean(mingli);
   const opportunityText = (m.opportunity || m.good).trim();
   const behaviorGuide = (m.behaviorGuide || "").trim();
-  const emotionText = (m.emotionCoaching || "").trim();
+  const emotionText = warmifyEmotionCoaching((m.emotionCoaching || "").trim());
   const elementPractice = (m.elementPractice || "").trim();
   const oneLineConclusion = (m.oneLineConclusion || "").trim();
   const bridgeText = (m.aiCounselBridge || "").trim();
