@@ -22,6 +22,32 @@ from utils.narrative_loader import load_sentences
 
 _DB_FILE = "life_event_signals_db"
 
+# 홍염살 — 일간 기준 지지
+_HONGNYEOM_TABLE: Dict[str, str] = {
+    '甲': '午', '乙': '午',
+    '丙': '寅', '丁': '未',
+    '戊': '辰', '己': '辰',
+    '庚': '戌', '辛': '酉',
+    '壬': '子', '癸': '申',
+}
+
+# 원진살 — 지지 쌍
+_WONJIN_MAP: Dict[str, str] = {
+    '子': '未', '未': '子',
+    '丑': '午', '午': '丑',
+    '寅': '酉', '酉': '寅',
+    '卯': '申', '申': '卯',
+    '辰': '亥', '亥': '辰',
+    '巳': '戌', '戌': '巳',
+}
+
+# 도화살 — 일지/년지 기준 지지
+_DOHWA_TABLE: Dict[str, str] = {
+    '子': '卯', '午': '酉', '卯': '子', '酉': '午',
+    '寅': '午', '戌': '午', '巳': '酉', '丑': '酉',
+    '申': '子', '辰': '子', '亥': '卯', '未': '卯',
+}
+
 # 지지 충 쌍
 _CHUNG_PAIRS: List[tuple] = [
     ("子", "午"), ("丑", "未"), ("寅", "申"),
@@ -270,11 +296,95 @@ def detect_life_events(
                 if sig and "health_caution" not in triggered_events:
                     _add_event("health_caution", f"{ko_key}오행 불균형(강도:{val})")
 
+    # ── A군: 이별 삼합 감지 ─────────────────────────────────────────
+    _has_chung = bool(chung_branches)
+    _has_hyeong = bool(_check_hyeong(month_ji, natal_branches)) if month_ji else False
+
+    # 원진 실시간 계산 (월지 기준)
+    _wonjin_target = _WONJIN_MAP.get(month_ji, "")
+    _has_wonjin_month = bool(_wonjin_target and _wonjin_target in natal_branches)
+
+    # 일지 충 여부 (부부궁 충)
+    _day_ji = str((packed.get("pillars") or {}).get("day", {}).get("ji") or "")
+    _has_day_chung = (_CHUNG_MAP.get(month_ji) == _day_ji) if (month_ji and _day_ji) else False
+
+    _ibyeol_count = sum([_has_chung, _has_hyeong, _has_wonjin_month])
+    if _ibyeol_count >= 2 or (_has_day_chung and _has_wonjin_month):
+        _add_event("ibyeol_samhap",
+                   f"충{'O' if _has_chung else 'X'}+형{'O' if _has_hyeong else 'X'}+원진{'O' if _has_wonjin_month else 'X'}")
+
+    # ── A군: 삼총살 감지 ─────────────────────────────────────────────
+    _dohwa_target = _DOHWA_TABLE.get(_day_ji, "")
+    _has_dohwa = bool(_dohwa_target and (_dohwa_target == month_ji or _dohwa_target in natal_branches))
+
+    _hongnyeom_target = _HONGNYEOM_TABLE.get(day_gan, "")
+    _has_hongnyeom = bool(_hongnyeom_target and (
+        _hongnyeom_target == month_ji or _hongnyeom_target in natal_branches))
+
+    _samchong_count = sum([_has_dohwa, _has_hongnyeom, _has_wonjin_month])
+    if _samchong_count >= 2:
+        _add_event("samchongsal",
+                   f"도화{'O' if _has_dohwa else 'X'}+홍염{'O' if _has_hongnyeom else 'X'}+원진{'O' if _has_wonjin_month else 'X'}")
+
+    # ── A군: 상관견관 감지 ──────────────────────────────────────────
+    _has_jeonggwan_in_natal = False
+    sipsin_data = (packed.get("analysis") or {}).get("sipsin") or {}
+    if isinstance(sipsin_data, dict):
+        counts = sipsin_data.get("counts") or {}
+        if isinstance(counts, dict):
+            _has_jeonggwan_in_natal = float(counts.get("정관", 0)) >= 1.0
+
+    if month_sipsin == "상관" and _has_jeonggwan_in_natal:
+        _add_event("sangkwan_gyeonan", "상관(월십신)+정관(원국) 충극")
+
+    # ── A군: 재성/관성 혼잡 감지 ──────────────────────────────────
+    if isinstance(sipsin_data, dict):
+        counts2 = sipsin_data.get("counts") or {}
+        if isinstance(counts2, dict):
+            _pyunjae = float(counts2.get("편재", 0))
+            _jungjae = float(counts2.get("정재", 0))
+            _pyungwan = float(counts2.get("편관", 0))
+            _jungwan  = float(counts2.get("정관", 0))
+
+            if _pyunjae + _jungjae >= 2.0:
+                _add_event("jaeseong_honjap",
+                           f"재성혼잡(편재{_pyunjae}+정재{_jungjae})")
+            if _pyungwan + _jungwan >= 2.0:
+                _add_event("gwanseong_honjap",
+                           f"관성혼잡(편관{_pyungwan}+정관{_jungwan})")
+
     # ── 결과 정렬: caution 먼저, positive 나중 ───────────────────────
     result = sorted(
         triggered_events.values(),
         key=lambda x: (0 if x["category"] == "caution" else 1)
     )
+
+    # ── B군: 삼재 월별 감지 ────────────────────────────────────────
+    try:
+        from engine.samjae_engine_v1 import build_samjae_result
+        samjae = build_samjae_result(packed)
+        if samjae.get("is_samjae"):
+            stage = samjae.get("stage", "")
+            # stage 값에 따라 분기
+            if "입력" in str(stage) or "들" in str(stage) or stage == 3:
+                _add_event("samjae_incoming", f"삼재진입(들삼재)")
+            elif "끝" in str(stage) or "날" in str(stage) or stage == 1:
+                _add_event("samjae_outgoing", f"삼재마무리(날삼재)")
+            else:
+                _add_event("samjae_mid", f"삼재진행중(눌삼재)")
+    except Exception:
+        pass
+
+    # ── B군: 대운 흐름 감지 ─────────────────────────────────────────
+    try:
+        analysis = packed.get("analysis") or {}
+        daewoon_flow = analysis.get("daewoon_flow") or analysis.get("current_daewoon_flow") or ""
+        if daewoon_flow in ("rising_strong", "rising_building", "peak"):
+            _add_event("daewoon_rising", f"대운상승({daewoon_flow})")
+        elif daewoon_flow in ("transition", "challenge_growth"):
+            _add_event("daewoon_challenge", f"대운전환({daewoon_flow})")
+    except Exception:
+        pass
 
     # 최대 3개만 반환 (너무 많으면 효과 희석)
     return result[:3]

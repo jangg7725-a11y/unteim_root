@@ -408,6 +408,100 @@ def detect_taeguk_cheonju_amrok_sangmun(pillars: Dict[Where, Tuple[str, str]]) -
 
 
 # -------------------------------------------------------------------
+
+# 이별·관계 특화 신살
+# -------------------------------------------------------------------
+_WONJIN_MAP = {
+    "子": "未", "未": "子",
+    "丑": "午", "午": "丑",
+    "寅": "酉", "酉": "寅",
+    "卯": "申", "申": "卯",
+    "辰": "亥", "亥": "辰",
+    "巳": "戌", "戌": "巳",
+}
+
+def detect_wonjin(pillars: Dict[Where, Tuple[str, str]]) -> List[ShinsalHit]:
+    """원진살(怨嗔殺): 일지 기준 원진 지지가 사주에 있을 때"""
+    hits: List[ShinsalHit] = []
+    day_b = pillars["day"][1]
+    target = _WONJIN_MAP.get(day_b)
+    if not target:
+        return hits
+    for where in ("year", "month", "hour"):
+        br = pillars[where][1]
+        if br == target:
+            hits.append(ShinsalHit(
+                name="원진살",
+                where=where,
+                branch=br,
+                detail=f"일지[{day_b}] 기준 원진",
+                weight=-1,
+            ))
+    return hits
+
+
+_HONGNYEOM_TABLE = {
+    "甲": "午", "乙": "午",
+    "丙": "寅", "丁": "未",
+    "戊": "辰", "己": "辰",
+    "庚": "戌", "辛": "酉",
+    "壬": "子", "癸": "申",
+}
+
+def detect_hongnyeom(pillars: Dict[Where, Tuple[str, str]]) -> List[ShinsalHit]:
+    """홍염살(紅艶殺): 일간 기준 특정 지지가 사주에 있을 때"""
+    hits: List[ShinsalHit] = []
+    day_g = pillars["day"][0]
+    target = _HONGNYEOM_TABLE.get(day_g)
+    if not target:
+        return hits
+    for where in ("year", "month", "day", "hour"):
+        br = pillars[where][1]
+        if br == target:
+            hits.append(ShinsalHit(
+                name="홍염살",
+                where=where,
+                branch=br,
+                detail=f"일간[{day_g}] 기준 홍염",
+                weight=-1,
+            ))
+    return hits
+
+
+_SANGMUN_TABLE = {
+    "子": "寅", "丑": "卯", "寅": "辰",
+    "卯": "巳", "辰": "午", "巳": "未",
+    "午": "申", "未": "酉", "申": "戌",
+    "酉": "亥", "戌": "子", "亥": "丑",
+}
+
+_JOGAEK_TABLE = {
+    "子": "戌", "丑": "亥", "寅": "子",
+    "卯": "丑", "辰": "寅", "巳": "卯",
+    "午": "辰", "未": "巳", "申": "午",
+    "酉": "未", "戌": "申", "亥": "酉",
+}
+
+def detect_jogaek(pillars: Dict[Where, Tuple[str, str]]) -> List[ShinsalHit]:
+    """조객살(弔客殺): 연지 기준 조객 지지가 사주에 있을 때"""
+    hits: List[ShinsalHit] = []
+    year_b = pillars["year"][1]
+    target = _JOGAEK_TABLE.get(year_b)
+    if not target:
+        return hits
+    for where in ("month", "day", "hour"):
+        br = pillars[where][1]
+        if br == target:
+            hits.append(ShinsalHit(
+                name="조객살",
+                where=where,
+                branch=br,
+                detail=f"연지[{year_b}] 기준 조객",
+                weight=-1,
+            ))
+    return hits
+
+
 # 핵심 신살 (도화/천을귀인/괴강)
 # -------------------------------------------------------------------
 _TAOHUA_TABLE = {"子": "卯", "午": "酉", "卯": "子", "酉": "午"}
@@ -615,6 +709,11 @@ def detect_shinsal(
     results += detect_taohua(P)
     results += detect_teneul(P)
     results += detect_goegang(P, include_optional_goegang)
+
+    # 이별·관계 특화 신살
+    results += detect_wonjin(P)
+    results += detect_hongnyeom(P)
+    results += detect_jogaek(P)
 
     # 확장 룰(JSON/CSV)
     if include_ext_rules:
