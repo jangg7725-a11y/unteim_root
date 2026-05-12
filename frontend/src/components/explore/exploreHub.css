@@ -97,6 +97,119 @@
   line-height: 1.35;
 }
 
+/* ── 카드 레이아웃 (2열 그라데이션 카드) ─────────────────── */
+.explore-hub__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.explore-hub__card-btn {
+  display: flex;
+  flex-direction: column;
+  border: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.explore-hub__card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(30, 27, 46, 0.12);
+}
+
+.explore-hub__card-btn:active {
+  transform: scale(0.98);
+}
+
+/* 배너 영역 */
+.explore-hub__card-banner {
+  position: relative;
+  min-height: 5.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.75rem 0.5rem 0.85rem;
+  text-align: center;
+}
+
+/* 우측 상단 영역 레이블 */
+.explore-hub__card-area {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  padding: 0.18rem 0.42rem;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.02em;
+}
+
+.explore-hub__card-ico {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.explore-hub__card-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.22);
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+/* 하단 설명 */
+.explore-hub__card-body {
+  padding: 0.5rem 0.65rem 0.6rem;
+  background: #fff;
+}
+
+.explore-hub__card-desc {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #15803d;
+  word-break: keep-all;
+}
+
+/* badge (beta/new) */
+.explore-hub__card-badge {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.1rem 0.32rem;
+  border-radius: 5px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+/* 배너 그라데이션 테마 */
+.explore-hub__card-banner--violet  { background: linear-gradient(135deg, #6d28d9 0%, #a78bfa 55%, #c4b5fd 100%); }
+.explore-hub__card-banner--rose    { background: linear-gradient(135deg, #be185d 0%, #f472b6 50%, #fbcfe8 100%); }
+.explore-hub__card-banner--amber   { background: linear-gradient(135deg, #b45309 0%, #fbbf24 55%, #fef3c7 100%); }
+.explore-hub__card-banner--slate   { background: linear-gradient(135deg, #334155 0%, #64748b 55%, #94a3b8 100%); }
+.explore-hub__card-banner--teal    { background: linear-gradient(135deg, #0f766e 0%, #2dd4bf 55%, #99f6e4 100%); }
+.explore-hub__card-banner--pink    { background: linear-gradient(135deg, #db2777 0%, #f9a8d4 60%, #fce7f3 100%); }
+.explore-hub__card-banner--indigo  { background: linear-gradient(135deg, #3730a3 0%, #818cf8 55%, #c7d2fe 100%); }
+.explore-hub__card-banner--green   { background: linear-gradient(135deg, #166534 0%, #4ade80 55%, #bbf7d0 100%); }
+
 /* 3열 그리드 */
 .explore-hub__grid3 {
   display: grid;
@@ -323,6 +436,13 @@
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--muted);
+}
+
+/* life 섹션 안에 삽입된 피드 */
+.explore-hub__life-feed {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(110, 90, 140, 0.15);
 }
 
 /* 게이트 모달 */

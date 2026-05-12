@@ -22,11 +22,8 @@ type Props = {
   hasBirth: boolean;
   hasReport: boolean;
   onNavigateTab: (tab: FeedTabTarget, meta?: FeedNavigateMeta) => void;
-  /** 사주 입력 탭 */
   onOpenSajuInput: () => void;
-  /** 로그인·저장 사주로 리포트 탭 — 탐색 카테고리별 월 포커스·앵커 메타 */
   onOpenSavedReportFlow: (meta?: FeedNavigateMeta) => void | Promise<void>;
-  /** 로그인·회원가입 모달 열기 */
   onOpenAuth: () => void;
 };
 
@@ -43,101 +40,82 @@ export function ExploreHubPage({
   const [navigating, setNavigating] = useState(false);
   const [sheet, setSheet] = useState<SheetState | null>(null);
 
-  /** flow 섹션 항목 클릭 → 바텀시트 표시 */
+  /** flow 섹션 항목 클릭 → 바텀시트 */
   const openTodaySheet = useCallback(
     (item: ExploreHubItem) => {
-      if (!hasBirth) {
-        setGateOpen(true);
-        return;
-      }
+      if (!hasBirth) { setGateOpen(true); return; }
       const point = hasReport ? deriveTodayPoint(item.id, reportData) : null;
       const act = exploreActionForCategoryId(item.id);
-      setSheet({
-        item,
-        point,
-        detailMeta: act.type === "report" ? act.meta : undefined,
-      });
+      setSheet({ item, point, detailMeta: act.type === "report" ? act.meta : undefined });
     },
     [hasBirth, hasReport, reportData],
   );
 
-  /** 바텀시트 — 자세히 보기 */
   const handleSheetDetail = useCallback(async () => {
     if (!sheet) return;
     setSheet(null);
-    try {
-      setNavigating(true);
-      await onOpenSavedReportFlow(sheet.detailMeta);
-    } finally {
-      setNavigating(false);
-    }
+    try { setNavigating(true); await onOpenSavedReportFlow(sheet.detailMeta); }
+    finally { setNavigating(false); }
   }, [sheet, onOpenSavedReportFlow]);
 
-  /** 바텀시트 — AI 상담 */
   const handleSheetCounsel = useCallback(async () => {
     setSheet(null);
     if (!hasReport) {
-      try {
-        setNavigating(true);
-        await onOpenSavedReportFlow(undefined);
-      } finally {
-        setNavigating(false);
-      }
+      try { setNavigating(true); await onOpenSavedReportFlow(undefined); }
+      finally { setNavigating(false); }
     }
     onNavigateTab("counsel");
   }, [hasReport, onOpenSavedReportFlow, onNavigateTab]);
 
-  /** 바텀시트 — 분석 시작 */
   const handleSheetStartAnalysis = useCallback(async () => {
     setSheet(null);
-    try {
-      setNavigating(true);
-      await onOpenSavedReportFlow(undefined);
-    } finally {
-      setNavigating(false);
-    }
+    try { setNavigating(true); await onOpenSavedReportFlow(undefined); }
+    finally { setNavigating(false); }
   }, [onOpenSavedReportFlow]);
 
   /** life·quick 섹션 항목 클릭 → 기존 리포트/탭 이동 */
   const runCategoryAction = useCallback(
     async (categoryId: string) => {
-      if (!hasBirth) {
-        setGateOpen(true);
-        return;
-      }
+      if (!hasBirth) { setGateOpen(true); return; }
       const act = exploreActionForCategoryId(categoryId);
       try {
         setNavigating(true);
-        if (act.type === "input") {
-          onOpenSajuInput();
-          return;
-        }
+        if (act.type === "input") { onOpenSajuInput(); return; }
         if (act.type === "counsel") {
-          if (!hasReport) {
-            await onOpenSavedReportFlow(undefined);
-          }
+          if (!hasReport) await onOpenSavedReportFlow(undefined);
           onNavigateTab("counsel");
           return;
         }
         await onOpenSavedReportFlow(act.meta);
-      } finally {
-        setNavigating(false);
-      }
+      } finally { setNavigating(false); }
     },
     [hasBirth, hasReport, onNavigateTab, onOpenSavedReportFlow, onOpenSajuInput],
+  );
+
+  /** 아이템 클릭 핸들러 — ID에 따라 sheet / navigation 분기 */
+  const handleItemClick = useCallback(
+    (item: ExploreHubItem) => {
+      if (FLOW_SHEET_IDS.has(item.id)) {
+        openTodaySheet(item);
+      } else {
+        runCategoryAction(item.id);
+      }
+    },
+    [openTodaySheet, runCategoryAction],
   );
 
   return (
     <>
       <div className={`explore-hub${navigating ? " explore-hub--busy" : ""}`}>
-        {navigating ? (
+        {navigating && (
           <div className="explore-hub__loading" role="status" aria-live="polite">
             <div className="explore-hub__loading-inner">
               <span className="explore-hub__spinner" aria-hidden />
               <span>리포트를 불러오는 중…</span>
             </div>
           </div>
-        ) : null}
+        )}
+
         <header className="explore-hub__hero">
           <h1 className="explore-hub__hero-title">탐색</h1>
           <p className="explore-hub__hero-sub">
@@ -153,6 +131,44 @@ export function ExploreHubPage({
               {section.title}
             </h2>
 
+            {/* ── 카드 레이아웃 (2열 그라데이션) ── */}
+            {section.layout === "cards" && (
+              <div className="explore-hub__cards">
+                {section.items.map((it) => (
+                  <button
+                    key={it.id}
+                    type="button"
+                    className="explore-hub__card-btn"
+                    onClick={() => handleItemClick(it)}
+                  >
+                    <div
+                      className={`explore-hub__card-banner explore-hub__card-banner--${it.theme ?? "violet"}`}
+                    >
+                      {it.areaLabel && (
+                        <span className="explore-hub__card-area">{it.areaLabel}</span>
+                      )}
+                      <span className="explore-hub__card-ico" aria-hidden="true">{it.icon}</span>
+                      <span className="explore-hub__card-label">
+                        {it.label}
+                        {it.badge === "beta" && (
+                          <span className="explore-hub__card-badge">β</span>
+                        )}
+                        {it.badge === "new" && (
+                          <span className="explore-hub__card-badge">NEW</span>
+                        )}
+                      </span>
+                    </div>
+                    {it.description && (
+                      <div className="explore-hub__card-body">
+                        <p className="explore-hub__card-desc">{it.description}</p>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── 3열 그리드 (레거시용 유지) ── */}
             {section.layout === "grid3" && (
               <div className="explore-hub__grid3">
                 {section.items.map((it) => (
@@ -160,22 +176,17 @@ export function ExploreHubPage({
                     key={it.id}
                     type="button"
                     className="explore-hub__grid3-btn"
-                    onClick={() =>
-                      FLOW_SHEET_IDS.has(it.id) ? openTodaySheet(it) : runCategoryAction(it.id)
-                    }
+                    onClick={() => handleItemClick(it)}
                   >
-                    <span className="explore-hub__grid3-ico" aria-hidden>
-                      {it.icon}
-                    </span>
+                    <span className="explore-hub__grid3-ico" aria-hidden>{it.icon}</span>
                     <span className="explore-hub__grid3-label">{it.label}</span>
-                    {it.description ? (
-                      <p className="explore-hub__grid3-desc">{it.description}</p>
-                    ) : null}
+                    {it.description && <p className="explore-hub__grid3-desc">{it.description}</p>}
                   </button>
                 ))}
               </div>
             )}
 
+            {/* ── 리스트 ── */}
             {section.layout === "list" && (
               <div className="explore-hub__list">
                 {section.items.map((it) => (
@@ -183,20 +194,16 @@ export function ExploreHubPage({
                     key={it.id}
                     type="button"
                     className="explore-hub__list-btn"
-                    onClick={() =>
-                      FLOW_SHEET_IDS.has(it.id) ? openTodaySheet(it) : runCategoryAction(it.id)
-                    }
+                    onClick={() => handleItemClick(it)}
                   >
-                    <span className="explore-hub__list-ico-wrap" aria-hidden>
-                      {it.icon}
-                    </span>
+                    <span className="explore-hub__list-ico-wrap" aria-hidden>{it.icon}</span>
                     <span className="explore-hub__list-text">
                       <span className="explore-hub__list-title">
                         {it.label}
                         {it.badge === "new" && <span className="explore-hub__badge">NEW</span>}
                         {it.badge === "beta" && <span className="explore-hub__badge">β</span>}
                       </span>
-                      {it.description ? <p className="explore-hub__list-desc">{it.description}</p> : null}
+                      {it.description && <p className="explore-hub__list-desc">{it.description}</p>}
                     </span>
                     <span className="explore-hub__list-arrow" aria-hidden>›</span>
                   </button>
@@ -204,6 +211,7 @@ export function ExploreHubPage({
               </div>
             )}
 
+            {/* ── 2열 카드 (레거시) ── */}
             {section.layout === "grid2" && (
               <div className="explore-hub__grid2">
                 {section.items.map((it) => (
@@ -211,46 +219,36 @@ export function ExploreHubPage({
                     key={it.id}
                     type="button"
                     className="explore-hub__grid2-btn"
-                    onClick={() => runCategoryAction(it.id)}
+                    onClick={() => handleItemClick(it)}
                   >
-                    <span className="explore-hub__grid2-ico" aria-hidden>
-                      {it.icon}
-                    </span>
+                    <span className="explore-hub__grid2-ico" aria-hidden>{it.icon}</span>
                     <span className="explore-hub__grid2-title">
                       {it.label}
-                      {it.badge === "new" && (
-                        <span className="explore-hub__badge explore-hub__badge--inline">
-                          NEW
-                        </span>
-                      )}
-                      {it.badge === "beta" && (
-                        <span className="explore-hub__badge explore-hub__badge--inline">
-                          β
-                        </span>
-                      )}
+                      {it.badge === "new" && <span className="explore-hub__badge explore-hub__badge--inline">NEW</span>}
+                      {it.badge === "beta" && <span className="explore-hub__badge explore-hub__badge--inline">β</span>}
                     </span>
-                    {it.description ? <p className="explore-hub__grid2-desc">{it.description}</p> : null}
+                    {it.description && <p className="explore-hub__grid2-desc">{it.description}</p>}
                   </button>
                 ))}
               </div>
             )}
+
+            {/* ── life 섹션 하단: 콘텐츠 피드 카드 삽입 ── */}
+            {section.id === "life" && (
+              <div className="explore-hub__life-feed">
+                <ContentFeedPage
+                  embedded
+                  hasBirth={hasBirth}
+                  hasReport={hasReport}
+                  onNavigateTab={onNavigateTab}
+                />
+              </div>
+            )}
           </section>
         ))}
-
-        <div className="explore-hub__feed-wrap">
-          <h2 className="explore-hub__feed-heading">코칭 카드</h2>
-          <p className="explore-hub__feed-lead">월별로 갱신되는 카드입니다. 카드를 누르면 안내 모달이 열립니다.</p>
-          <ContentFeedPage
-            embedded
-            hasBirth={hasBirth}
-            hasReport={hasReport}
-            onNavigateTab={onNavigateTab}
-          />
-        </div>
       </div>
 
-      {/* 오늘의 포인트 바텀시트 */}
-      {sheet ? (
+      {sheet && (
         <TodayPointSheet
           item={sheet.item}
           point={sheet.point}
@@ -260,7 +258,7 @@ export function ExploreHubPage({
           onCounsel={handleSheetCounsel}
           onStartAnalysis={handleSheetStartAnalysis}
         />
-      ) : null}
+      )}
 
       <SajuGateModal
         open={gateOpen}
