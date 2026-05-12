@@ -20,6 +20,7 @@ export function exploreActionForCategoryId(id: string): ExploreCategoryAction {
   switch (id) {
     case "m1":
       return { type: "report", meta: { focusMonth: m } };
+    // m2~m9: 바텀시트의 "자세히 보기" 목적지 — 월운 앵커 대신 각 섹션 앵커로 연결
     case "m2":
       return { type: "report", meta: { reportAnchor: "report-anchor-today" } };
     case "m3":
@@ -29,11 +30,11 @@ export function exploreActionForCategoryId(id: string): ExploreCategoryAction {
     case "m5":
       return { type: "report", meta: { reportAnchor: "report-section-personality" } };
     case "m6":
-      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
+      return { type: "report", meta: { reportAnchor: "report-section-personality" } };
     case "m7":
       return { type: "report", meta: { reportAnchor: "report-anchor-overview" } };
     case "m8":
-      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
+      return { type: "report", meta: { reportAnchor: "report-anchor-overview" } };
     case "m9":
       return { type: "report", meta: { reportAnchor: "report-anchor-daewoon" } };
 

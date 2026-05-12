@@ -24,10 +24,9 @@ export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
   {
     id: "flow",
     eyebrow: "엔진 기반 코칭",
-    title: "사주가 말하는 나의 오늘",
-    layout: "grid3",
+    title: "사주로 알아보는 나의 오늘",
+    layout: "list",
     items: [
-      { id: "m1", label: "이번 달 흐름", icon: "📅", description: "이달, 나를 도와줄 기운은?" },
       { id: "m2", label: "오늘의 리듬", icon: "🌤️", description: "오늘 내 에너지, 어디에 쓸까?" },
       { id: "m3", label: "관계·인연", icon: "💬", description: "지금 내 곁의 사람, 괜찮을까?" },
       { id: "m4", label: "일·재물", icon: "💼", description: "돈과 일, 지금 흐름이 맞나요?" },
@@ -44,6 +43,7 @@ export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
     title: "내 사주 영역별 운세 읽기",
     layout: "list",
     items: [
+      { id: "m1", label: "이번 달 흐름", icon: "📅", description: "이달, 나를 도와줄 기운은?" },
       { id: "l1", label: "궁합·관계", description: "우리 둘, 잘 맞는 편일까요?", icon: "🤝" },
       { id: "l2", label: "택일·일정", description: "이날, 시작해도 괜찮을까요?", icon: "🗓️" },
       { id: "l3", label: "건강·휴식", description: "내 몸이 지금 보내는 신호는?", icon: "🌿" },

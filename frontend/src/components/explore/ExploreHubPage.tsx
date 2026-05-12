@@ -1,11 +1,22 @@
 import { useCallback, useState } from "react";
 import type { FeedNavigateMeta, FeedTabTarget } from "@/types/contentFeed";
 import { useSajuSession } from "@/context/SajuSessionContext";
-import { EXPLORE_HUB_SECTIONS } from "@/data/exploreHubSections";
+import { EXPLORE_HUB_SECTIONS, type ExploreHubItem } from "@/data/exploreHubSections";
 import { ContentFeedPage } from "@/components/feed/ContentFeedPage";
 import { exploreActionForCategoryId } from "@/utils/exploreCategory";
+import { deriveTodayPoint, type TodayPointResult } from "@/utils/deriveTodayPoint";
+import { TodayPointSheet } from "./TodayPointSheet";
 import { SajuGateModal } from "./SajuGateModal";
 import "./exploreHub.css";
+
+/** flow 섹션(사주로 알아보는 나의 오늘) 항목 — 클릭 시 바텀시트 표시 */
+const FLOW_SHEET_IDS = new Set(["m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"]);
+
+type SheetState = {
+  item: ExploreHubItem;
+  point: TodayPointResult | null;
+  detailMeta?: FeedNavigateMeta;
+};
 
 type Props = {
   hasBirth: boolean;
@@ -27,13 +38,69 @@ export function ExploreHubPage({
   onOpenSavedReportFlow,
   onOpenAuth,
 }: Props) {
-  const { sessionEmail } = useSajuSession();
+  const { sessionEmail, reportData } = useSajuSession();
   const [gateOpen, setGateOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const [sheet, setSheet] = useState<SheetState | null>(null);
 
+  /** flow 섹션 항목 클릭 → 바텀시트 표시 */
+  const openTodaySheet = useCallback(
+    (item: ExploreHubItem) => {
+      if (!hasBirth) {
+        setGateOpen(true);
+        return;
+      }
+      const point = hasReport ? deriveTodayPoint(item.id, reportData) : null;
+      const act = exploreActionForCategoryId(item.id);
+      setSheet({
+        item,
+        point,
+        detailMeta: act.type === "report" ? act.meta : undefined,
+      });
+    },
+    [hasBirth, hasReport, reportData],
+  );
+
+  /** 바텀시트 — 자세히 보기 */
+  const handleSheetDetail = useCallback(async () => {
+    if (!sheet) return;
+    setSheet(null);
+    try {
+      setNavigating(true);
+      await onOpenSavedReportFlow(sheet.detailMeta);
+    } finally {
+      setNavigating(false);
+    }
+  }, [sheet, onOpenSavedReportFlow]);
+
+  /** 바텀시트 — AI 상담 */
+  const handleSheetCounsel = useCallback(async () => {
+    setSheet(null);
+    if (!hasReport) {
+      try {
+        setNavigating(true);
+        await onOpenSavedReportFlow(undefined);
+      } finally {
+        setNavigating(false);
+      }
+    }
+    onNavigateTab("counsel");
+  }, [hasReport, onOpenSavedReportFlow, onNavigateTab]);
+
+  /** 바텀시트 — 분석 시작 */
+  const handleSheetStartAnalysis = useCallback(async () => {
+    setSheet(null);
+    try {
+      setNavigating(true);
+      await onOpenSavedReportFlow(undefined);
+    } finally {
+      setNavigating(false);
+    }
+  }, [onOpenSavedReportFlow]);
+
+  /** life·quick 섹션 항목 클릭 → 기존 리포트/탭 이동 */
   const runCategoryAction = useCallback(
     async (categoryId: string) => {
-      /** 로그인 여부와 무관하게, 이미 입력·저장된 사주가 있으면 탐색에서 그대로 이용 */
       if (!hasBirth) {
         setGateOpen(true);
         return;
@@ -46,10 +113,6 @@ export function ExploreHubPage({
           return;
         }
         if (act.type === "counsel") {
-          if (!hasBirth) {
-            setGateOpen(true);
-            return;
-          }
           if (!hasReport) {
             await onOpenSavedReportFlow(undefined);
           }
@@ -97,7 +160,9 @@ export function ExploreHubPage({
                     key={it.id}
                     type="button"
                     className="explore-hub__grid3-btn"
-                    onClick={() => runCategoryAction(it.id)}
+                    onClick={() =>
+                      FLOW_SHEET_IDS.has(it.id) ? openTodaySheet(it) : runCategoryAction(it.id)
+                    }
                   >
                     <span className="explore-hub__grid3-ico" aria-hidden>
                       {it.icon}
@@ -118,7 +183,9 @@ export function ExploreHubPage({
                     key={it.id}
                     type="button"
                     className="explore-hub__list-btn"
-                    onClick={() => runCategoryAction(it.id)}
+                    onClick={() =>
+                      FLOW_SHEET_IDS.has(it.id) ? openTodaySheet(it) : runCategoryAction(it.id)
+                    }
                   >
                     <span className="explore-hub__list-ico-wrap" aria-hidden>
                       {it.icon}
@@ -131,6 +198,7 @@ export function ExploreHubPage({
                       </span>
                       {it.description ? <p className="explore-hub__list-desc">{it.description}</p> : null}
                     </span>
+                    <span className="explore-hub__list-arrow" aria-hidden>›</span>
                   </button>
                 ))}
               </div>
@@ -180,6 +248,19 @@ export function ExploreHubPage({
           />
         </div>
       </div>
+
+      {/* 오늘의 포인트 바텀시트 */}
+      {sheet ? (
+        <TodayPointSheet
+          item={sheet.item}
+          point={sheet.point}
+          hasReport={hasReport}
+          onClose={() => setSheet(null)}
+          onDetail={handleSheetDetail}
+          onCounsel={handleSheetCounsel}
+          onStartAnalysis={handleSheetStartAnalysis}
+        />
+      ) : null}
 
       <SajuGateModal
         open={gateOpen}

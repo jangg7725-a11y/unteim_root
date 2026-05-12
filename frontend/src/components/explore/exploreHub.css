@@ -223,6 +223,16 @@
   font-weight: 500;
 }
 
+.explore-hub__list-arrow {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  color: var(--muted, #8b85a0);
+  line-height: 1;
+  opacity: 0.6;
+  margin-left: auto;
+  align-self: center;
+}
+
 /* 2열 카드 */
 .explore-hub__grid2 {
   display: grid;
