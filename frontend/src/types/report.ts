@@ -132,6 +132,21 @@ export type MonthlyFortuneEngineMonth = {
     reframe: string;
     trigger_reasons: string[];
   }>;
+  /** 삼재 — 삼재 해당 연도에만 존재 */
+  samjaeStatus?: {
+    is_samjae: boolean;
+    stage?: string;
+    bok_samjae?: boolean;
+  } | null;
+  /** 대운 흐름 6가지 — 대운 간지의 용신/기신 여부로 추론 */
+  daewoonFlowId?: string;
+  daewoonFlowLabel?: string;
+  daewoonFlowEra?: string;
+  daewoonFlowEnergy?: string;
+  /** 격국 — 격국명 + 핵심 서사 + 행동 패턴 */
+  geukgukName?: string;
+  geukgukCore?: string;
+  geukgukBehavior?: string;
   /** 이 달 월지와 실제로 일치하는 위험 신살 기반 리스크 슬롯 (없으면 표시 안 함) */
   monthRiskSlots?: Array<{
     found: boolean;

@@ -1346,6 +1346,61 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
     v1, v2 = _void_branches(packed)
     agg_profile = _aggregate_en_counts(_five_element_counts(packed))
 
+    # ── 연간 1회 계산 — 삼재·대운흐름·격국 ───────────────────────────
+    # 삼재
+    _samjae_status: Dict[str, Any] = {}
+    try:
+        from engine.samjae_engine_v1 import build_samjae_result as _bsr
+        _sr = _bsr(packed)
+        if _sr.get("is_samjae"):
+            _samjae_status = {
+                "is_samjae": True,
+                "stage": _sr.get("stage") or "일반",
+                "bok_samjae": bool(_sr.get("bok_samjae")),
+            }
+    except Exception:
+        pass
+
+    # 대운 흐름 타입 — 대운 간지 오행이 용신/기신인지로 추론
+    _dw_stem_el = _stem_elem_ko(daewoon_p[0]) if daewoon_p else ""
+    _dw_branch_el = _stem_elem_ko(daewoon_p[-1]) if len(daewoon_p) > 1 else ""
+    _favorable = {e for e in (yong, hee) if e}
+    _unfavorable = {e for e in (gi,) if e}
+    _fav_count = sum(1 for e in (_dw_stem_el, _dw_branch_el) if e in _favorable)
+    _unf_count = sum(1 for e in (_dw_stem_el, _dw_branch_el) if e in _unfavorable)
+    if _fav_count == 2:
+        _dw_flow_id = "peak"
+    elif _fav_count == 1 and _unf_count == 0:
+        _dw_flow_id = "rising_strong"
+    elif _fav_count == 1 and _unf_count == 1:
+        _dw_flow_id = "rising_building"
+    elif _unf_count == 2:
+        _dw_flow_id = "challenge_growth"
+    elif _unf_count == 1:
+        _dw_flow_id = "rest_recovery"
+    else:
+        _dw_flow_id = "transition"
+
+    _dw_flow_slots: Dict[str, Any] = {}
+    try:
+        from engine.daewoon_narrative_interpreter import get_flow_slots as _gfs
+        _dw_flow_slots = _gfs(_dw_flow_id, seed=abs(hash(f"{target_year}|{daewoon_p}")))
+    except Exception:
+        pass
+
+    # 격국
+    _geukguk_name = str(
+        (packed.get("analysis") or {}).get("base_structure", {}).get("geukguk") or ""
+    ).strip()
+    _gg_slots: Dict[str, Any] = {}
+    try:
+        from engine.geukguk_narrative_interpreter import get_geukguk_slots as _gggs
+        if _geukguk_name:
+            _gg_slots = _gggs(_geukguk_name, seed=abs(hash(f"{target_year}|gg")))
+    except Exception:
+        pass
+    # ─────────────────────────────────────────────────────────────────
+
     months_out: List[Dict[str, Any]] = []
     scores: List[Tuple[int, int]] = []
 
@@ -1459,6 +1514,17 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
                 "action": counsel["actionGuide"],
                 "score": stars,
                 "luckScore": luck,
+                # ── 삼재 ──────────────────────────────────────────────
+                "samjaeStatus": _samjae_status if _samjae_status.get("is_samjae") else None,
+                # ── 대운 흐름 6가지 ───────────────────────────────────
+                "daewoonFlowId": _dw_flow_id,
+                "daewoonFlowLabel": _dw_flow_slots.get("label_ko", ""),
+                "daewoonFlowEra": _dw_flow_slots.get("era", ""),
+                "daewoonFlowEnergy": _dw_flow_slots.get("energy", ""),
+                # ── 격국 ──────────────────────────────────────────────
+                "geukgukName": _gg_slots.get("label_ko") or _geukguk_name,
+                "geukgukCore": _gg_slots.get("core_narrative", ""),
+                "geukgukBehavior": _gg_slots.get("behavior", ""),
             }
         )
 
