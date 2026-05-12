@@ -332,6 +332,26 @@
   font-weight: 700;
 }
 
+/* 합·충·형 인터랙션 힌트 chips */
+.mfb__interaction-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.mfb__interaction-chip {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 20px;
+  background: rgba(99, 102, 241, 0.09);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  line-height: 1.4;
+}
+
 .mfb__section-title {
   margin: 0 0 0.35rem;
   font-size: 0.78rem;
@@ -534,6 +554,35 @@
 .mfb__narrative--behavior p,
 .mfb__narrative--element p {
   margin: 0 0 0.35rem;
+}
+
+/* 잘 풀리는 방향 → 행동 가이드 내 ✓ 항목 */
+.mfb__good-bullets {
+  margin: 0 0 0.55rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px dashed rgba(22, 163, 74, 0.22);
+}
+
+.mfb__good-bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0 0 0.28rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #1a3d1e;
+}
+
+.mfb__good-bullet-item:last-child {
+  margin-bottom: 0;
+}
+
+.mfb__good-check {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #16a34a;
+  font-size: 0.88rem;
+  margin-top: 0.05rem;
 }
 
 .mfb__behavior,

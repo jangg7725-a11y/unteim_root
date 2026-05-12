@@ -294,6 +294,14 @@ export function MonthlyFortuneEngine({
                   <BoldInline text={para} />
                 </p>
               ))}
+              {/* 합·충·형 인터랙션 힌트 — 이달 흐름 보강 */}
+              {m.interactionHints && m.interactionHints.length > 0 && (
+                <div className="mfb__interaction-hints">
+                  {m.interactionHints.slice(0, 3).map((hint, i) => (
+                    <span key={i} className="mfb__interaction-chip">{hint}</span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {!hasCounselSections && (
@@ -307,19 +315,12 @@ export function MonthlyFortuneEngine({
               </>
             )}
 
-            <div className="mfb__short-grid">
-              <p className="mfb__section-title">잘 풀리는 방향</p>
-              <ul className="mfb__bullet-list">
-                {(goodBullets.length ? goodBullets : [opportunityText]).map((line, i) => (
-                  <li key={`good-${i}`}>{line}</li>
-                ))}
-              </ul>
-              {oneLineConclusion ? (
-                <p className="mfb__one-line">
-                  <strong>이달의 한줄 결론</strong> {oneLineConclusion}
-                </p>
-              ) : null}
-            </div>
+            {/* 이달의 한줄 결론 (잘풀리는방향 제거 후 단독 유지) */}
+            {oneLineConclusion ? (
+              <p className="mfb__one-line">
+                <strong>이달의 한줄 결론</strong> {oneLineConclusion}
+              </p>
+            ) : null}
 
             {/* 이달의 카테고리별 운세 */}
             <div className="mfb__cat-section">
@@ -331,14 +332,30 @@ export function MonthlyFortuneEngine({
               </div>
             </div>
 
-            {behaviorGuide ? (
+            {/* 행동 가이드 — 잘 풀리는 방향(goodBullets)을 ✓ 항목으로 먼저 배치 */}
+            {(goodBullets.length > 0 || opportunityText || behaviorGuide) ? (
               <div className="mfb__behavior">
-                <p className="mfb__section-title">행동 가이드 (지금 해야 할 3가지 / 피해야 할 2가지)</p>
-                <div className="mfb__narrative mfb__narrative--behavior">
-                  {behaviorGuide.split(/\n+/).map((line, i) => (
-                    <p key={i}>{line}</p>
+                <p className="mfb__section-title">행동 가이드</p>
+                {/* ✓ 잘 풀리는 방향 — good/opportunity 필드 */}
+                <div className="mfb__good-bullets">
+                  {(goodBullets.length > 0
+                    ? goodBullets
+                    : opportunityText.split(/\n+/).map((x) => x.replace(/^[\-•]\s*/, "").trim()).filter(Boolean)
+                  ).map((line, i) => (
+                    <p key={`gb-${i}`} className="mfb__good-bullet-item">
+                      <span className="mfb__good-check" aria-hidden="true">✓</span>
+                      {line}
+                    </p>
                   ))}
                 </div>
+                {/* 기존 행동 가이드 (✓/✗ 구분) */}
+                {behaviorGuide ? (
+                  <div className="mfb__narrative mfb__narrative--behavior">
+                    {behaviorGuide.split(/\n+/).map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 

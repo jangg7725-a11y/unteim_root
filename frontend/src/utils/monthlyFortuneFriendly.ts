@@ -50,19 +50,44 @@ function pickFirst(...slots: (string | undefined | null)[]): string {
 export function buildMonthlyFriendlyParagraphs(m: MonthlyFortuneEngineMonth): string[] {
   const out: string[] = [];
 
-  // p1: 일간별 이달 팁(월별 인덱스 순환) — 일간 + 월 인덱스 → 매월 다른 사주 근거 문장
-  const p1 = pickFirst(m.daymaster_monthly_tip, m.oheng_monthly_strategy);
+  // p1: 일간 월별 팁 — 일간 기질 × 이달 월 인덱스 → 매월 다른 사주 근거 문장
+  const p1 = (m.daymaster_monthly_tip || "").trim();
   if (p1) out.push(p1);
 
-  // p2: 월간 십성 기반 한 줄 — 월주 천간이 일간에 대해 어떤 십성인지에서 직접 도출
-  const sipsin = (m.stemTenGod || "").trim();
-  const p2 = SIPSIN_MONTHLY_LINE[sipsin];
-  if (p2) out.push(p2);
+  // p2: 오행 월별 전략 — 지배 오행 × 이달 인덱스 (p1과 다를 때만 추가)
+  const p2 = (m.oheng_monthly_strategy || "").trim();
+  if (p2 && p2 !== p1) out.push(p2);
 
-  // p3: 12운성 기반 한 줄 — 이달 일간이 처한 12운성 단계에서 직접 도출
-  const stage = (m.twelveStage || "").trim();
-  const p3 = TWELVE_STAGE_LINE[stage];
+  // p1·p2 모두 없을 때 fallback
+  if (!p1 && !p2) {
+    const fallback = pickFirst(m.overallFlow, m.flow);
+    if (fallback) {
+      // 첫 문장만 추출
+      const first = fallback.split(/\n+/)[0].trim();
+      if (first) out.push(first);
+    }
+  }
+
+  // p3: 월간 십성 기반 한 줄 — 월주 천간이 일간에 대해 어떤 십성인지에서 직접 도출
+  const sipsin = (m.stemTenGod || "").trim();
+  const p3 = SIPSIN_MONTHLY_LINE[sipsin];
   if (p3) out.push(p3);
+
+  // p4: 12운성 기반 한 줄 — 이달 일간이 처한 12운성 단계에서 직접 도출
+  const stage = (m.twelveStage || "").trim();
+  const p4 = TWELVE_STAGE_LINE[stage];
+  if (p4) out.push(p4);
+
+  // p5: overallFlow / flow 첫 단락 — 종합 흐름 보강 (기존 출력과 중복 방지)
+  const flowRaw = pickFirst(m.overallFlow, m.flow);
+  if (flowRaw) {
+    const flowFirst = flowRaw.split(/\n+/)[0].trim();
+    // 이미 out에 포함된 내용이면 스킵
+    const isDup = out.some((p) => p.includes(flowFirst.slice(0, 18)));
+    if (!isDup && flowFirst.length > 20) {
+      out.push(flowFirst.endsWith(".") ? flowFirst : flowFirst + ".");
+    }
+  }
 
   return out;
 }
