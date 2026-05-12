@@ -1388,10 +1388,13 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         pass
 
-    # 격국
-    _geukguk_name = str(
-        (packed.get("analysis") or {}).get("base_structure", {}).get("geukguk") or ""
-    ).strip()
+    # 격국 — analyze_geukguk 반환값은 {"name": "관성격", "axis": ...} dict 이므로
+    #         name 키를 먼저 뽑고, 없으면 문자열 그대로 사용
+    _geukguk_raw = (packed.get("analysis") or {}).get("base_structure", {}).get("geukguk") or {}
+    if isinstance(_geukguk_raw, dict):
+        _geukguk_name = str(_geukguk_raw.get("name") or "").strip()
+    else:
+        _geukguk_name = str(_geukguk_raw).strip()
     _gg_slots: Dict[str, Any] = {}
     try:
         from engine.geukguk_narrative_interpreter import get_geukguk_slots as _gggs

@@ -442,7 +442,13 @@ function deriveCaution(m: MonthlyFortuneEngineMonth): MonthCategory {
     }
   }
 
-  // 2순위: interactionHints 충·형 (매달 다름)
+  // 2순위: riskPoints 원문 (엔진 상담 기반 주의 문장)
+  if (m.riskPoints && lines.length < 2) {
+    const riskFirst = m.riskPoints.split(/\n+/)[0]?.trim();
+    if (riskFirst) lines.push(clip(riskFirst, 95));
+  }
+
+  // 3순위: interactionHints 충·형 (매달 다름)
   const clashHints = (m.interactionHints ?? []).filter((h) => /충|형|파|해/.test(h));
   if (clashHints.length && lines.length < 2) {
     lines.push(clip(clashHints[0], 90));
@@ -451,14 +457,14 @@ function deriveCaution(m: MonthlyFortuneEngineMonth): MonthCategory {
     }
   }
 
-  // 3순위: 위험 십성 주의 메시지 (매달 십성이 다름)
+  // 4순위: 위험 십성 주의 메시지 (매달 십성이 다름)
   const sipsinCaution = CAUTION_SIPSIN[sipsin];
   if (sipsinCaution) {
     chips.push(sipsinCaution.chip);
     if (lines.length < 2) lines.push(sipsinCaution.msg);
   }
 
-  // 4순위: 위험 12운성 주의 메시지
+  // 5순위: 위험 12운성 주의 메시지
   const stageCaution = CAUTION_STAGE[stage];
   if (stageCaution && lines.length < 2) {
     lines.push(stageCaution);

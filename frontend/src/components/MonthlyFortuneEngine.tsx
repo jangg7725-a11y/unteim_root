@@ -149,7 +149,7 @@ export function MonthlyFortuneEngine({
   if (!m || total === 0) return null;
 
   const opportunityText = (m.opportunity || m.good).trim();
-  const behaviorGuide = (m.behaviorGuide || "").trim();
+  const behaviorGuide = (m.behaviorGuide || m.actionGuide || "").trim();
   const elementPractice = (m.elementPractice || "").trim();
   const oneLineConclusion = (m.oneLineConclusion || "").trim();
   const bridgeText = (m.aiCounselBridge || "").trim();
