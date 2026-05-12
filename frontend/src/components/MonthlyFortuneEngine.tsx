@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MonthlyFortuneEnginePayload } from "@/types/report";
 import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
-import { buildCounselorEmotionText } from "@/utils/buildCounselorEmotionText";
-import {
-  deriveMonthlyCategories,
-  type MonthCategory,
-  type ShinsalEntry,
-} from "@/utils/deriveMonthlyCategories";
+import { LifeEventSignalCard } from "./LifeEventSignalCard";
 import "./monthly-fortune-book.css";
 
 function BoldInline({ text }: { text: string }) {
@@ -34,85 +29,6 @@ function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
   return <span className="mfb__stars">{filled}</span>;
 }
 
-/** 신살 아이템 1개 렌더링 */
-function ShinsalItem({ item }: { item: ShinsalEntry }) {
-  const catCls =
-    item.category === "good"
-      ? "mfb__si-name--good"
-      : item.category === "risk"
-        ? "mfb__si-name--risk"
-        : "mfb__si-name--caution";
-  const catLabel =
-    item.category === "good" ? "귀인·길신" : item.category === "risk" ? "주의" : "조심";
-
-  return (
-    <div className="mfb__si">
-      <p className={`mfb__si-name ${catCls}`}>
-        {item.name}
-        <span className="mfb__si-badge">{catLabel}</span>
-      </p>
-      <p className="mfb__si-effect">{item.effect}</p>
-      <p className="mfb__si-advice">{item.advice}</p>
-    </div>
-  );
-}
-
-function CategoryCard({ cat }: { cat: MonthCategory }) {
-  const [open, setOpen] = useState(false);
-
-  // 신살 카드: 항목이 없으면 처음부터 접힌 상태로, 있으면 펼쳐서 표시
-  const hasShinsal = cat.key === "shinsal" && (cat.shinsalItems?.length ?? 0) > 0;
-
-  return (
-    <button
-      type="button"
-      className={`mfb__cat-card mfb__cat-card--${cat.key}${open ? " mfb__cat-card--open" : ""}`}
-      onClick={() => setOpen((v) => !v)}
-      aria-expanded={open}
-    >
-      <div className="mfb__cat-card-header">
-        <span className="mfb__cat-card-ico" aria-hidden="true">
-          {cat.emoji}
-        </span>
-        <span className="mfb__cat-card-name">{cat.title}</span>
-        {cat.score != null && (
-          <span className="mfb__cat-card-stars" aria-label={`${cat.score}점`}>
-            {"★".repeat(cat.score) + "☆".repeat(5 - cat.score)}
-          </span>
-        )}
-        <span className="mfb__cat-card-arrow" aria-hidden="true">▾</span>
-      </div>
-
-      {/* 신살 칩 — 이름 태그 (헤더 아래 항상 표시) */}
-      {cat.chips && cat.chips.length > 0 && (
-        <div className="mfb__cat-chips">
-          {cat.chips.map((chip) => (
-            <span key={chip} className="mfb__cat-chip">
-              {chip}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="mfb__cat-body">
-        {/* 신살 전용: 각 신살별 구조화된 설명 */}
-        {hasShinsal
-          ? cat.shinsalItems!.map((item) => (
-              <ShinsalItem key={item.name} item={item} />
-            ))
-          : cat.lines.map((line, i) => (
-              <p key={i} className="mfb__cat-line">
-                {line}
-              </p>
-            ))}
-        {cat.caution && (
-          <p className="mfb__cat-caution">{cat.caution}</p>
-        )}
-      </div>
-    </button>
-  );
-}
-
 export function MonthlyFortuneEngine({
   data,
   onGoCounsel,
@@ -126,6 +42,7 @@ export function MonthlyFortuneEngine({
   );
   const total = monthsSorted.length;
   const [idx, setIdx] = useState(0);
+  const [changeOpen, setChangeOpen] = useState(false);
 
   const focusIndex = useMemo(() => {
     if (monthFocus == null) return null;
@@ -140,6 +57,9 @@ export function MonthlyFortuneEngine({
     setIdx(focusIndex);
   }, [focusIndex, monthFocus]);
 
+  useEffect(() => {
+    setChangeOpen(false);
+  }, [idx]);
 
   const safeIdx = Math.min(idx, Math.max(0, total - 1));
   const m = monthsSorted[safeIdx];
@@ -168,14 +88,17 @@ export function MonthlyFortuneEngine({
   if (!m || total === 0) return null;
 
   const mingli = (m.mingliInterpretation || "").trim();
+  const reality = (m.realityChanges || "").trim();
+  const coreEvents = (m.coreEvents || "").trim();
   const hasCounselSections = Boolean(mingli);
   const opportunityText = (m.opportunity || m.good).trim();
+  const riskText = (m.riskPoints || m.caution).trim();
+  const actionText = (m.actionGuide || m.action).trim();
   const behaviorGuide = (m.behaviorGuide || "").trim();
-  const counselorLines = useMemo(() => buildCounselorEmotionText(m), [m]);
+  const emotionText = (m.emotionCoaching || "").trim();
   const elementPractice = (m.elementPractice || "").trim();
   const oneLineConclusion = (m.oneLineConclusion || "").trim();
   const bridgeText = (m.aiCounselBridge || "").trim();
-  const monthCategories = useMemo(() => deriveMonthlyCategories(m), [m]);
   const bridgeLines = bridgeText
     .split(/\n+/)
     .map((line) => line.trim())
@@ -185,6 +108,11 @@ export function MonthlyFortuneEngine({
     : [];
   const friendlyParagraphs = useMemo(() => buildMonthlyFriendlyParagraphs(m), [m]);
   const goodBullets = (m.opportunity || m.good)
+    .split(/\n+/)
+    .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const riskBullets = (m.riskPoints || m.caution)
     .split(/\n+/)
     .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
     .filter(Boolean)
@@ -295,17 +223,59 @@ export function MonthlyFortuneEngine({
                   <BoldInline text={para} />
                 </p>
               ))}
-              {/* 합·충·형 인터랙션 힌트 — 이달 흐름 보강 */}
-              {m.interactionHints && m.interactionHints.length > 0 && (
-                <div className="mfb__interaction-hints">
-                  {m.interactionHints.slice(0, 3).map((hint, i) => (
-                    <span key={i} className="mfb__interaction-chip">{hint}</span>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {!hasCounselSections && (
+            {/* 인생 사건 신호 — 상복·우환·수술·사고·이별 등 */}
+            {m.life_event_signals && m.life_event_signals.length > 0 && (
+              <LifeEventSignalCard
+                events={m.life_event_signals}
+                month={m.month}
+              />
+            )}
+
+            {hasCounselSections ? (
+              <>
+                <div className="mfb__change-box">
+                  <button
+                    type="button"
+                    className="mfb__change-toggle"
+                    onClick={() => setChangeOpen((v) => !v)}
+                    aria-expanded={changeOpen}
+                  >
+                    변화 흐름 {changeOpen ? "접기 ▲" : "보기 ▼"}
+                  </button>
+                  {changeOpen ? (
+                    <div className="mfb__narrative">
+                      {mingli.split("\n\n").map((para, i) => (
+                        <p key={i}>{para}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <p className="mfb__section-title">월별 풀이해설</p>
+                <div className="mfb__narrative mfb__narrative--reality">
+                  {reality
+                    .split(/\n+/)
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                </div>
+
+                {coreEvents ? (
+                  <>
+                    <p className="mfb__section-title">핵심 사건 예측</p>
+                    <div className="mfb__narrative mfb__narrative--events">
+                      {coreEvents.split(/\n+/).map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </>
+            ) : (
               <>
                 <p className="mfb__section-title">풀 해석</p>
                 <div className="mfb__narrative">
@@ -316,63 +286,39 @@ export function MonthlyFortuneEngine({
               </>
             )}
 
-            {/* 이달의 한줄 결론 (잘풀리는방향 제거 후 단독 유지) */}
-            {oneLineConclusion ? (
-              <p className="mfb__one-line">
-                <strong>이달의 한줄 결론</strong> {oneLineConclusion}
-              </p>
-            ) : null}
-
-            {/* 이달의 카테고리별 운세 */}
-            <div className="mfb__cat-section">
-              <p className="mfb__cat-title">이달의 카테고리별 운세</p>
-              <div className="mfb__cat-grid">
-                {monthCategories.map((cat) => (
-                  <CategoryCard key={cat.key} cat={cat} />
+            <div className="mfb__short-grid">
+              <p className="mfb__section-title">잘 풀리는 방향</p>
+              <ul className="mfb__bullet-list">
+                {(goodBullets.length ? goodBullets : [opportunityText]).map((line, i) => (
+                  <li key={`good-${i}`}>{line}</li>
                 ))}
-              </div>
+              </ul>
+              <p className="mfb__section-title">주의할 점</p>
+              <ul className="mfb__bullet-list">
+                {(riskBullets.length ? riskBullets : [riskText]).map((line, i) => (
+                  <li key={`risk-${i}`}>{line}</li>
+                ))}
+              </ul>
+              <p>
+                <strong>한 줄 정리</strong> {oneLineConclusion || actionText}
+              </p>
             </div>
 
-            {/* 행동 가이드 — 잘 풀리는 방향(goodBullets)을 ✓ 항목으로 먼저 배치 */}
-            {(goodBullets.length > 0 || opportunityText || behaviorGuide) ? (
+            {behaviorGuide ? (
               <div className="mfb__behavior">
-                <p className="mfb__section-title">행동 가이드</p>
-                {/* ✓ 잘 풀리는 방향 — good/opportunity 필드 */}
-                <div className="mfb__good-bullets">
-                  {(goodBullets.length > 0
-                    ? goodBullets
-                    : opportunityText.split(/\n+/).map((x) => x.replace(/^[\-•]\s*/, "").trim()).filter(Boolean)
-                  ).map((line, i) => (
-                    <p key={`gb-${i}`} className="mfb__good-bullet-item">
-                      <span className="mfb__good-check" aria-hidden="true">✓</span>
-                      {line}
-                    </p>
+                <p className="mfb__section-title">행동 가이드 (지금 해야 할 3가지 / 피해야 할 2가지)</p>
+                <div className="mfb__narrative mfb__narrative--behavior">
+                  {behaviorGuide.split(/\n+/).map((line, i) => (
+                    <p key={i}>{line}</p>
                   ))}
                 </div>
-                {/* 기존 행동 가이드 (✓/✗ 구분) */}
-                {behaviorGuide ? (
-                  <div className="mfb__narrative mfb__narrative--behavior">
-                    {behaviorGuide.split(/\n+/).map((line, i) => (
-                      <p key={i}>{line}</p>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             ) : null}
 
-            {counselorLines.length > 0 ? (
+            {emotionText ? (
               <div className="mfb__emotion">
-                <p className="mfb__section-title mfb__section-title--counsel">💬 감정 코칭</p>
-                <div className="mfb__counsel-body">
-                  {counselorLines.map((line, i) => (
-                    <p key={i} className={`mfb__counsel-line mfb__counsel-line--${
-                      i === 0 ? "open" :
-                      i === counselorLines.length - 1 ? "close" : "mid"
-                    }`}>
-                      {line}
-                    </p>
-                  ))}
-                </div>
+                <p className="mfb__section-title">감정 코칭</p>
+                <p className="mfb__emotion-text">{emotionText}</p>
               </div>
             ) : null}
 
@@ -387,29 +333,10 @@ export function MonthlyFortuneEngine({
               </div>
             ) : null}
 
-            {m.monthRiskSlots && m.monthRiskSlots.length > 0 ? (
-              <div className="mfb__month-risk">
-                <p className="mfb__section-title">이 달 주의 패턴</p>
-                {m.monthRiskSlots.map((slot, i) => (
-                  <div key={i} className="mfb__risk-slot">
-                    <p className="mfb__risk-slot-label">{slot.label_ko}</p>
-                    {slot.core_message && (
-                      <p className="mfb__risk-slot-core">{slot.core_message}</p>
-                    )}
-                    {slot.warning && (
-                      <p className="mfb__risk-slot-warning">
-                        <span className="mfb__risk-tag">주의</span> {slot.warning}
-                      </p>
-                    )}
-                    {slot.action && (
-                      <p className="mfb__risk-slot-action">
-                        <span className="mfb__risk-tag mfb__risk-tag--action">행동</span> {slot.action}
-                      </p>
-                    )}
-                  </div>
-                ))}
-                <p className="mfb__risk-note">사주 월지 신살 기반 경향 안내 — 단정이 아닌 참고 정보입니다.</p>
-              </div>
+            {oneLineConclusion ? (
+              <p className="mfb__one-line">
+                <strong>한 줄 결론</strong> {oneLineConclusion}
+              </p>
             ) : null}
 
             {bridgeText ? (

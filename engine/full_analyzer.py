@@ -45,6 +45,7 @@ from engine.money_pattern_interpreter import get_money_context_for_packed
 from engine.health_pattern_interpreter import get_health_context_for_packed
 from engine.career_exam_interpreter import get_career_context_for_packed
 from engine.relationship_marriage_interpreter import get_relation_context_for_packed
+from engine.life_event_detector import get_monthly_life_event_slots
 from utils.narrative_loader import load_sentences
 
 KST = ZoneInfo("Asia/Seoul")
@@ -64,6 +65,7 @@ _MONTHLY_SLOT_KEYS = (
     "relation_trait",
     "career_strategy",
     "career_strength",
+    "life_event_signals",
 )
 
 
@@ -76,10 +78,7 @@ def _first_text(*values: Any) -> str:
 
 
 def _month_slot_index(row: Dict[str, Any], fallback_idx: int) -> int:
-    try:
-        month = int(row.get("month") or fallback_idx + 1)
-    except (ValueError, TypeError):
-        month = fallback_idx + 1
+    month = int(row.get("month") or fallback_idx + 1)
     if 1 <= month <= 12:
         return month - 1
     return fallback_idx % 12
@@ -204,7 +203,8 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     # ── 3. money_monthly (재물 이달 힌트, 오행별 pool 순환) ─────────
     try:
         money_db = load_sentences("money_pattern_db")
-        _dom_ko = element_ko  # _dominant_element_ko()는 이미 한글(목·화·토·금·수) 반환
+        _oheng_ko_map = {"wood":"목","fire":"화","earth":"토","metal":"금","water":"수"}
+        _dom_ko = _oheng_ko_map.get(element_ko, "")
         money_oh_entry = (money_db.get("oheng_money") or {}).get(_dom_ko, {})
         money_monthly_pool = money_oh_entry.get("monthly_pool", []) if isinstance(money_oh_entry, dict) else []
         money_advice_pool = money_oh_entry.get("advice_pool", []) if isinstance(money_oh_entry, dict) else []
@@ -235,7 +235,9 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
     # ── 6. career_strategy (직업 전략, 오행별 pool 순환) ─────────────
     try:
         career_db = load_sentences("career_exam_db")
-        _career_key = element_ko  # _dominant_element_ko()는 이미 한글(목·화·토·금·수) 반환
+        _oheng_hanja_map = {"목":"목","화":"화","토":"토","금":"금","수":"수"}
+        _oheng_en_to_ko = {"wood":"목","fire":"화","earth":"토","metal":"금","water":"수"}
+        _career_key = _oheng_en_to_ko.get(element_ko, "")
         career_oh_entry = (career_db.get("oheng_career") or {}).get(_career_key, {})
         career_strategy_pool = career_oh_entry.get("strategy_pool", []) if isinstance(career_oh_entry, dict) else []
         career_strength_pool = career_oh_entry.get("strength_pool", []) if isinstance(career_oh_entry, dict) else []
@@ -283,6 +285,16 @@ def _inject_monthly_narrative_slots(packed: Dict[str, Any]) -> None:
         if career_strength_pool and not row.get("career_strength"):
             row["career_strength"] = _pick(career_strength_pool, slot_idx)
 
+        # 인생 사건 신호 감지 (상복·우환·수술·사고·이별 등)
+        try:
+            life_slots = get_monthly_life_event_slots(packed, row, seed=slot_idx)
+            if life_slots.get("found"):
+                row["life_event_signals"] = life_slots["events"]
+            else:
+                row["life_event_signals"] = []
+        except Exception:
+            row["life_event_signals"] = []
+
 
 def _merge_monthly_slots_into_fortune(packed: Dict[str, Any]) -> None:
     """프론트가 읽는 monthly_fortune.months에 monthly_reports 슬롯을 복사한다."""
@@ -298,21 +310,14 @@ def _merge_monthly_slots_into_fortune(packed: Dict[str, Any]) -> None:
     for row in monthly_reports:
         if not isinstance(row, dict):
             continue
-        try:
-            month = int(row.get("month") or 0)
-        except (ValueError, TypeError):
-            month = 0
+        month = int(row.get("month") or 0)
         if 1 <= month <= 12:
             by_month[month] = row
 
     for month_row in months:
         if not isinstance(month_row, dict):
             continue
-        try:
-            _mkey = int(month_row.get("month") or 0)
-        except (ValueError, TypeError):
-            _mkey = 0
-        source = by_month.get(_mkey)
+        source = by_month.get(int(month_row.get("month") or 0))
         if not source:
             continue
         for key in _MONTHLY_SLOT_KEYS:
