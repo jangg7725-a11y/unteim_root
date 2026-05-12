@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MonthlyFortuneEnginePayload } from "@/types/report";
 import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
-import { warmifyEmotionCoaching } from "@/utils/warmifyEmotionCoaching";
+import { buildCounselorEmotionText } from "@/utils/buildCounselorEmotionText";
 import {
   deriveMonthlyCategories,
   type MonthCategory,
@@ -171,7 +171,7 @@ export function MonthlyFortuneEngine({
   const hasCounselSections = Boolean(mingli);
   const opportunityText = (m.opportunity || m.good).trim();
   const behaviorGuide = (m.behaviorGuide || "").trim();
-  const emotionText = warmifyEmotionCoaching((m.emotionCoaching || "").trim());
+  const counselorLines = useMemo(() => buildCounselorEmotionText(m), [m]);
   const elementPractice = (m.elementPractice || "").trim();
   const oneLineConclusion = (m.oneLineConclusion || "").trim();
   const bridgeText = (m.aiCounselBridge || "").trim();
@@ -360,10 +360,19 @@ export function MonthlyFortuneEngine({
               </div>
             ) : null}
 
-            {emotionText ? (
+            {counselorLines.length > 0 ? (
               <div className="mfb__emotion">
-                <p className="mfb__section-title">감정 코칭</p>
-                <p className="mfb__emotion-text">{emotionText}</p>
+                <p className="mfb__section-title mfb__section-title--counsel">💬 감정 코칭</p>
+                <div className="mfb__counsel-body">
+                  {counselorLines.map((line, i) => (
+                    <p key={i} className={`mfb__counsel-line mfb__counsel-line--${
+                      i === 0 ? "open" :
+                      i === counselorLines.length - 1 ? "close" : "mid"
+                    }`}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
               </div>
             ) : null}
 

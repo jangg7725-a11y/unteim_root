@@ -505,12 +505,60 @@
 
 .mfb__emotion {
   margin-top: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 12px;
-  background: rgba(124, 58, 237, 0.06);
-  border: 1px solid rgba(124, 58, 237, 0.12);
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.07) 0%, rgba(236, 72, 153, 0.05) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.15);
 }
 
+.mfb__section-title--counsel {
+  font-size: 0.82rem;
+  margin-bottom: 0.6rem;
+  color: #6d28d9;
+}
+
+/* 상담가 어투 단락 공통 */
+.mfb__counsel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.mfb__counsel-line {
+  margin: 0;
+  line-height: 1.7;
+  font-size: 0.875rem;
+  color: #3d2f5c;
+}
+
+/* 개막 공감 — 조금 더 굵고 따뜻하게 */
+.mfb__counsel-line--open {
+  font-weight: 600;
+  color: #5b21b6;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(139, 92, 246, 0.07);
+  border-radius: 8px;
+  border-left: 3px solid rgba(139, 92, 246, 0.4);
+}
+
+/* 중간 단락 — 감정 이유·상황 힌트·행동 코칭 */
+.mfb__counsel-line--mid {
+  padding-left: 0.2rem;
+}
+
+/* 마무리 응원 — 따뜻한 강조 */
+.mfb__counsel-line--close {
+  font-weight: 600;
+  color: #be185d;
+  font-size: 0.875rem;
+  padding: 0.3rem 0.6rem;
+  background: rgba(236, 72, 153, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid rgba(236, 72, 153, 0.3);
+}
+
+/* 구버전 호환 (emotion-text) */
 .mfb__emotion-text {
   margin: 0;
   line-height: 1.65;
