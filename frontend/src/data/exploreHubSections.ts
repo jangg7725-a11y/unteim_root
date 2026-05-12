@@ -37,6 +37,22 @@ export type ExploreHubSection = {
 
 export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
   {
+    id: "flow",
+    eyebrow: "엔진 기반 코칭",
+    title: "사주로 알아보는 나의 오늘",
+    layout: "cards",
+    items: [
+      { id: "m2", label: "오늘의 리듬",     icon: "🌤️", description: "오늘 내 에너지, 어디에 쓸까?",    theme: "teal",   areaLabel: "오늘" },
+      { id: "m3", label: "관계·인연",        icon: "💬", description: "지금 내 곁의 사람, 괜찮을까?",   theme: "rose",   areaLabel: "오늘" },
+      { id: "m4", label: "일·재물",          icon: "💼", description: "돈과 일, 지금 흐름이 맞나요?",   theme: "amber",  areaLabel: "오늘" },
+      { id: "m5", label: "마음·성향",        icon: "🌙", description: "내가 반응하는 방식, 왜 그럴까?", theme: "indigo", areaLabel: "오늘" },
+      { id: "m6", label: "실천 한 줄",       icon: "✅", description: "오늘 딱 하나만 해야 한다면?",    theme: "violet", areaLabel: "오늘" },
+      { id: "m7", label: "사주 개요",        icon: "🔮", description: "내 사주, 한눈에 보기",           theme: "slate",  areaLabel: "사주" },
+      { id: "m8", label: "신살 하이라이트",  icon: "✨", description: "내 사주 속 숨은 특별한 기운",   theme: "pink",   areaLabel: "사주" },
+      { id: "m9", label: "대운 스냅샷",      icon: "📿", description: "앞으로 10년, 큰 흐름은?",       theme: "slate",  areaLabel: "대운" },
+    ],
+  },
+  {
     id: "life",
     eyebrow: "생활 맞춤",
     title: "내 사주 영역별 운세 읽기",

@@ -171,7 +171,7 @@ export function ExploreHubPage({
               </div>
             )}
 
-            {/* ── action 레이아웃 (바로 가기 — 풀배너 2열) ── */}
+            {/* ── action 레이아웃 (바로 가기 — 1열 4줄 가로형) ── */}
             {section.layout === "action" && (
               <div className="explore-hub__action">
                 {section.items.map((it) => (
@@ -181,18 +181,26 @@ export function ExploreHubPage({
                     className={`explore-hub__action-btn explore-hub__action-btn--${it.theme ?? "violet"}`}
                     onClick={() => handleItemClick(it)}
                   >
-                    {it.areaLabel && (
-                      <span className="explore-hub__action-area">{it.areaLabel}</span>
-                    )}
+                    {/* 좌: 아이콘 블록 */}
                     <span className="explore-hub__action-ico" aria-hidden="true">{it.icon}</span>
-                    <span className="explore-hub__action-label">
-                      {it.label}
-                      {it.badge === "beta" && <span className="explore-hub__action-badge">β</span>}
-                      {it.badge === "new"  && <span className="explore-hub__action-badge">NEW</span>}
+
+                    {/* 우: 4줄 텍스트 */}
+                    <span className="explore-hub__action-text">
+                      {it.areaLabel && (
+                        <span className="explore-hub__action-area">{it.areaLabel}</span>
+                      )}
+                      <span className="explore-hub__action-label">
+                        {it.label}
+                        {it.badge === "beta" && <span className="explore-hub__action-badge">β</span>}
+                        {it.badge === "new"  && <span className="explore-hub__action-badge">NEW</span>}
+                      </span>
+                      {it.description && (
+                        <p className="explore-hub__action-desc">{it.description}</p>
+                      )}
                     </span>
-                    {it.description && (
-                      <p className="explore-hub__action-desc">{it.description}</p>
-                    )}
+
+                    {/* 우측 화살표 */}
+                    <span className="explore-hub__action-arrow" aria-hidden="true">›</span>
                   </button>
                 ))}
               </div>
