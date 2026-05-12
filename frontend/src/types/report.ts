@@ -6,12 +6,28 @@ export type NarrativeSlot = {
   oheng?: { found: boolean; label_ko?: string; core_theme?: string; strength?: string; weakness?: string; advice?: string; care?: string; strategy?: string; monthly?: string; monthly_hint?: string; organ_system?: string };
 };
 
+export type SepMovSlot = {
+  found: boolean;
+  type?: string;
+  label_ko?: string;
+  core_message?: string;
+  warning?: string;
+  guidance?: string;
+  action?: string;
+  context?: string;
+  trigger_signals?: string[];
+};
+
 export type NarrativeSlots = {
   money?: NarrativeSlot;
   health?: NarrativeSlot;
   career?: NarrativeSlot;
   relation?: NarrativeSlot;
   risk?: { shinsal_risks?: Array<{ found: boolean; label_ko?: string; core_message?: string; warning?: string; action?: string }> };
+  /** 이별수 — 신살/십신/오행/대운 기반 감지 시에만 found=true */
+  separation?: SepMovSlot;
+  /** 이동수 (이직·이사·부서이동·환경변화) — 신살/십신/오행/대운 기반 감지 시에만 found=true */
+  movement?: SepMovSlot;
 };
 
 export type SajuReportData = {
@@ -115,6 +131,15 @@ export type MonthlyFortuneEngineMonth = {
     action: string;
     reframe: string;
     trigger_reasons: string[];
+  }>;
+  /** 이 달 월지와 실제로 일치하는 위험 신살 기반 리스크 슬롯 (없으면 표시 안 함) */
+  monthRiskSlots?: Array<{
+    found: boolean;
+    risk_type?: string;
+    label_ko?: string;
+    core_message?: string;
+    warning?: string;
+    action?: string;
   }>;
   /** 월별 narrative 슬롯 — 일간 풀과 지배 오행 풀의 월별 인덱스 순환 결과 (월별 사주값에 직결) */
   daymaster_monthly_tip?: string;
