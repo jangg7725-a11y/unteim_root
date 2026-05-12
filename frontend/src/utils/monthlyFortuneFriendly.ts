@@ -47,12 +47,6 @@ function pickFirst(...slots: (string | undefined | null)[]): string {
   return "";
 }
 
-function scoreLine(score: number): string {
-  if (score >= 72) return "luck_score 기준 흐름이 받쳐주는 구간이라 실행력을 한 단계 올려도 버틸 가능성이 큽니다.";
-  if (score >= 55) return "luck_score 기준 기회와 부담이 함께 들어오는 구간이라 균형 운영이 핵심입니다.";
-  return "luck_score 기준 무리하면 빨리 지치기 쉬운 구간이라 업무량을 줄여 가는 편이 좋습니다.";
-}
-
 export function buildMonthlyFriendlyParagraphs(m: MonthlyFortuneEngineMonth): string[] {
   const out: string[] = [];
 
@@ -69,10 +63,6 @@ export function buildMonthlyFriendlyParagraphs(m: MonthlyFortuneEngineMonth): st
   const stage = (m.twelveStage || "").trim();
   const p3 = TWELVE_STAGE_LINE[stage];
   if (p3) out.push(p3);
-
-  // p4: luck_score 기반 한 줄 — 점수 자체가 월별 사주 계산값
-  const score = Number(m.luckScore || 0);
-  if (score > 0) out.push(scoreLine(score));
 
   return out;
 }

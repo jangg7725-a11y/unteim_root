@@ -70,7 +70,7 @@ export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
   {
     id: "quick",
     eyebrow: "바로 가기",
-    title: "지금 바로 시작해볼까요?",
+    title: "지금 알아 볼까요?",
     layout: "action",
     items: [
       { id: "q1", label: "AI 상담",    icon: "💭", description: "지금 바로 물어보세요",     theme: "violet", areaLabel: "상담",   badge: "beta" },
