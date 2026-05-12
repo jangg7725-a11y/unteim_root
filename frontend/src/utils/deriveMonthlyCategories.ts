@@ -246,14 +246,19 @@ function deriveHealth(m: MonthlyFortuneEngineMonth): MonthCategory {
     ? OHAENG_ROUTINE[ohaeng]
     : undefined;
 
-  // ── 6. monthRiskSlots 건강 신살 경고 ─────────────────────────
+  // ── 6. health_monthly DB 슬롯 (원국 건강 기질, 보강용) ───────
+  if (m.health_monthly && lines.length < 3) {
+    lines.push(clip(m.health_monthly, 90));
+  }
+
+  // ── 7. monthRiskSlots 건강 신살 경고 ─────────────────────────
   const healthSlot = (m.monthRiskSlots ?? []).find(
     (r) =>
       r.found &&
       /건강|질병|부상|체력|혈/.test(r.label_ko ?? "") &&
       r.warning
   );
-  const caution = healthSlot?.warning ?? routine;
+  const caution = healthSlot?.warning ?? (m.health_care ? clip(m.health_care, 80) : undefined) ?? routine;
 
   return {
     key: "health",
@@ -280,9 +285,14 @@ function deriveLove(m: MonthlyFortuneEngineMonth): MonthCategory {
     lines.push(clip(loveHints[0], 90));
   }
 
-  // 2순위: 십성 기반 애정 메시지 (매달 십성이 다름)
+  // 2순위: 원국 relation_advice 슬롯 (관계 패턴 근거)
+  if (m.relation_advice) {
+    lines.push(clip(m.relation_advice, 95));
+  }
+
+  // 3순위: 십성 기반 애정 메시지
   const sipsinMsg = LOVE_MSG[sipsin];
-  if (sipsinMsg) {
+  if (sipsinMsg && lines.length < 2) {
     lines.push(sipsinMsg);
   }
 
@@ -300,14 +310,19 @@ function deriveMoney(m: MonthlyFortuneEngineMonth): MonthCategory {
 
   const lines: string[] = [];
 
-  // 1순위: 오행 월별 전략 (매달 다름, 재물·전략과 가장 직결)
-  if (m.oheng_monthly_strategy) {
+  // 1순위: 원국 money_monthly 슬롯 (재물 기질 근거)
+  if (m.money_monthly) {
+    lines.push(clip(m.money_monthly, 95));
+  }
+
+  // 2순위: 오행 월별 전략 (매달 다름, 재물·전략 직결)
+  if (m.oheng_monthly_strategy && lines.length < 2) {
     lines.push(clip(m.oheng_monthly_strategy, 95));
   }
 
-  // 2순위: 십성 기반 재물 메시지 (매달 십성이 다름)
+  // 3순위: 십성 기반 재물 메시지
   const sipsinMsg = MONEY_MSG[sipsin];
-  if (sipsinMsg) {
+  if (sipsinMsg && lines.length < 2) {
     lines.push(sipsinMsg);
   }
 
@@ -315,7 +330,8 @@ function deriveMoney(m: MonthlyFortuneEngineMonth): MonthCategory {
     lines.push("이달의 재물 흐름은 큰 변화 없이 유지하는 것이 중심입니다.");
   }
 
-  return { key: "money", title: "이달의 재물운", emoji: "💰", score, lines };
+  const caution = m.money_advice ? clip(m.money_advice, 80) : undefined;
+  return { key: "money", title: "이달의 재물운", emoji: "💰", score, lines, caution };
 }
 
 /**

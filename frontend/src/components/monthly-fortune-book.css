@@ -566,6 +566,55 @@
   font-size: 0.92rem;
 }
 
+/* ── 세운·대운 간지 보조 줄 ─────────────────────────────────── */
+.mfb__pillar-sub {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.mfb__pillar-sub-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.15);
+  padding: 0.06rem 0.3rem;
+  border-radius: 3px;
+  margin-right: 0.15rem;
+}
+
+.mfb__pillar-sep {
+  margin: 0 0.25rem;
+  color: #d1d5db;
+}
+
+/* ── 용신 한줄 ──────────────────────────────────────────────── */
+.mfb__yongshin-line {
+  margin: 0.2rem 0 0.45rem;
+  font-size: 0.78rem;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.06);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  border-left: 3px solid rgba(124, 58, 237, 0.3);
+}
+
+/* ── 핵심 사건 예측 ─────────────────────────────────────────── */
+.mfb__core-events {
+  margin: 0.6rem 0;
+  padding: 0.55rem 0.75rem;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 10px;
+}
+
+.mfb__core-events-body p {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: #374151;
+  line-height: 1.55;
+}
+
 /* ── 공망 ─────────────────────────────────────────────────────── */
 .mfb__gongmang-line {
   margin: 0.3rem 0 0.5rem;

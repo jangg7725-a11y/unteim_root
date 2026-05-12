@@ -157,6 +157,10 @@ export function MonthlyFortuneEngine({
     .split(/\n+/)
     .map((line) => line.trim())
     .filter(Boolean);
+  const yongshinLine = (m.yongshinLine || "").trim();
+  const coreEvents = (m.coreEvents || "").trim();
+  const seunPillarLabel = (m.seunPillar || "").trim();
+  const daewoonPillarLabel = (m.daewoonPillar || "").trim();
   const shinsalHighlights = Array.isArray(m.shinsalHighlights)
     ? m.shinsalHighlights.map((x) => x.trim()).filter(Boolean).slice(0, 2)
     : [];
@@ -254,6 +258,17 @@ export function MonthlyFortuneEngine({
               월주 <strong>{m.monthPillar || "—"}</strong> · 월간 십신 <strong>{m.stemTenGod}</strong> · 지지
               본기 십신 <strong>{m.branchTenGodMain}</strong> · 12운성 <strong>{m.twelveStage}</strong>
             </p>
+            {(seunPillarLabel || daewoonPillarLabel) ? (
+              <p className="mfb__pillar-sub">
+                {seunPillarLabel ? <><span className="mfb__pillar-sub-label">세운</span> <strong>{seunPillarLabel}</strong></> : null}
+                {seunPillarLabel && daewoonPillarLabel ? <span className="mfb__pillar-sep"> · </span> : null}
+                {daewoonPillarLabel ? <><span className="mfb__pillar-sub-label">대운</span> <strong>{daewoonPillarLabel}</strong></> : null}
+              </p>
+            ) : null}
+            {/* ── 용신 한줄 ── */}
+            {yongshinLine ? (
+              <p className="mfb__yongshin-line">⚡ {yongshinLine}</p>
+            ) : null}
 
             {/* ── 격국 ── */}
             {m.geukgukName ? (
@@ -325,6 +340,18 @@ export function MonthlyFortuneEngine({
             {m.life_event_signals && m.life_event_signals.length > 0 && (
               <LifeEventSignalCard events={m.life_event_signals} month={m.month} />
             )}
+
+            {/* ── 핵심 사건 예측 ── */}
+            {coreEvents ? (
+              <div className="mfb__core-events">
+                <p className="mfb__section-title">📌 이달의 핵심 포인트</p>
+                <div className="mfb__core-events-body">
+                  {coreEvents.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {/* ── 이달의 한줄 결론 ── */}
             {oneLineConclusion ? (

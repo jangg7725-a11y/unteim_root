@@ -159,6 +159,14 @@ export type MonthlyFortuneEngineMonth = {
   /** 월별 narrative 슬롯 — 일간 풀과 지배 오행 풀의 월별 인덱스 순환 결과 (월별 사주값에 직결) */
   daymaster_monthly_tip?: string;
   oheng_monthly_strategy?: string;
+  /** 차트-고정 슬롯 — 원국 기반이라 12달 동일값, 카테고리 상세 보강에 사용 */
+  oheng_monthly_core?: string;
+  money_monthly?: string;
+  money_advice?: string;
+  health_monthly?: string;
+  health_care?: string;
+  relation_advice?: string;
+  career_strategy?: string;
 };
 
 export type MonthlyFortuneEnginePayload = {

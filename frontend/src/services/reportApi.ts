@@ -387,6 +387,54 @@ function parseMonthlyFortune(raw: Record<string, unknown>): MonthlyFortuneEngine
               }))
               .filter((r) => r.found && r.label_ko)
           : undefined,
+        // ── 삼재 ────────────────────────────────────────────────────
+        samjaeStatus:
+          x.samjaeStatus && typeof x.samjaeStatus === "object"
+            ? (() => {
+                const s = x.samjaeStatus as Record<string, unknown>;
+                return s.is_samjae === true
+                  ? {
+                      is_samjae: true,
+                      stage: String(s.stage ?? "일반"),
+                      bok_samjae: Boolean(s.bok_samjae),
+                    }
+                  : null;
+              })()
+            : null,
+        // ── 대운 흐름 ─────────────────────────────────────────────
+        daewoonFlowId: String(x.daewoonFlowId ?? ""),
+        daewoonFlowLabel: String(x.daewoonFlowLabel ?? ""),
+        daewoonFlowEra: String(x.daewoonFlowEra ?? ""),
+        daewoonFlowEnergy: String(x.daewoonFlowEnergy ?? ""),
+        // ── 격국 ─────────────────────────────────────────────────
+        geukgukName: String(x.geukgukName ?? ""),
+        geukgukCore: String(x.geukgukCore ?? ""),
+        geukgukBehavior: String(x.geukgukBehavior ?? ""),
+        // ── 인생 사건 신호 ────────────────────────────────────────
+        life_event_signals: Array.isArray(x.life_event_signals)
+          ? (x.life_event_signals as unknown[])
+              .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
+              .map((e) => ({
+                event_id: String(e.event_id ?? ""),
+                label_ko: String(e.label_ko ?? ""),
+                icon: String(e.icon ?? ""),
+                category: (e.category === "positive" ? "positive" : "caution") as "caution" | "positive",
+                signal: String(e.signal ?? ""),
+                action: String(e.action ?? ""),
+                reframe: String(e.reframe ?? ""),
+                trigger_reasons: Array.isArray(e.trigger_reasons)
+                  ? (e.trigger_reasons as unknown[]).map(String)
+                  : [],
+              }))
+          : undefined,
+        // ── 차트-고정 슬롯 (12달 동일값, 카테고리 보강용) ─────────
+        oheng_monthly_core: String(x.oheng_monthly_core ?? ""),
+        money_monthly: String(x.money_monthly ?? ""),
+        money_advice: String(x.money_advice ?? ""),
+        health_monthly: String(x.health_monthly ?? ""),
+        health_care: String(x.health_care ?? ""),
+        relation_advice: String(x.relation_advice ?? ""),
+        career_strategy: String(x.career_strategy ?? ""),
       };
     })
     .filter((m): m is NonNullable<typeof m> => m !== null && m.month >= 1 && m.month <= 12);
