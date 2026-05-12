@@ -781,6 +781,63 @@
   border-left: 3px solid rgba(180, 83, 9, 0.35);
 }
 
+/* ── 신살 아이템 (ShinsalItem 컴포넌트) ─────────────────────── */
+
+.mfb__si {
+  padding: 0.6rem 0 0.65rem;
+  border-bottom: 1px solid rgba(103, 58, 183, 0.1);
+}
+
+.mfb__si:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mfb__si-name {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.28rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.mfb__si-name--good    { color: #15803d; }
+.mfb__si-name--caution { color: #b45309; }
+.mfb__si-name--risk    { color: #c7211a; }
+
+.mfb__si-badge {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.06rem 0.38rem;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.07);
+  color: inherit;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.mfb__si-effect {
+  margin: 0 0 0.22rem;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #2d2040;
+}
+
+.mfb__si-advice {
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.48;
+  color: #6b5e8a;
+}
+
+.mfb__si-advice::before {
+  content: "→ ";
+  font-weight: 600;
+}
+
 /* ── 반응형 ── */
 @media (max-width: 720px) {
   .mfb__book-inner {

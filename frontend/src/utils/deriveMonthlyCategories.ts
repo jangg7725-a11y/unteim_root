@@ -20,7 +20,13 @@
  */
 
 import type { MonthlyFortuneEngineMonth } from "@/types/report";
+import {
+  SHINSAL_DB,
+  parseShinsalChip,
+  type ShinsalEntry,
+} from "@/utils/shinsalMonthDb";
 
+export type { ShinsalEntry };
 export type CategoryScore = 1 | 2 | 3 | 4 | 5;
 
 export type MonthCategory = {
@@ -31,6 +37,8 @@ export type MonthCategory = {
   lines: string[];
   caution?: string;
   chips?: string[];
+  /** 신살 전용: 각 신살별 구조화된 설명 */
+  shinsalItems?: ShinsalEntry[];
 };
 
 // ── 내부 헬퍼 ────────────────────────────────────────────────
@@ -215,53 +223,92 @@ function deriveMoney(m: MonthlyFortuneEngineMonth): MonthCategory {
   return { key: "money", title: "이달의 재물운", emoji: "💰", score, lines };
 }
 
-/** 이달의 신살 — 근거: shinsalHighlights (중복 제거) */
+/**
+ * 이달의 신살
+ * 근거: shinsalHighlights(칩) → SHINSAL_DB 설명 연결
+ *       monthRiskSlots → core_message/warning 우선 사용 (있을 때)
+ * 각 신살별로 이름 + 이달 영향 + 조언을 shinsalItems에 구조화하여 반환
+ */
 function deriveShinsal(m: MonthlyFortuneEngineMonth): MonthCategory {
-  // 중복 제거: "주의: 반안살" / "신살: 반안살" → "반안살" 로 통일
-  const rawHighlights = [...new Set(
-    (m.shinsalHighlights ?? [])
-      .map((h) => h.replace(/^(귀인:|주의:|신살:)\s*/i, "").trim())
-      .filter(Boolean)
-  )];
+  // ① shinsalHighlights 파싱 (중복 제거)
+  const parsedChips = (m.shinsalHighlights ?? [])
+    .map((h) => parseShinsalChip(h))
+    .filter((p) => p.name.length > 0);
 
-  // 원본에서 귀인 여부 파악 (접두사 기준)
-  const origHighlights = (m.shinsalHighlights ?? []).map((h) => h.trim());
-  const isGoodSet = new Set(
-    origHighlights
-      .filter((h) => h.startsWith("귀인:"))
-      .map((h) => h.replace(/^귀인:\s*/, "").trim())
-  );
+  // 이름 기준 중복 제거 (같은 신살이 "주의: 반안살" / "신살: 반안살" 두 번 나올 때)
+  const seenNames = new Set<string>();
+  const uniqueChips = parsedChips.filter((p) => {
+    if (seenNames.has(p.name)) return false;
+    seenNames.add(p.name);
+    return true;
+  });
 
-  const chips = rawHighlights.slice(0, 5);
-  const lines: string[] = [];
-
-  if (rawHighlights.length) {
-    const goods = rawHighlights.filter((h) => isGoodSet.has(h));
-    const risks = rawHighlights.filter((h) => !isGoodSet.has(h));
-
-    if (goods.length) {
-      lines.push(`이달 활성 귀인·길성: ${goods.join(", ")}`);
-    }
-    if (risks.length) {
-      lines.push(`주의할 신살: ${risks.join(", ")}`);
-    }
-  } else {
-    // monthRiskSlots 레이블 보조
-    const riskLabels = [...new Set(
-      (m.monthRiskSlots ?? [])
-        .filter((r) => r.found && r.label_ko)
-        .map((r) => r.label_ko as string)
-    )];
-
-    if (riskLabels.length) {
-      chips.push(...riskLabels.slice(0, 3));
-      lines.push(`이달 활성 신살: ${riskLabels.join(", ")}`);
-    } else {
-      lines.push("이달에 특별히 활성화된 신살이 없습니다. 안정적인 흐름입니다.");
+  // ② monthRiskSlots → label_ko: core_message 맵 (엔진 계산 기반, 우선순위 높음)
+  const riskMsgMap = new Map<string, string>();
+  for (const slot of m.monthRiskSlots ?? []) {
+    if (slot.found && slot.label_ko) {
+      const msg = slot.warning ?? slot.core_message;
+      if (msg) riskMsgMap.set(slot.label_ko, msg);
     }
   }
 
-  return { key: "shinsal", title: "이달의 신살", emoji: "✨", chips, lines };
+  // ③ shinsalHighlights에 없지만 monthRiskSlots에 있는 신살 보완
+  for (const slot of m.monthRiskSlots ?? []) {
+    if (slot.found && slot.label_ko && !seenNames.has(slot.label_ko)) {
+      uniqueChips.push({ name: slot.label_ko, type: "caution" });
+      seenNames.add(slot.label_ko);
+    }
+  }
+
+  // ④ 각 신살 → ShinsalEntry 구성
+  const shinsalItems: ShinsalEntry[] = uniqueChips
+    .slice(0, 5)
+    .map(({ name, type }) => {
+      // DB에 있는 설명 우선
+      const dbEntry = SHINSAL_DB[name];
+      // monthRiskSlots의 엔진 계산 설명이 있으면 effect로 사용
+      const engineEffect = riskMsgMap.get(name);
+
+      if (dbEntry) {
+        return {
+          ...dbEntry,
+          // 엔진이 구체적 메시지를 줬을 때는 보조로 붙임
+          effect: engineEffect
+            ? `${clip(engineEffect, 80)} ${dbEntry.effect}`
+            : dbEntry.effect,
+        };
+      }
+
+      // DB 미등재 신살 → 분류 추론 + 기본 메시지
+      const category: ShinsalEntry["category"] =
+        type === "good" ? "good" : type === "caution" ? "caution" : "caution";
+      return {
+        name,
+        category,
+        effect:
+          engineEffect ??
+          `이달 ${name}이 활성화됩니다. 에너지의 흐름에 주의를 기울이세요.`,
+        advice: "신살의 영향을 참고해 이달 흐름을 조율하세요.",
+      };
+    });
+
+  // ⑤ 칩: 표시용 이름 목록
+  const chips = shinsalItems.map((s) => s.name);
+
+  // ⑥ 신살이 하나도 없을 때
+  const lines: string[] =
+    shinsalItems.length === 0
+      ? ["이달에 특별히 활성화된 신살이 없습니다. 안정적인 흐름입니다."]
+      : [];
+
+  return {
+    key: "shinsal",
+    title: "이달의 신살",
+    emoji: "✨",
+    chips,
+    lines,
+    shinsalItems: shinsalItems.length > 0 ? shinsalItems : undefined,
+  };
 }
 
 /** 이달의 주의포인트 — 근거: monthRiskSlots + 충·형 힌트 + 십성·12운성 (매달 변동 필드만) */

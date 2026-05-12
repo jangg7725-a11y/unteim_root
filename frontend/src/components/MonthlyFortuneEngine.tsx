@@ -4,6 +4,7 @@ import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
 import {
   deriveMonthlyCategories,
   type MonthCategory,
+  type ShinsalEntry,
 } from "@/utils/deriveMonthlyCategories";
 import "./monthly-fortune-book.css";
 
@@ -32,8 +33,35 @@ function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
   return <span className="mfb__stars">{filled}</span>;
 }
 
+/** 신살 아이템 1개 렌더링 */
+function ShinsalItem({ item }: { item: ShinsalEntry }) {
+  const catCls =
+    item.category === "good"
+      ? "mfb__si-name--good"
+      : item.category === "risk"
+        ? "mfb__si-name--risk"
+        : "mfb__si-name--caution";
+  const catLabel =
+    item.category === "good" ? "귀인·길신" : item.category === "risk" ? "주의" : "조심";
+
+  return (
+    <div className="mfb__si">
+      <p className={`mfb__si-name ${catCls}`}>
+        {item.name}
+        <span className="mfb__si-badge">{catLabel}</span>
+      </p>
+      <p className="mfb__si-effect">{item.effect}</p>
+      <p className="mfb__si-advice">{item.advice}</p>
+    </div>
+  );
+}
+
 function CategoryCard({ cat }: { cat: MonthCategory }) {
   const [open, setOpen] = useState(false);
+
+  // 신살 카드: 항목이 없으면 처음부터 접힌 상태로, 있으면 펼쳐서 표시
+  const hasShinsal = cat.key === "shinsal" && (cat.shinsalItems?.length ?? 0) > 0;
+
   return (
     <button
       type="button"
@@ -54,6 +82,7 @@ function CategoryCard({ cat }: { cat: MonthCategory }) {
         <span className="mfb__cat-card-arrow" aria-hidden="true">▾</span>
       </div>
 
+      {/* 신살 칩 — 이름 태그 (헤더 아래 항상 표시) */}
       {cat.chips && cat.chips.length > 0 && (
         <div className="mfb__cat-chips">
           {cat.chips.map((chip) => (
@@ -65,11 +94,16 @@ function CategoryCard({ cat }: { cat: MonthCategory }) {
       )}
 
       <div className="mfb__cat-body">
-        {cat.lines.map((line, i) => (
-          <p key={i} className="mfb__cat-line">
-            {line}
-          </p>
-        ))}
+        {/* 신살 전용: 각 신살별 구조화된 설명 */}
+        {hasShinsal
+          ? cat.shinsalItems!.map((item) => (
+              <ShinsalItem key={item.name} item={item} />
+            ))
+          : cat.lines.map((line, i) => (
+              <p key={i} className="mfb__cat-line">
+                {line}
+              </p>
+            ))}
         {cat.caution && (
           <p className="mfb__cat-caution">{cat.caution}</p>
         )}
