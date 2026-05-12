@@ -680,7 +680,7 @@
   background: linear-gradient(135deg, #ede7f6 0%, #f6f3fc 100%);
   border-color: rgba(103, 58, 183, 0.13);
 }
-.mfb__cat-card--badluck {
+.mfb__cat-card--caution {
   background: linear-gradient(135deg, #fbe9e7 0%, #fdf5f3 100%);
   border-color: rgba(229, 57, 53, 0.12);
 }
