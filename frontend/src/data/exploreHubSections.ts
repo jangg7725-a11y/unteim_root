@@ -31,7 +31,7 @@ export type ExploreHubSection = {
   id: string;
   eyebrow: string;
   title: string;
-  layout: "cards" | "grid3" | "list" | "grid2";
+  layout: "cards" | "action" | "grid3" | "list" | "grid2";
   items: ExploreHubItem[];
 };
 
@@ -55,12 +55,12 @@ export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
     id: "quick",
     eyebrow: "바로 가기",
     title: "지금 바로 시작해볼까요?",
-    layout: "cards",
+    layout: "action",
     items: [
-      { id: "q1", label: "AI 상담",   icon: "💭", description: "지금 바로 물어보세요",        theme: "violet", areaLabel: "상담",   badge: "beta" },
-      { id: "q2", label: "리포트 열기", icon: "📋", description: "내 사주 분석 전체 보기",    theme: "slate",  areaLabel: "리포트" },
-      { id: "q3", label: "사주 입력",  icon: "✏️", description: "1분이면 충분해요",           theme: "indigo", areaLabel: "사주" },
-      { id: "q4", label: "월별 카드",  icon: "📖", description: "이달의 흐름을 한 장으로",   theme: "amber",  areaLabel: "이번 달" },
+      { id: "q1", label: "AI 상담",    icon: "💭", description: "지금 바로 물어보세요",     theme: "violet", areaLabel: "상담",   badge: "beta" },
+      { id: "q2", label: "리포트 열기", icon: "📋", description: "내 사주 분석 전체 보기",  theme: "slate",  areaLabel: "리포트" },
+      { id: "q3", label: "사주 입력",  icon: "✏️", description: "1분이면 충분해요",         theme: "indigo", areaLabel: "사주" },
+      { id: "q4", label: "월별 카드",  icon: "📖", description: "이달의 흐름을 한 장으로", theme: "amber",  areaLabel: "이번 달" },
     ],
   },
 ];

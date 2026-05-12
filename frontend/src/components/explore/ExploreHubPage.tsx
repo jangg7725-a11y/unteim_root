@@ -124,7 +124,11 @@ export function ExploreHubPage({
         </header>
 
         {EXPLORE_HUB_SECTIONS.map((section) => (
-          <section key={section.id} className="explore-hub__section" aria-labelledby={`hub-sec-${section.id}`}>
+          <section
+            key={section.id}
+            className={`explore-hub__section${section.layout === "action" ? " explore-hub__section--action" : ""}`}
+            aria-labelledby={`hub-sec-${section.id}`}
+          >
             <p className="explore-hub__eyebrow">{section.eyebrow}</p>
             <h2 id={`hub-sec-${section.id}`} className="explore-hub__sec-title">
               {section.title}
@@ -161,6 +165,33 @@ export function ExploreHubPage({
                       <div className="explore-hub__card-body">
                         <p className="explore-hub__card-desc">{it.description}</p>
                       </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── action 레이아웃 (바로 가기 — 풀배너 2열) ── */}
+            {section.layout === "action" && (
+              <div className="explore-hub__action">
+                {section.items.map((it) => (
+                  <button
+                    key={it.id}
+                    type="button"
+                    className={`explore-hub__action-btn explore-hub__action-btn--${it.theme ?? "violet"}`}
+                    onClick={() => handleItemClick(it)}
+                  >
+                    {it.areaLabel && (
+                      <span className="explore-hub__action-area">{it.areaLabel}</span>
+                    )}
+                    <span className="explore-hub__action-ico" aria-hidden="true">{it.icon}</span>
+                    <span className="explore-hub__action-label">
+                      {it.label}
+                      {it.badge === "beta" && <span className="explore-hub__action-badge">β</span>}
+                      {it.badge === "new"  && <span className="explore-hub__action-badge">NEW</span>}
+                    </span>
+                    {it.description && (
+                      <p className="explore-hub__action-desc">{it.description}</p>
                     )}
                   </button>
                 ))}
