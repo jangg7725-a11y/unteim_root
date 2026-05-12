@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import type { FeedNavigateMeta, FeedTabTarget } from "@/types/contentFeed";
 import { useSajuSession } from "@/context/SajuSessionContext";
 import { EXPLORE_HUB_SECTIONS, type ExploreHubItem } from "@/data/exploreHubSections";
-import { ContentFeedPage } from "@/components/feed/ContentFeedPage";
 import { exploreActionForCategoryId } from "@/utils/exploreCategory";
 import { deriveTodayPoint, type TodayPointResult } from "@/utils/deriveTodayPoint";
 import { TodayPointSheet } from "./TodayPointSheet";
@@ -233,17 +232,6 @@ export function ExploreHubPage({
               </div>
             )}
 
-            {/* ── life 섹션 하단: 콘텐츠 피드 카드 삽입 ── */}
-            {section.id === "life" && (
-              <div className="explore-hub__life-feed">
-                <ContentFeedPage
-                  embedded
-                  hasBirth={hasBirth}
-                  hasReport={hasReport}
-                  onNavigateTab={onNavigateTab}
-                />
-              </div>
-            )}
           </section>
         ))}
       </div>
