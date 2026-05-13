@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { BirthInputPayload } from "@/types/birthInput";
-import type { SajuOverviewPayload, SajuReportData } from "@/types/report";
+import type { SajuReportData } from "@/types/report";
 import type { FortuneLinesData } from "@/types/fortuneLines";
 import { SCREEN_COPY } from "@/constants/screenCopy";
 import { loadFortuneLines } from "@/services/fortuneLinesApi";
 import { pickFortuneLineForReport } from "@/utils/pickFortuneLine";
-import { deriveTodayFortuneFromReport } from "@/utils/reportTodayCard";
 import { formatKoreanDisplayDate } from "@/utils/formatKoreanDate";
 import { COMPAT_SCORE_LEGEND_LINES, starBandFrom100 } from "@/utils/compatibilityLabels";
-import { TodayFortuneCard } from "./TodayFortuneCard";
 import { MonthlyFortuneEngine } from "./MonthlyFortuneEngine";
 import { MicroPointOffers } from "./MicroPointOffers";
 import { PartnerInputModal } from "./PartnerInputModal";
@@ -42,82 +40,6 @@ type Props = {
   onConsumedScrollAnchor?: () => void;
 };
 
-function SajuOverviewSnippet({ ov }: { ov: SajuOverviewPayload }) {
-  const { pillars, fiveElements } = ov;
-  const c = fiveElements.counts;
-  const rows = [
-    ["연주", pillars.year],
-    ["월주", pillars.month],
-    ["일주", pillars.day],
-    ["시주", pillars.hour],
-  ] as const;
-  return (
-    <section id="report-anchor-overview" className="report-page__card" aria-label="사주 개요">
-      <h3 className="report-page__card-title">사주 개요 (원국)</h3>
-      <table className="report-page__overview-mini">
-        <tbody>
-          {rows.map(([label, p]) => (
-            <tr key={label}>
-              <th scope="row">{label}</th>
-              <td>
-                {p.gan}
-                {p.ji}
-              </td>
-              <td>십신 {p.sipsin || "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="report-page__overview-fe">
-        오행 분포: 목 {c["목"] ?? 0} · 화 {c["화"] ?? 0} · 토 {c["토"] ?? 0} · 금 {c["금"] ?? 0} · 수 {c["수"] ?? 0}
-      </p>
-    </section>
-  );
-}
-
-function DaewoonSnippet({ ov }: { ov: SajuOverviewPayload }) {
-  const list = ov.daewoon || [];
-  if (!list.length) return null;
-  return (
-    <section id="report-anchor-daewoon" className="report-page__card" aria-label="대운 스냅샷">
-      <h3 className="report-page__card-title">대운 스냅샷</h3>
-      <ul className="report-page__daewoon-list">
-        {list.slice(0, 10).map((d, i) => (
-          <li key={`${d.pillar}-${i}`}>
-            <strong>{d.pillar}</strong>{" "}
-            <span className="report-page__daewoon-age">
-              ({String(d.startAge ?? "?")}~{String(d.endAge ?? "?")}세)
-            </span>
-            {d.isCurrent ? <span className="report-page__daewoon-now"> · 현재</span> : null}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-type SectionProps = {
-  id?: string;
-  title: string;
-  body: string;
-  /** 엔진 본문과 구분되는 참고 문장(문장 DB) */
-  supplementaryLine?: string | null;
-};
-
-function ReportSection({ id, title, body, supplementaryLine }: SectionProps) {
-  return (
-    <section id={id} className="report-page__card" aria-label={title}>
-      <h3 className="report-page__card-title">{title}</h3>
-      {supplementaryLine ? (
-        <div className="report-page__fortune-aside" role="note">
-          <span className="report-page__fortune-label">참고 한 줄</span>
-          <p className="report-page__fortune-text">{supplementaryLine}</p>
-        </div>
-      ) : null}
-      <p className="report-page__card-text">{body}</p>
-    </section>
-  );
-}
 
 
 export function ReportPage({
@@ -178,17 +100,9 @@ export function ReportPage({
     if (!birth) return null;
     const raw = report?.raw ?? null;
     return {
-      total: pickFortuneLineForReport("total", fortuneLines, birth, raw),
-      personality: pickFortuneLineForReport("personality", fortuneLines, birth, raw),
-      work: pickFortuneLineForReport("work", fortuneLines, birth, raw),
-      money: pickFortuneLineForReport("money", fortuneLines, birth, raw),
-      health: pickFortuneLineForReport("health", fortuneLines, birth, raw),
-      todayCard: pickFortuneLineForReport("todayCard", fortuneLines, birth, raw),
       monthlyIntro: pickFortuneLineForReport("monthlyIntro", fortuneLines, birth, raw),
     };
   }, [birth, fortuneLines, report?.raw]);
-
-  const todayFortuneData = useMemo(() => deriveTodayFortuneFromReport(report), [report]);
 
   const onSelectSingle = (item: MicroPointOfferItem) => {
     setSelectedQuestion(item.question);
@@ -295,6 +209,7 @@ export function ReportPage({
                 monthFocus={monthFocus}
                 onShowFullYear={onClearMonthFocus}
                 supplementaryIntroLine={reportFortune?.monthlyIntro ?? null}
+                narrativeSlots={report.narrativeSlots}
               />
             </div>
           ) : (
@@ -321,68 +236,17 @@ export function ReportPage({
             </div>
           )}
 
-          {report.sajuOverview ? <SajuOverviewSnippet ov={report.sajuOverview} /> : null}
-
-          <TodayFortuneCard
-            data={todayFortuneData ?? undefined}
-            supplementaryLine={reportFortune?.todayCard ?? null}
-          />
-
-          <div className="report-page__grid">
-            <ReportSection
-              id="report-section-total"
-              title="총운"
-              body={report.total}
-              supplementaryLine={reportFortune?.total ?? null}
-            />
-            <ReportSection
-              id="report-section-personality"
-              title="성격"
-              body={report.personality}
-              supplementaryLine={reportFortune?.personality ?? null}
-            />
-            <ReportSection
-              id="report-section-work"
-              title="직업운"
-              body={report.work}
-              supplementaryLine={
-                report.narrativeSlots?.career?.oheng?.strategy
-                ?? report.narrativeSlots?.career?.oheng?.strength
-                ?? reportFortune?.work
-                ?? null
-              }
-            />
-            <ReportSection
-              id="report-section-money"
-              title="재물운"
-              body={report.money}
-              supplementaryLine={
-                report.narrativeSlots?.money?.daymaster?.money_trait
-                ?? report.narrativeSlots?.money?.oheng?.advice
-                ?? reportFortune?.money
-                ?? null
-              }
-            />
-            <ReportSection
-              id="report-section-health"
-              title="건강운"
-              body={report.health}
-              supplementaryLine={
-                report.narrativeSlots?.health?.daymaster?.health_tendency
-                ?? report.narrativeSlots?.health?.oheng?.care
-                ?? reportFortune?.health
-                ?? null
-              }
-            />
-          </div>
-
           {/* 인연운 카드 */}
           <RelationFortuneCard narrativeSlots={report.narrativeSlots} />
 
-          {/* 위험 주의 카드 — 신살 기반 */}
-          <RiskCautionCard narrativeSlots={report.narrativeSlots} />
-
-          {report.sajuOverview ? <DaewoonSnippet ov={report.sajuOverview} /> : null}
+          {/* 월운 엔진이 없을 때만: 주의 패턴(월운 내부와 중복 방지) */}
+          {!(
+            report.monthlyFortune
+            && report.monthlyFortune.months.length > 0
+            && !report.monthlyFortune.error
+          ) ? (
+            <RiskCautionCard narrativeSlots={report.narrativeSlots} />
+          ) : null}
 
           <MicroPointOffers onSelectSingle={onSelectSingle} onSelectPair={onSelectPair} />
 

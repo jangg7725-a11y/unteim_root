@@ -885,6 +885,10 @@
 
 /* ── 이달의 카테고리별 운세 ──────────────────────────────── */
 
+.mfb__book-inner .risk-card {
+  margin-top: 0.85rem;
+}
+
 .mfb__cat-section {
   margin: 1.35rem 0 0.5rem;
 }
@@ -900,8 +904,8 @@
 
 .mfb__cat-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
 }
 
 /* 공통 카드 */

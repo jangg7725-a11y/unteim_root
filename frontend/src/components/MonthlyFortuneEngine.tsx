@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { MonthlyFortuneEnginePayload } from "@/types/report";
+import type { MonthlyFortuneEnginePayload, NarrativeSlots } from "@/types/report";
 import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
 import { buildCounselorEmotionText } from "@/utils/buildCounselorEmotionText";
 import { deriveMonthlyCategories, type MonthCategory, type ShinsalEntry } from "@/utils/deriveMonthlyCategories";
 import { LifeEventSignalCard } from "./LifeEventSignalCard";
+import { RiskCautionCard } from "./RiskCautionCard";
 import "./monthly-fortune-book.css";
 
 function BoldInline({ text }: { text: string }) {
@@ -21,6 +22,8 @@ type Props = {
   monthFocus: number | null;
   onShowFullYear?: () => void;
   supplementaryIntroLine?: string | null;
+  /** 원국 narrative — 이 시기 주의 패턴(신살·건갑 등) */
+  narrativeSlots?: NarrativeSlots | null;
 };
 
 function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
@@ -101,6 +104,7 @@ export function MonthlyFortuneEngine({
   monthFocus,
   onShowFullYear,
   supplementaryIntroLine,
+  narrativeSlots,
 }: Props) {
   const monthsSorted = useMemo(
     () => [...data.months].sort((a, b) => a.month - b.month),
@@ -369,6 +373,9 @@ export function MonthlyFortuneEngine({
                 ))}
               </div>
             </div>
+
+            {/* ── 이 시기 주의할 패턴 (행동 가이드 바로 위) ── */}
+            <RiskCautionCard narrativeSlots={narrativeSlots} />
 
             {/* ── 행동 가이드 (잘 풀리는 방향 포함) ── */}
             {(goodBullets.length > 0 || opportunityText || behaviorGuide) ? (
