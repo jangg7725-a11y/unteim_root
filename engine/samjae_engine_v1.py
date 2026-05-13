@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
 
 # 삼재 그룹 정의 (년지 기준)
@@ -14,12 +14,34 @@ SAMJAE_GROUPS = {
 }
 
 # 각 그룹의 삼재 시작 지지 (통상: 인/사/신/해)
+# → 세운 년지가 이 지지일 때 **눌삼재(본삼재)**. 직전 년지=들삼재, 직후 년지=날삼재.
 SAMJAE_START = {
-    "신자진": "인",
-    "해묘미": "사",
-    "인오술": "신",
-    "사유축": "해",
+    "신자진": "寅",
+    "해묘미": "巳",
+    "인오술": "申",
+    "사유축": "亥",
 }
+
+# 12지 순환 (양력 세운 년지 판정용)
+_ZHI12 = tuple("子丑寅卯辰巳午未申酉戌亥")
+
+
+def _zhi_index(ji: str) -> Optional[int]:
+    if not ji or len(ji) < 1:
+        return None
+    c = ji.strip()[0]
+    try:
+        return _ZHI12.index(c)
+    except ValueError:
+        return None
+
+
+def _prev_next_branches(pivot: str) -> Tuple[Optional[str], Optional[str]]:
+    """pivot의 직전·직후 지지 (12지 원형)."""
+    i = _zhi_index(pivot)
+    if i is None:
+        return None, None
+    return _ZHI12[(i - 1) % 12], _ZHI12[(i + 1) % 12]
 
 
 def _branch_from_any(x: Any) -> Optional[str]:
@@ -191,12 +213,12 @@ def _extract_current_sewun_branch(packed: Dict[str, Any]) -> Optional[str]:
 def build_samjae_result(packed: Dict[str, Any]) -> Dict[str, Any]:
     """
     삼재 결과 dict 반환.
+    - 들/눌/날: 세운 지지가 눌(본삼재)의 직전·일치·직후이면 각각 들삼재·눌삼재·날삼재.
     - 실패해도 reason / 중간값을 항상 담아 디버깅 가능하게 한다.
     """
-    
+
     year_branch = _extract_year_branch(packed)
     current_branch = _extract_current_sewun_branch(packed)
-    
 
     # 기본 결과(항상 필드 유지)
     out: Dict[str, Any] = {
@@ -205,9 +227,10 @@ def build_samjae_result(packed: Dict[str, Any]) -> Dict[str, Any]:
         "current_sewun_branch": current_branch,
         "group": None,
         "samjae_start_branch": None,
-        "is_samjae": None,
-        "stage": None,        # "일반/완화/전환" (다음 단계에서 고도화)
-        "bok_samjae": None,   # 다음 단계에서 조건식 추가
+        "is_samjae": False,
+        "stage": None,          # "들삼재" | "눌삼재" | "날삼재" — 삼재 구간일 때만
+        "stage_code": None,    # "deul" | "nul" | "nal" — API/프론트 분기용
+        "bok_samjae": False,
         "reason": None,
     }
 
@@ -222,19 +245,45 @@ def build_samjae_result(packed: Dict[str, Any]) -> Dict[str, Any]:
         out["reason"] = "year_branch_not_in_groups"
         return out
 
-    start_branch = SAMJAE_START.get(group)
+    pivot = SAMJAE_START.get(group)
     out["group"] = group
-    out["samjae_start_branch"] = start_branch
+    out["samjae_start_branch"] = pivot
+
+    if not pivot:
+        out["enabled"] = False
+        out["reason"] = "samjae_pivot_missing"
+        return out
 
     if not current_branch:
         out["enabled"] = False
         out["reason"] = "current_sewun_branch_not_found"
         return out
 
-    is_samjae = (current_branch == start_branch)
-    out["is_samjae"] = is_samjae
-    out["stage"] = "일반" if is_samjae else None
-    out["bok_samjae"] = False  # 다음 단계에서 조건식
+    deul_br, nal_br = _prev_next_branches(pivot)
+    if not deul_br or not nal_br:
+        out["enabled"] = False
+        out["reason"] = "branch_cycle_error"
+        return out
+
+    # 세운 지지 정규화 (한 글자)
+    cur = current_branch.strip()[0] if current_branch else ""
+
+    if cur == deul_br:
+        out["is_samjae"] = True
+        out["stage"] = "들삼재"
+        out["stage_code"] = "deul"
+    elif cur == pivot:
+        out["is_samjae"] = True
+        out["stage"] = "눌삼재"
+        out["stage_code"] = "nul"
+    elif cur == nal_br:
+        out["is_samjae"] = True
+        out["stage"] = "날삼재"
+        out["stage_code"] = "nal"
+    else:
+        out["is_samjae"] = False
+        out["stage"] = None
+        out["stage_code"] = None
 
     return out
 
@@ -264,6 +313,20 @@ def _detect_cross_flags(packed: Dict[str, Any]) -> Dict[str, bool]:
     }
 
 
+def _stage_to_bundle_phase(stage: Optional[str]) -> str:
+    """들삼재/눌삼재/날삼재 → build_samjae_bundle_v2 가중치 키(입력/눌림/끝)."""
+    if not stage:
+        return "눌림"
+    s = str(stage)
+    if "들" in s:
+        return "입력"
+    if "날" in s:
+        return "끝"
+    if "눌" in s:
+        return "눌림"
+    return "눌림"
+
+
 def build_samjae_bundle_v2(packed: Dict[str, Any]) -> Dict[str, Any]:
     """
     기존 build_samjae_result() 결과를 기반으로
@@ -282,7 +345,8 @@ def build_samjae_bundle_v2(packed: Dict[str, Any]) -> Dict[str, Any]:
         })
         return base
 
-    phase = base.get("stage")  # 입력/눌림/끝 등
+    phase = base.get("stage")
+    phase_key = _stage_to_bundle_phase(phase if isinstance(phase, str) else None)
     cross = _detect_cross_flags(packed)
 
     relief_score = 0
@@ -316,14 +380,13 @@ def build_samjae_bundle_v2(packed: Dict[str, Any]) -> Dict[str, Any]:
         reasons.append("충/파/해(+1)")
 
     # ----------------------------
-    # 🔹 기본 위험도 (들/눌림/끝)
+    # 🔹 기본 위험도 (들=입력 / 눌=눌림 / 날=끝)
     # ----------------------------
-    phase_key = phase if isinstance(phase, str) else ""
     phase_weight = {
         "입력": 3,     # 들삼재
-        "눌림": 2,     # 누울삼재
+        "눌림": 2,     # 눌삼재
         "끝": 1        # 날삼재
-    }.get(phase_key, 1)
+    }.get(phase_key, 2)
 
     risk_level = phase_weight
 
