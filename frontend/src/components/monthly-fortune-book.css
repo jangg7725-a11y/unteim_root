@@ -305,7 +305,7 @@
 }
 
 .mfb__friendly {
-  margin: 0 0 1rem;
+  margin: 0 0 0.5rem;
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
   background: rgba(99, 102, 241, 0.06);
@@ -330,6 +330,55 @@
 .mfb__friendly-text strong {
   color: #433864;
   font-weight: 700;
+}
+
+.mfb__cat-scores-wrap {
+  margin: 0 0 1rem;
+}
+
+.mfb__cat-scores-heading {
+  margin: 0 0 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #5b4a78;
+  letter-spacing: 0.02em;
+}
+
+.mfb__cat-scores {
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+.mfb__cat-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.76rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(67, 82, 153, 0.08);
+}
+
+.mfb__cat-score-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mfb__cat-score-row:first-child {
+  padding-top: 0;
+}
+
+.mfb__cat-score-title {
+  font-weight: 600;
+  color: #3f3260;
+}
+
+.mfb__cat-score-stars--na {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 
 /* 합·충·형 인터랙션 힌트 chips */

@@ -1,4 +1,5 @@
 import type { MonthlyFortuneEngineMonth, NarrativeSlots } from "@/types/report";
+import type { MonthCategory } from "@/utils/deriveMonthlyCategories";
 import { mergeMonthlyFortuneRisks } from "@/utils/mergeMonthlyFortuneRisks";
 
 /**
@@ -8,8 +9,8 @@ import { mergeMonthlyFortuneRisks } from "@/utils/mergeMonthlyFortuneRisks";
  * - 모든 문단은 그 달의 사주 계산값(월간 십성 · 12운성 · 일간 팁 풀의 월별 인덱스 ·
  *   지배 오행 전략 풀의 월별 인덱스 · luck_score)에 직결되어야 한다.
  * - 관계 위험 패턴(ibyeolsu·ohae) 요약은 월별 슬롯의 **warning** 우선(core_message 는 DB 고정이라 매달 같음).
- * - 차트-fixed 슬롯(money_monthly / health_monthly / relation_advice / oheng_monthly_core 등)은
- *   12개월 동일 노출이 되므로 여기서 사용하지 않는다(차트 카드에서 별도 노출).
+ * - 카테고리별 운세 본문(건강·애정·재물·신살·주의·행운)은 `buildMonthlyCoreParagraphs`에서
+ *   `deriveMonthlyCategories` 결과와 합쳐 이달의 핵심에 넣고, 별점은 별도 행으로 둔다.
  * - 풀에 매핑이 없는 십성/운성은 빈 문단으로 두어, 근거 없는 일반 운세 문장으로 채우지 않는다.
  */
 
@@ -132,5 +133,51 @@ export function buildMonthlyFriendlyParagraphs(
     }
   }
 
+  return out;
+}
+
+function normalizeParaDedupeKey(s: string): string {
+  return s.trim().replace(/\s+/g, " ").slice(0, 88);
+}
+
+/** 카테고리 카드 본문 → 핵심 블록용 문단 (신살은 effect·advice 펼침, caution 포함) */
+export function extractCategoryLinesForCore(cat: MonthCategory): string[] {
+  if (cat.key === "shinsal" && cat.shinsalItems && cat.shinsalItems.length > 0) {
+    const acc: string[] = [];
+    for (const it of cat.shinsalItems) {
+      const e = (it.effect || "").trim();
+      const a = (it.advice || "").trim();
+      if (e) acc.push(e);
+      if (a && a !== e) acc.push(a);
+    }
+    return acc;
+  }
+  const lines = cat.lines.map((l) => l.trim()).filter(Boolean);
+  const c = (cat.caution || "").trim();
+  if (c) lines.push(c);
+  return lines;
+}
+
+/**
+ * 이달의 핵심 본문: friendly 문단 + 카테고리별 운세 본문(앞 88자 기준 중복 제거).
+ */
+export function buildMonthlyCoreParagraphs(
+  m: MonthlyFortuneEngineMonth,
+  narrativeSlots: NarrativeSlots | null | undefined,
+  categories: MonthCategory[],
+): string[] {
+  const base = buildMonthlyFriendlyParagraphs(m, narrativeSlots);
+  const seen = new Set<string>();
+  for (const p of base) seen.add(normalizeParaDedupeKey(p));
+
+  const out = [...base];
+  for (const cat of categories) {
+    for (const line of extractCategoryLinesForCore(cat)) {
+      const key = normalizeParaDedupeKey(line);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(line);
+    }
+  }
   return out;
 }

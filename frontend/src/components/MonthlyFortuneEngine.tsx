@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MonthlyFortuneEnginePayload, NarrativeSlots } from "@/types/report";
-import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
+import { buildMonthlyCoreParagraphs } from "@/utils/monthlyFortuneFriendly";
 import { buildCounselorEmotionText } from "@/utils/buildCounselorEmotionText";
-import { deriveMonthlyCategories, type MonthCategory, type ShinsalEntry } from "@/utils/deriveMonthlyCategories";
+import { deriveMonthlyCategories } from "@/utils/deriveMonthlyCategories";
 import { RiskCautionCard } from "./RiskCautionCard";
 import "./monthly-fortune-book.css";
 
@@ -28,73 +28,6 @@ type Props = {
 function Stars({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
   const filled = "★".repeat(score) + "☆".repeat(5 - score);
   return <span className="mfb__stars">{filled}</span>;
-}
-
-/* 카테고리 점수 — CategoryScore = 1|2|3|4|5 */
-
-/* 신살 아이템 */
-function ShinsalItem({ item }: { item: ShinsalEntry }) {
-  const badgeCls =
-    item.category === "good"
-      ? "mfb__si-badge--good"
-      : item.category === "risk"
-      ? "mfb__si-badge--risk"
-      : "mfb__si-badge--caution";
-  return (
-    <div className="mfb__si">
-      <div className="mfb__si-header">
-        <span className="mfb__si-name">{item.name}</span>
-        <span className={`mfb__si-badge ${badgeCls}`}>
-          {item.category === "good" ? "귀인" : item.category === "risk" ? "주의" : "조심"}
-        </span>
-      </div>
-      {item.effect && <p className="mfb__si-effect">{item.effect}</p>}
-      {item.advice && <p className="mfb__si-advice">→ {item.advice}</p>}
-    </div>
-  );
-}
-
-/* 카테고리 카드 */
-function CategoryCard({ cat }: { cat: MonthCategory }) {
-  const [open, setOpen] = useState(false);
-  const colorMap: Record<string, string> = {
-    health: "mfb__cat-card--health",
-    love: "mfb__cat-card--love",
-    money: "mfb__cat-card--money",
-    shinsal: "mfb__cat-card--shinsal",
-    caution: "mfb__cat-card--caution",
-    goodluck: "mfb__cat-card--goodluck",
-  };
-  const cls = `mfb__cat-card ${colorMap[cat.key] ?? ""}`;
-  return (
-    <div className={cls}>
-      <div className="mfb__cat-card-header" onClick={() => setOpen((v) => !v)}>
-        <span>{cat.emoji} {cat.title}</span>
-        {cat.score != null && (
-          <span className="mfb__cat-score">
-            {"★".repeat(cat.score)}{"☆".repeat(5 - cat.score)}
-          </span>
-        )}
-        <span className="mfb__cat-toggle">{open ? "−" : "+"}</span>
-      </div>
-      <div className="mfb__cat-card-body">
-        {cat.key === "shinsal" && cat.shinsalItems && cat.shinsalItems.length > 0 ? (
-          <div className="mfb__si-list">
-            {cat.shinsalItems.map((item, i) => (
-              <ShinsalItem key={i} item={item} />
-            ))}
-          </div>
-        ) : (
-          <>
-            {cat.lines.map((line, i) => <p key={i}>{line}</p>)}
-            {open && cat.caution && (
-              <p className="mfb__cat-caution">{cat.caution}</p>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export function MonthlyFortuneEngine({
@@ -167,12 +100,12 @@ export function MonthlyFortuneEngine({
   const shinsalHighlights = Array.isArray(m.shinsalHighlights)
     ? m.shinsalHighlights.map((x) => x.trim()).filter(Boolean).slice(0, 2)
     : [];
-  const friendlyParagraphs = useMemo(
-    () => buildMonthlyFriendlyParagraphs(m, narrativeSlots),
-    [m, narrativeSlots],
+  const monthCategories = useMemo(() => deriveMonthlyCategories(m), [m]);
+  const coreParagraphs = useMemo(
+    () => buildMonthlyCoreParagraphs(m, narrativeSlots, monthCategories),
+    [m, narrativeSlots, monthCategories],
   );
   const counselorLines = useMemo(() => buildCounselorEmotionText(m), [m]);
-  const monthCategories = useMemo(() => deriveMonthlyCategories(m), [m]);
   const goodBullets = (m.opportunity || m.good)
     .split(/\n+/)
     .map((x) => x.replace(/^[\-\u2022]\s*/, "").trim())
@@ -305,10 +238,10 @@ export function MonthlyFortuneEngine({
               </div>
             ) : null}
 
-            {/* ── 이달의 핵심 ── */}
+            {/* ── 이달의 핵심 (+ 카테고리별 본문 통합) ── */}
             <div className="mfb__friendly" aria-label="이달의 핵심">
               <p className="mfb__section-title mfb__section-title--friendly">이달의 핵심</p>
-              {friendlyParagraphs.map((para, i) => (
+              {coreParagraphs.map((para, i) => (
                 <p key={i} className="mfb__friendly-text">
                   <BoldInline text={para} />
                 </p>
@@ -320,6 +253,22 @@ export function MonthlyFortuneEngine({
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="mfb__cat-scores-wrap">
+              <p className="mfb__cat-scores-heading">이달의 카테고리별 운세</p>
+              <div className="mfb__cat-scores" aria-label="영역별 별점 요약">
+                {monthCategories.map((cat) => (
+                  <div key={cat.key} className="mfb__cat-score-row">
+                    <span className="mfb__cat-score-title">{cat.emoji} {cat.title}</span>
+                    {cat.score != null ? (
+                      <Stars score={cat.score} />
+                    ) : (
+                      <span className="mfb__cat-score-stars mfb__cat-score-stars--na">—</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* ── 핵심 사건 예측 ── */}
@@ -341,17 +290,7 @@ export function MonthlyFortuneEngine({
               </p>
             ) : null}
 
-            {/* ── 이달의 카테고리별 운세 ── */}
-            <div className="mfb__cat-section">
-              <p className="mfb__cat-title">이달의 카테고리별 운세</p>
-              <div className="mfb__cat-grid">
-                {monthCategories.map((cat) => (
-                  <CategoryCard key={cat.key} cat={cat} />
-                ))}
-              </div>
-            </div>
-
-            {/* ── 이 시기 주의할 패턴 (행동 가이드 바로 위) ── */}
+            {/* ── 이달의 한줄 결론 ── */}
             <RiskCautionCard
               narrativeSlots={narrativeSlots}
               monthRiskSlots={m.monthRiskSlots}
