@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from engine.calendar_year_fortune import (
     _find_sewun_pillar,
@@ -23,6 +23,7 @@ from engine.monthly_reports_builder import (
     _month_luck_score,
     _natal_branches_kor,
 )
+from utils.narrative_loader import load_sentences
 from engine.risk_fortune_interpreter import get_shinsal_risk_slots
 from engine.shinsal_score import summarize_shinsal
 from engine.shinsal_rules import BRANCH_KO2HZ, twelve_lifestage
@@ -43,6 +44,27 @@ _SHINSAL_RISK_SET = {
 _SHINSAL_CAUTION_SET = {
     "도화", "역마살", "괴강살", "양인살", "화개살", "반안살", "장성살",
 }
+
+_SHINSAL_RISK_MAP_KEYS_CACHE: Optional[Set[str]] = None
+
+_MONTH_RISK_ORDER = (
+    "gwanjaesu",
+    "sonjaesu",
+    "accident_su",
+    "ibyeolsu",
+    "hwongjaesu",
+    "guseolsu",
+    "ohae",
+)
+
+
+def _get_shinsal_risk_map_keys() -> Set[str]:
+    """risk_fortune_db 의 shinsal_risk_map 키 — 엔진에 매핑된 신살만 원국 보강 대상으로."""
+    global _SHINSAL_RISK_MAP_KEYS_CACHE
+    if _SHINSAL_RISK_MAP_KEYS_CACHE is None:
+        raw = (load_sentences("risk_fortune_db").get("engine_mapping") or {}).get("shinsal_risk_map") or {}
+        _SHINSAL_RISK_MAP_KEYS_CACHE = {str(k) for k in raw.keys()}
+    return _SHINSAL_RISK_MAP_KEYS_CACHE
 
 
 def _stem_elem_ko(stem: str) -> str:
@@ -1225,6 +1247,72 @@ def _risk_shinsal_for_month(packed: Dict[str, Any], month_branch_hanja: str) -> 
     return list(dict.fromkeys(risk_names))
 
 
+def _natal_risk_shinsal_names(packed: Dict[str, Any]) -> List[str]:
+    """
+    원국에 있는 위험·주의 신살 + DB에 매핑된 기타 신살(혈인살 등) 이름.
+    어느 기둥에 붙어 있든 월별 문구 보강에 사용한다.
+    """
+    items = _extract_shinsal_items(packed)
+    map_keys = _get_shinsal_risk_map_keys()
+    out: List[str] = []
+    for it in items:
+        name = str(it.get("name") or "").strip()
+        if not name or name.startswith("12운성:"):
+            continue
+        if name in _SHINSAL_RISK_SET or name in _SHINSAL_CAUTION_SET or name in map_keys:
+            out.append(name)
+    return list(dict.fromkeys(out))
+
+
+def _build_month_risk_slots(
+    packed: Dict[str, Any],
+    month_branch_hanja: str,
+    *,
+    target_year: int,
+    month: int,
+) -> List[Dict[str, Any]]:
+    """
+    월별 '주의 패턴' 슬롯.
+    - 월지와 branch가 맞는 위험 신살을 우선 반영
+    - 그 외 원국 신살로 accident_su / ibyeolsu 등 부족 유형 보강
+    - 문구 시드에 연·월·월지 포함 → 달마다 warning/action 풀 추출이 달라짐
+    """
+    mb = str(month_branch_hanja or "").strip()
+    seed_src = f"{target_year}|{month}|{mb}|risk"
+    risk_seed = int(hashlib.md5(seed_src.encode("utf-8")).hexdigest(), 16) % (2**31)
+
+    month_names = _risk_shinsal_for_month(packed, mb)
+    natal_names = _natal_risk_shinsal_names(packed)
+
+    by_type: Dict[str, Dict[str, Any]] = {}
+
+    for sname in month_names:
+        for slot in get_shinsal_risk_slots(sname, seed=risk_seed):
+            if not slot.get("found"):
+                continue
+            rt = str(slot.get("risk_type") or "").strip()
+            if rt:
+                by_type[rt] = slot
+
+    for sname in natal_names:
+        for slot in get_shinsal_risk_slots(sname, seed=risk_seed):
+            if not slot.get("found"):
+                continue
+            rt = str(slot.get("risk_type") or "").strip()
+            if rt and rt not in by_type:
+                by_type[rt] = slot
+
+    ordered: List[Dict[str, Any]] = []
+    for rt in _MONTH_RISK_ORDER:
+        if rt in by_type:
+            ordered.append(by_type[rt])
+    seen = set(_MONTH_RISK_ORDER)
+    for rt, sl in by_type.items():
+        if rt not in seen:
+            ordered.append(sl)
+    return ordered[:8]
+
+
 def _flow_good_caution_action(
     *,
     seed: str,
@@ -1445,14 +1533,13 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
         sh_ctx = _shinsal_month_context(packed, var_seed, mb_hanja or month_branch, m)
         sh_chips = _shinsal_month_chips(packed, mb_hanja or month_branch)
 
-        # 이 달에 실제 작용하는 위험 신살 → DB 슬롯 계산
-        _month_risk_shinsal = _risk_shinsal_for_month(packed, mb_hanja or month_branch)
-        _month_risk_seed = int(hashlib.md5(f"{target_year}|{m}|risk".encode()).hexdigest(), 16) % (2**31)
-        _month_risk_slots = [
-            slot
-            for sname in _month_risk_shinsal
-            for slot in get_shinsal_risk_slots(sname, seed=_month_risk_seed)
-        ][:8]
+        # 이 달 주의 패턴: 월지 발동 + 원국 신살 보강, 연·월·월지 시드로 문구가 달마다 변함
+        _month_risk_slots = _build_month_risk_slots(
+            packed,
+            mb_hanja or month_branch,
+            target_year=target_year,
+            month=m,
+        )
 
         counsel = _build_counsel_sections(
             packed=packed,

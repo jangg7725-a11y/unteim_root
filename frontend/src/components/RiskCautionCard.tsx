@@ -39,34 +39,26 @@ const RISK_ORDER = [
   "ohae",
 ];
 
-function mergeShinsalRisks(
-  natal: RiskSlot[] | undefined,
-  monthly: RiskSlot[] | undefined,
-): RiskSlot[] {
-  const seen = new Set<string>();
-  const out: RiskSlot[] = [];
-  const keyOf = (r: RiskSlot) =>
-    (typeof r.risk_type === "string" && r.risk_type.trim()) || r.label_ko || "";
-
-  for (const list of [monthly, natal]) {
-    if (!list?.length) continue;
-    for (const r of list) {
-      if (!r?.found) continue;
-      const k = keyOf(r);
-      if (!k || seen.has(k)) continue;
-      seen.add(k);
-      out.push(r);
-    }
-  }
-
-  out.sort((a, b) => {
-    const ka = keyOf(a);
-    const kb = keyOf(b);
+function sortSlotsByRiskOrder(slots: RiskSlot[]): RiskSlot[] {
+  return [...slots].sort((a, b) => {
+    const ka = (typeof a.risk_type === "string" && a.risk_type.trim()) || "";
+    const kb = (typeof b.risk_type === "string" && b.risk_type.trim()) || "";
     const ia = RISK_ORDER.indexOf(ka);
     const ib = RISK_ORDER.indexOf(kb);
     return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
   });
-  return out;
+}
+
+/**
+ * 월운 카드: monthRiskSlots가 있으면 엔진 월별 슬롯만 사용(문구가 달·월지 시드로 매번 다름).
+ * 월 데이터가 없을 때만 원국 narrative_slots.risk 를 사용.
+ */
+function mergeShinsalRisks(
+  natal: RiskSlot[] | undefined,
+  monthly: RiskSlot[] | undefined,
+): RiskSlot[] {
+  if (monthly?.length) return sortSlotsByRiskOrder(monthly);
+  return sortSlotsByRiskOrder(natal ?? []);
 }
 
 function getIcon(label: string): string {
