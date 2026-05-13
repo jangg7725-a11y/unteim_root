@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { BirthInputPayload } from "@/types/birthInput";
 import type { SajuReportData } from "@/types/report";
 import { formatDualCalendarBirthLine } from "@/utils/calendarDualLabel";
@@ -390,6 +390,11 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
     { key: "hour", title: "시주", pillar: p.hour as Record<string, unknown> | null },
   ];
   const daewoon = ov?.daewoon ?? (((raw.daewoon as unknown[]) ?? (asRecord(raw.analysis)?.daewoon as unknown[]) ?? []).filter((x) => asRecord(x)).slice(0, 8) as any[]);
+  const monthlySampleRow = useMemo(() => {
+    const months = report?.monthlyFortune?.months;
+    if (!months?.length) return null;
+    return [...months].sort((a, b) => a.month - b.month)[0];
+  }, [report?.monthlyFortune?.months]);
   const dayVoid =
     ov?.gongmang?.dayBase ??
     voidByPillar(String((p.day as Record<string, unknown> | null)?.gan ?? "").trim(), String((p.day as Record<string, unknown> | null)?.ji ?? "").trim());
@@ -590,6 +595,20 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
             })}
           </div>
         </section>
+        {monthlySampleRow?.geukgukName ? (
+          <section className="saju-dash__block">
+            <div className="saju-dash__geukguk">
+              <span className="saju-dash__geukguk-label">격국</span>
+              <strong className="saju-dash__geukguk-name">{monthlySampleRow.geukgukName}</strong>
+              {monthlySampleRow.geukgukCore ? (
+                <p className="saju-dash__geukguk-core">{monthlySampleRow.geukgukCore}</p>
+              ) : null}
+              {monthlySampleRow.geukgukBehavior ? (
+                <p className="saju-dash__geukguk-behavior">{monthlySampleRow.geukgukBehavior}</p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
       </div>
 
       <section className="saju-dash__block saju-dash__block--daewoon">
@@ -609,6 +628,17 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
             : [<span key="n" className="saju-dash__chip">대운 데이터 준비 중</span>]}
         </div>
       </section>
+
+      {monthlySampleRow?.daewoonFlowLabel ? (
+        <section className="saju-dash__block saju-dash__block--daewoon-flow">
+          <div className="saju-dash__daewoon-flow">
+            <span className="saju-dash__daewoon-flow-label">대운 흐름</span>
+            <strong>{monthlySampleRow.daewoonFlowLabel}</strong>
+            {monthlySampleRow.daewoonFlowEra ? <p>{monthlySampleRow.daewoonFlowEra}</p> : null}
+            {monthlySampleRow.daewoonFlowEnergy ? <p>{monthlySampleRow.daewoonFlowEnergy}</p> : null}
+          </div>
+        </section>
+      ) : null}
     </section>
   );
 }

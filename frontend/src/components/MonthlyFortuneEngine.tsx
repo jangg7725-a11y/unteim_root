@@ -276,26 +276,6 @@ export function MonthlyFortuneEngine({
               <p className="mfb__yongshin-line">⚡ {yongshinLine}</p>
             ) : null}
 
-            {/* ── 격국 ── */}
-            {m.geukgukName ? (
-              <div className="mfb__geukguk">
-                <span className="mfb__geukguk-label">격국</span>
-                <strong className="mfb__geukguk-name">{m.geukgukName}</strong>
-                {m.geukgukCore ? <p className="mfb__geukguk-core">{m.geukgukCore}</p> : null}
-                {m.geukgukBehavior ? <p className="mfb__geukguk-behavior">{m.geukgukBehavior}</p> : null}
-              </div>
-            ) : null}
-
-            {/* ── 대운 흐름 ── */}
-            {m.daewoonFlowLabel ? (
-              <div className="mfb__daewoon-flow">
-                <span className="mfb__daewoon-flow-label">대운 흐름</span>
-                <strong>{m.daewoonFlowLabel}</strong>
-                {m.daewoonFlowEra ? <p>{m.daewoonFlowEra}</p> : null}
-                {m.daewoonFlowEnergy ? <p>{m.daewoonFlowEnergy}</p> : null}
-              </div>
-            ) : null}
-
             {/* ── 삼재 경고 ── */}
             {m.samjaeStatus?.is_samjae ? (
               <div className="mfb__samjae">

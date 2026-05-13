@@ -42,13 +42,10 @@ function appendMonthlyRelationRiskSummaries(
     if (!slot) continue;
     const core = (slot.core_message || "").trim();
     const warn = (slot.warning || "").trim();
-    const rawLabel = (slot.label_ko || "").trim();
-    const shortLabel = rawLabel.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
     const body = clipOneLine(core || warn, 130);
     if (!body) continue;
-    const line = shortLabel ? `${shortLabel}: ${body}` : body;
-    const dup = out.some((p) => p.slice(0, 40) === line.slice(0, 40));
-    if (!dup) out.push(line);
+    const dup = out.some((p) => p.slice(0, 40) === body.slice(0, 40));
+    if (!dup) out.push(body);
   }
 }
 
