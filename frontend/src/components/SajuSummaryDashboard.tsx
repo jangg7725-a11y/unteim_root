@@ -142,12 +142,6 @@ function voidByPillar(stem: string, branch: string): string {
   return groups[g] ?? "—";
 }
 
-function pickSipsin(raw: Record<string, unknown>): string {
-  const analysis = asRecord(raw.analysis) ?? {};
-  const sibsin = asRecord(raw.sibsin) ?? asRecord(analysis.sipsin) ?? {};
-  return pickFirst((asRecord(sibsin.summary) ?? sibsin).dominant ?? sibsin.summary ?? sibsin);
-}
-
 function getPillars(raw: Record<string, unknown>) {
   const p = asRecord(raw.pillars) ?? {};
   return {
@@ -365,7 +359,6 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
           year: previewPillars.year ?? null,
         }
     : getPillars(raw);
-  const sipsin = pickSipsin(raw);
   const localOhaeng = getLocalOhaengCountsFromPillars({
     year: p.year as Record<string, unknown> | null,
     month: p.month as Record<string, unknown> | null,
