@@ -1273,9 +1273,13 @@ def _build_month_risk_slots(
 ) -> List[Dict[str, Any]]:
     """
     월별 '주의 패턴' 슬롯.
-    - 월지와 branch가 맞는 위험 신살을 우선 반영
-    - 그 외 원국 신살로 accident_su / ibyeolsu 등 부족 유형 보강
-    - 문구 시드에 연·월·월지 포함 → 달마다 warning/action 풀 추출이 달라짐
+
+    1) **월지 일치** (`_risk_shinsal_for_month`): 이번 달 양력 월주 월지와 신살 branch 가 같을 때
+       해당 신살로부터 위험 유형 슬롯을 채운다 (우선).
+    2) **원국 보강** (`_natal_risk_shinsal_names`): 원국 어디에든 있는 위험·주의 신살로부터,
+       아직 비어 있는 risk_type(예: 사고수·이별수)만 보충한다. 같은 유형은 월지 일치 쪽이 이미 있으면 덮어쓰지 않음.
+
+    문구 시드에 연·월·월지 를 넣어 달마다 warning/action 추출이 달라진다.
     """
     mb = str(month_branch_hanja or "").strip()
     seed_src = f"{target_year}|{month}|{mb}|risk"
