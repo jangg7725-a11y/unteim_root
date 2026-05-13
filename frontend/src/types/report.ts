@@ -23,7 +23,16 @@ export type NarrativeSlots = {
   health?: NarrativeSlot;
   career?: NarrativeSlot;
   relation?: NarrativeSlot;
-  risk?: { shinsal_risks?: Array<{ found: boolean; label_ko?: string; core_message?: string; warning?: string; action?: string }> };
+  risk?: {
+    shinsal_risks?: Array<{
+      found: boolean;
+      risk_type?: string;
+      label_ko?: string;
+      core_message?: string;
+      warning?: string;
+      action?: string;
+    }>;
+  };
   /** 이별수 — 신살/십신/오행/대운 기반 감지 시에만 found=true */
   separation?: SepMovSlot;
   /** 이동수 (이직·이사·부서이동·환경변화) — 신살/십신/오행/대운 기반 감지 시에만 found=true */

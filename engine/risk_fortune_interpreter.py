@@ -23,6 +23,7 @@ _DB_FILE = "risk_fortune_db"
 _RISK_SECTIONS = {
     "gwanjaesu": "관재수",
     "accident_su": "사고수",
+    "ibyeolsu": "이별수",
     "sonjaesu": "손재수",
     "hwongjaesu": "횡재수",
     "guseolsu": "구설수",

@@ -6,6 +6,8 @@ import "./risk-caution-card.css";
 
 type RiskSlot = {
   found: boolean;
+  /** 엔진 위험 키 (gwanjaesu, accident_su, ibyeolsu …) — 월별·원국 병합 시 중복 제거용 */
+  risk_type?: string;
   label_ko?: string;
   core_message?: string;
   warning?: string;
@@ -14,14 +16,58 @@ type RiskSlot = {
 
 type Props = {
   narrativeSlots?: NarrativeSlots | null;
+  /** 월지와 맞닿아 발동한 위험 신살 슬롯 — 엔진 `monthRiskSlots`, 달마다 다름 */
+  monthRiskSlots?: RiskSlot[] | null;
 };
 
 const RISK_ICON: Record<string, string> = {
   "관재수(官災數)": "⚖️",
   "사고수(事故數)": "🛡️",
+  "이별수(離別數)": "🥀",
   "손재수(損財數)": "💸",
   "횡재수(橫財數)": "🍀",
 };
+
+/** 엔진 risk_type 기준 표시 순서 (관재·재물·신체·관계 순) */
+const RISK_ORDER = [
+  "gwanjaesu",
+  "sonjaesu",
+  "accident_su",
+  "ibyeolsu",
+  "hwongjaesu",
+  "guseolsu",
+  "ohae",
+];
+
+function mergeShinsalRisks(
+  natal: RiskSlot[] | undefined,
+  monthly: RiskSlot[] | undefined,
+): RiskSlot[] {
+  const seen = new Set<string>();
+  const out: RiskSlot[] = [];
+  const keyOf = (r: RiskSlot) =>
+    (typeof r.risk_type === "string" && r.risk_type.trim()) || r.label_ko || "";
+
+  for (const list of [monthly, natal]) {
+    if (!list?.length) continue;
+    for (const r of list) {
+      if (!r?.found) continue;
+      const k = keyOf(r);
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(r);
+    }
+  }
+
+  out.sort((a, b) => {
+    const ka = keyOf(a);
+    const kb = keyOf(b);
+    const ia = RISK_ORDER.indexOf(ka);
+    const ib = RISK_ORDER.indexOf(kb);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+  return out;
+}
 
 function getIcon(label: string): string {
   for (const [key, icon] of Object.entries(RISK_ICON)) {
@@ -62,16 +108,12 @@ function SepMovBox({ slot, icon, colorClass }: { slot: SepMovSlot; icon: string;
   );
 }
 
-export function RiskCautionCard({ narrativeSlots }: Props) {
-  const risks = narrativeSlots?.risk?.shinsal_risks;
+export function RiskCautionCard({ narrativeSlots, monthRiskSlots }: Props) {
+  const validRisks = mergeShinsalRisks(narrativeSlots?.risk?.shinsal_risks, monthRiskSlots ?? undefined);
   const health = narrativeSlots?.health;
   const relation = narrativeSlots?.relation;
   const separation = narrativeSlots?.separation;
   const movement = narrativeSlots?.movement;
-
-  const validRisks = (risks ?? []).filter(
-    (r): r is RiskSlot & { found: true } => !!r.found,
-  );
 
   const healthTendency =
     health?.daymaster?.health_tendency || health?.oheng?.care || "";
@@ -157,12 +199,13 @@ export function RiskCautionCard({ narrativeSlots }: Props) {
         )}
 
         {/* 신살 위험 패턴 */}
-        {validRisks.map((risk, i) => {
+        {validRisks.map((risk) => {
           const label = risk.label_ko ?? "";
           const positive = isPositive(label);
+          const rk = risk.risk_type || label;
           return (
             <div
-              key={i}
+              key={rk}
               className={`risk-card__item ${positive ? "risk-card__item--positive" : "risk-card__item--caution"}`}
             >
               <div className="risk-card__item-head">

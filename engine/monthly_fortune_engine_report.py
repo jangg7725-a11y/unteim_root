@@ -1452,7 +1452,7 @@ def build_monthly_fortune_engine(packed: Dict[str, Any]) -> Dict[str, Any]:
             slot
             for sname in _month_risk_shinsal
             for slot in get_shinsal_risk_slots(sname, seed=_month_risk_seed)
-        ][:3]
+        ][:8]
 
         counsel = _build_counsel_sections(
             packed=packed,

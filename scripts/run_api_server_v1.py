@@ -844,7 +844,7 @@ def _analyze_to_dict(birth: str, req: AnalyzeRequest) -> Dict[str, Any]:
                     "shinsal_risks": [
                         slot for s in _shinsal_names
                         for slot in get_shinsal_risk_slots(s, seed=_slot_seed)
-                    ][:3]
+                    ][:8]
                 }),
                 "separation": _clean(_sep_mov.get("separation", {})),
                 "movement": _clean(_sep_mov.get("movement", {})),
