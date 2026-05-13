@@ -437,7 +437,6 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
           const ji = String(c.pillar?.ji ?? "").trim();
           const gm = STEM_META[gan];
           const jm = BRANCH_META[ji];
-          const hidden = (jm?.hidden ?? []).slice(0, 3);
           const sh = previewShinsalByWhere?.[c.key] ?? byWhereShinsal(raw, c.key);
           return (
             <article key={c.title} className="saju-dash__pillar-card">
@@ -458,30 +457,11 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
                 </span>
               </div>
               <div className="saju-dash__mini">
-                <span className="saju-dash__mini-label">십신</span>
-                <span className="saju-dash__mini-value">
-                  {String((c.pillar?.sipsin as string | undefined) ?? (gan ? tenGod(dayStem, gan) : sipsin))}
-                </span>
-              </div>
-              <div className="saju-dash__mini">
                 <span className="saju-dash__mini-label">12운성</span>
                 <span className="saju-dash__mini-value">
                   {formatTwelveStage(
                     String((c.pillar?.twelve as string | undefined) ?? previewTwelveByWhere?.[c.key] ?? localTwelveByWhere[c.key] ?? byWhereTwelve(raw, c.key) ?? "—")
                   )}
-                </span>
-              </div>
-              <div className="saju-dash__mini">
-                <span className="saju-dash__mini-label">지장간</span>
-                <span className="saju-dash__mini-value">
-                  {Array.isArray(c.pillar?.hiddenStems)
-                    ? ((c.pillar?.hiddenStems as Array<Record<string, unknown>>)
-                        .map((h) => `${String(h.stem ?? "")}(${String(h.sipsin ?? "")})`)
-                        .filter(Boolean)
-                        .join(" · ") || "—")
-                    : hidden.length
-                      ? hidden.map((h) => `${h}(${tenGod(dayStem, h)})`).join(" · ")
-                      : "—"}
                 </span>
               </div>
               <div className="saju-dash__chips">
@@ -565,6 +545,52 @@ export function SajuSummaryDashboard({ birth, report }: Props) {
                   <p className="saju-dash__shinsal-head">{c.title} 기준</p>
                   <div className="saju-dash__chips">
                     <span className="saju-dash__chip saju-dash__chip--state">{formatTwelveStage(rawTw)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        <section className="saju-dash__block">
+          <p className="saju-dash__block-title">십신 (기둥별)</p>
+          <div className="saju-dash__shinsal-grid">
+            {cardKeys.map((c) => {
+              const gan = String(c.pillar?.gan ?? "").trim();
+              const sipsinChip = String((c.pillar?.sipsin as string | undefined) ?? (gan ? tenGod(dayStem, gan) : "—")) || "—";
+              return (
+                <div key={`sipsin-${c.key}`} className="saju-dash__shinsal-col">
+                  <p className="saju-dash__shinsal-head">{c.title} 기준</p>
+                  <div className="saju-dash__chips">
+                    <span className="saju-dash__chip saju-dash__chip--fortune">{sipsinChip}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        <section className="saju-dash__block">
+          <p className="saju-dash__block-title">지장간 (기둥별)</p>
+          <div className="saju-dash__shinsal-grid">
+            {cardKeys.map((c) => {
+              const ji = String(c.pillar?.ji ?? "").trim();
+              const jm = BRANCH_META[ji];
+              const hiddenFallback = (jm?.hidden ?? []).slice(0, 3);
+              const stemsArr: string[] = Array.isArray(c.pillar?.hiddenStems)
+                ? (c.pillar?.hiddenStems as Array<Record<string, unknown>>)
+                    .map((h) => {
+                      const stem = String(h.stem ?? "").trim();
+                      const ss = String(h.sipsin ?? "").trim();
+                      return stem ? `${stem}(${ss || tenGod(dayStem, stem)})` : "";
+                    })
+                    .filter(Boolean)
+                : hiddenFallback.map((h) => `${h}(${tenGod(dayStem, h)})`);
+              return (
+                <div key={`hidden-${c.key}`} className="saju-dash__shinsal-col">
+                  <p className="saju-dash__shinsal-head">{c.title} 기준</p>
+                  <div className="saju-dash__chips">
+                    {(stemsArr.length ? stemsArr : ["—"]).map((s, i) => (
+                      <span key={i} className="saju-dash__chip saju-dash__chip--state">{s}</span>
+                    ))}
                   </div>
                 </div>
               );
