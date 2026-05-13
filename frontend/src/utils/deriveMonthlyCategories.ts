@@ -8,7 +8,7 @@
  *   twelveStage        — 12운성 (매달 다름)
  *   interactionHints   — 합·충·형 힌트 (매달 다름)
  *   shinsalHighlights  — 활성 신살 (매달 다름)
- *   monthRiskSlots     — 월지 기반 위험 슬롯 → 「이 시기 주의할 패턴」전용 (신살 카드에는 넣지 않음)
+ *   monthRiskSlots     — 월지 기반 위험 슬롯 → 「이 시기 주의할 패턴」전용 (신살 카드 본문에서는 패턴 축과 겹치는 항목 제외)
  *   oheng_monthly_strategy — 오행 전략 (매달 다름)
  *   daymaster_monthly_tip  — 일간 월별 팁
  *   yongshinLine       — 용신·희신·기신 월간 평가
@@ -25,6 +25,10 @@ import {
   parseShinsalChip,
   type ShinsalEntry,
 } from "@/utils/shinsalMonthDb";
+import {
+  monthRiskTypeSet,
+  shinsalOverlapsMonthRiskPattern,
+} from "@/utils/shinsalRiskOverlap";
 
 export type { ShinsalEntry };
 export type CategoryScore = 1 | 2 | 3 | 4 | 5;
@@ -292,6 +296,15 @@ function deriveHealth(m: MonthlyFortuneEngineMonth): MonthCategory {
   };
 }
 
+function monthHasIbyeolsuRisk(m: MonthlyFortuneEngineMonth): boolean {
+  return (m.monthRiskSlots ?? []).some(
+    (r) =>
+      r.found !== false &&
+      typeof r.risk_type === "string" &&
+      r.risk_type.trim() === "ibyeolsu",
+  );
+}
+
 /** 이달의 애정운 — 근거: stemTenGod + interactionHints 합·충 */
 function deriveLove(m: MonthlyFortuneEngineMonth): MonthCategory {
   const sipsin = (m.stemTenGod || "").trim();
@@ -300,9 +313,17 @@ function deriveLove(m: MonthlyFortuneEngineMonth): MonthCategory {
   const lines: string[] = [];
 
   // 1순위: interactionHints 중 관계 관련 합·충 힌트 (매달 변동)
-  const loveHints = (m.interactionHints ?? []).filter((h) =>
-    /합|충|형|인연|관계|배우자|이성|연애/.test(h)
-  );
+  const ibyeolsuPattern = monthHasIbyeolsuRisk(m);
+  const loveHints = (m.interactionHints ?? []).filter((h) => {
+    if (!/합|충|형|인연|관계|배우자|이성|연애/.test(h)) return false;
+    if (
+      ibyeolsuPattern &&
+      /이별|별거|거리감|냉각|정리\s*필요|관계\s*단절/.test(h)
+    ) {
+      return false;
+    }
+    return true;
+  });
   if (loveHints.length) {
     lines.push(clip(loveHints[0], 90));
   }
@@ -375,8 +396,13 @@ function deriveShinsal(m: MonthlyFortuneEngineMonth): MonthCategory {
     return true;
   });
 
-  // ② 각 신살 → ShinsalEntry 구성 (엔진 위험 패턴 문구는 합치지 않음)
-  const shinsalItems: ShinsalEntry[] = uniqueChips
+  const activeRiskTypes = monthRiskTypeSet(m.monthRiskSlots);
+  const withoutPatternOverlap = uniqueChips.filter(
+    (p) => !shinsalOverlapsMonthRiskPattern(p.name, activeRiskTypes),
+  );
+
+  // ② 각 신살 → ShinsalEntry 구성 — 패턴 카드와 같은 축은 패턴 블록에 맡김
+  const shinsalItems: ShinsalEntry[] = withoutPatternOverlap
     .slice(0, 5)
     .map(({ name, type }) => {
       const dbEntry = SHINSAL_DB[name];
@@ -396,11 +422,16 @@ function deriveShinsal(m: MonthlyFortuneEngineMonth): MonthCategory {
     });
   const chips = shinsalItems.map((s) => s.name);
 
-  // ③ 신살이 하나도 없을 때
-  const lines: string[] =
-    shinsalItems.length === 0
-      ? ["이달에 특별히 활성화된 신살이 없습니다. 안정적인 흐름입니다."]
-      : [];
+  // ③ 신살이 하나도 없을 때 / 전부 패턴 카드와 축이 겹칠 때
+  let lines: string[] = [];
+  if (shinsalItems.length === 0) {
+    lines =
+      uniqueChips.length > 0
+        ? [
+            "상단 칩의 활성 신살 중, 이번 달 주의 패턴과 같은 축은 아래 「이 시기 주의할 패턴」에 통합해 두었습니다.",
+          ]
+        : ["이달에 특별히 활성화된 신살이 없습니다. 안정적인 흐름입니다."];
+  }
 
   return {
     key: "shinsal",

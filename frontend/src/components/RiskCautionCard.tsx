@@ -155,6 +155,12 @@ export function RiskCautionCard({
   const hasSeparation = !!separation?.found;
   const hasMovement = !!movement?.found;
 
+  /** 이별수 슬롯이 이미 있으면 narrative separation 과 메시지가 겹치므로 생략 */
+  const hasIbyeolsuRiskSlot = validRisks.some(
+    (r) => typeof r.risk_type === "string" && r.risk_type.trim() === "ibyeolsu",
+  );
+  const showSeparationBox = hasSeparation && separation && !hasIbyeolsuRiskSlot;
+
   const hasLifeEvents = !!(lifeEventSignals && lifeEventSignals.length > 0);
 
   const hasAnythingToShow =
@@ -232,8 +238,8 @@ export function RiskCautionCard({
           </div>
         )}
 
-        {/* 이별수 박스 */}
-        {hasSeparation && separation && (
+        {/* 이별수 narrative — 월별 이별수 슬롯과 중복되면 후자만 표시 */}
+        {showSeparationBox && separation && (
           <SepMovBox slot={separation} icon="💔" colorClass="risk-card__item--separation" />
         )}
 
@@ -249,7 +255,9 @@ export function RiskCautionCard({
             role="status"
             aria-live="polite"
           >
-            <p className="risk-card__empty-core-four-text">해당 내용이 없어요~^^</p>
+            <p className="risk-card__empty-core-four-text">
+              관재·손재·사고·이별 패턴 중 특별히 두드러지는 신호는 적습니다.
+            </p>
           </div>
         )}
 
