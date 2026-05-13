@@ -2,23 +2,17 @@
 // 신살 기반 위험 패턴 주의 카드 — narrative_slots.risk + health + relation + separation + movement 데이터 출력
 
 import type { MonthlyFortuneEngineMonth, NarrativeSlots, SepMovSlot } from "@/types/report";
+import {
+  mergeMonthlyFortuneRisks,
+  type MonthlyMergedRiskSlot,
+} from "@/utils/mergeMonthlyFortuneRisks";
 import { LifeEventSignalCard } from "./LifeEventSignalCard";
 import "./risk-caution-card.css";
-
-type RiskSlot = {
-  found: boolean;
-  /** 엔진 위험 키 (gwanjaesu, accident_su, ibyeolsu …) — 월별·원국 병합 시 중복 제거용 */
-  risk_type?: string;
-  label_ko?: string;
-  core_message?: string;
-  warning?: string;
-  action?: string;
-};
 
 type Props = {
   narrativeSlots?: NarrativeSlots | null;
   /** 월지와 맞닿아 발동한 위험 신살 슬롯 — 엔진 `monthRiskSlots`, 달마다 다름 */
-  monthRiskSlots?: RiskSlot[] | null;
+  monthRiskSlots?: MonthlyMergedRiskSlot[] | null;
   /**
    * true일 때 관재·손재·사고·이별(gwanjaesu/sonjaesu/accident_su/ibyeolsu) 슬롯이 하나도 없으면
    * 안내 한 줄을 표시합니다. 월별 운세 카드에서만 사용합니다.
@@ -27,6 +21,8 @@ type Props = {
   /** 월운 전용 — 인생 사건 신호를 상단에서 “이 시기 주의할 패턴” 카드와 한 블록으로 표시 */
   lifeEventSignals?: MonthlyFortuneEngineMonth["life_event_signals"];
   lifeEventMonth?: number;
+  /** 월운에서 「이달의 핵심」으로 옮긴 risk_type 은 여기서 렌더하지 않음 */
+  omitRiskTypes?: readonly string[] | null;
 };
 
 /** 관재수·손재수·사고수·이별수 — 사용자가 기대하는 네 가지 ‘수’ 패턴 */
@@ -44,39 +40,6 @@ const RISK_ICON: Record<string, string> = {
   "손재수(損財數)": "💸",
   "횡재수(橫財數)": "🍀",
 };
-
-/** 엔진 risk_type 기준 표시 순서 (관재·재물·신체·관계 순) */
-const RISK_ORDER = [
-  "gwanjaesu",
-  "sonjaesu",
-  "accident_su",
-  "ibyeolsu",
-  "hwongjaesu",
-  "guseolsu",
-  "ohae",
-];
-
-function sortSlotsByRiskOrder(slots: RiskSlot[]): RiskSlot[] {
-  return [...slots].sort((a, b) => {
-    const ka = (typeof a.risk_type === "string" && a.risk_type.trim()) || "";
-    const kb = (typeof b.risk_type === "string" && b.risk_type.trim()) || "";
-    const ia = RISK_ORDER.indexOf(ka);
-    const ib = RISK_ORDER.indexOf(kb);
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-  });
-}
-
-/**
- * 월운 카드: monthRiskSlots가 있으면 엔진 월별 슬롯만 사용(문구가 달·월지 시드로 매번 다름).
- * 월 데이터가 없을 때만 원국 narrative_slots.risk 를 사용.
- */
-function mergeShinsalRisks(
-  natal: RiskSlot[] | undefined,
-  monthly: RiskSlot[] | undefined,
-): RiskSlot[] {
-  if (monthly?.length) return sortSlotsByRiskOrder(monthly);
-  return sortSlotsByRiskOrder(natal ?? []);
-}
 
 function getIcon(label: string): string {
   for (const [key, icon] of Object.entries(RISK_ICON)) {
@@ -123,8 +86,23 @@ export function RiskCautionCard({
   showEmptyCoreFourHint = false,
   lifeEventSignals,
   lifeEventMonth,
+  omitRiskTypes,
 }: Props) {
-  const validRisks = mergeShinsalRisks(narrativeSlots?.risk?.shinsal_risks, monthRiskSlots ?? undefined);
+  const mergedRisks = mergeMonthlyFortuneRisks(
+    narrativeSlots?.risk?.shinsal_risks,
+    monthRiskSlots ?? undefined,
+  );
+  const omitSet = new Set(
+    (omitRiskTypes ?? []).map((x) => x.trim()).filter(Boolean),
+  );
+  const validRisks =
+    omitSet.size > 0
+      ? mergedRisks.filter((r) => {
+          const rt = typeof r.risk_type === "string" ? r.risk_type.trim() : "";
+          return !rt || !omitSet.has(rt);
+        })
+      : mergedRisks;
+
   const health = narrativeSlots?.health;
   const relation = narrativeSlots?.relation;
   const separation = narrativeSlots?.separation;
@@ -137,8 +115,11 @@ export function RiskCautionCard({
     (r) => !r.risk_type || !CORE_FOUR_RISK_TYPES.has(r.risk_type),
   );
 
+  const mergedCoreFourCount = mergedRisks.filter(
+    (r) => typeof r.risk_type === "string" && CORE_FOUR_RISK_TYPES.has(r.risk_type),
+  ).length;
   const showCoreFourEmptyNote =
-    showEmptyCoreFourHint && coreFourRisks.length === 0;
+    showEmptyCoreFourHint && mergedCoreFourCount === 0;
 
   const healthTendency =
     health?.daymaster?.health_tendency || health?.oheng?.care || "";
@@ -155,8 +136,8 @@ export function RiskCautionCard({
   const hasSeparation = !!separation?.found;
   const hasMovement = !!movement?.found;
 
-  /** 이별수 슬롯이 이미 있으면 narrative separation 과 메시지가 겹치므로 생략 */
-  const hasIbyeolsuRiskSlot = validRisks.some(
+  /** 이별수 슬롯이 있으면 narrative separation 과 메시지가 겹치므로 생략 (omit 전 병합 기준) */
+  const hasIbyeolsuRiskSlot = mergedRisks.some(
     (r) => typeof r.risk_type === "string" && r.risk_type.trim() === "ibyeolsu",
   );
   const showSeparationBox = hasSeparation && separation && !hasIbyeolsuRiskSlot;

@@ -167,7 +167,10 @@ export function MonthlyFortuneEngine({
   const shinsalHighlights = Array.isArray(m.shinsalHighlights)
     ? m.shinsalHighlights.map((x) => x.trim()).filter(Boolean).slice(0, 2)
     : [];
-  const friendlyParagraphs = useMemo(() => buildMonthlyFriendlyParagraphs(m), [m]);
+  const friendlyParagraphs = useMemo(
+    () => buildMonthlyFriendlyParagraphs(m, narrativeSlots),
+    [m, narrativeSlots],
+  );
   const counselorLines = useMemo(() => buildCounselorEmotionText(m), [m]);
   const monthCategories = useMemo(() => deriveMonthlyCategories(m), [m]);
   const goodBullets = (m.opportunity || m.good)
@@ -375,6 +378,7 @@ export function MonthlyFortuneEngine({
               showEmptyCoreFourHint
               lifeEventSignals={m.life_event_signals}
               lifeEventMonth={m.month}
+              omitRiskTypes={["ibyeolsu", "ohae"]}
             />
 
             {/* ── 행동 가이드 (잘 풀리는 방향 포함) ── */}

@@ -1,15 +1,56 @@
-import type { MonthlyFortuneEngineMonth } from "@/types/report";
+import type { MonthlyFortuneEngineMonth, NarrativeSlots } from "@/types/report";
+import { mergeMonthlyFortuneRisks } from "@/utils/mergeMonthlyFortuneRisks";
 
 /**
- * "이달의 핵심" 박스의 4문단을 만든다.
+ * "이달의 핵심" 박스의 문단을 만든다.
  *
  * 운트임 '근거 매핑' 비가역 룰:
  * - 모든 문단은 그 달의 사주 계산값(월간 십성 · 12운성 · 일간 팁 풀의 월별 인덱스 ·
  *   지배 오행 전략 풀의 월별 인덱스 · luck_score)에 직결되어야 한다.
+ * - 관계 위험 패턴(ibyeolsu·ohae)은 월별 monthRiskSlots(+월 미부 여 시 원국 risk 슬롯)과 동일 병합 근거로
+ *   한 줄 요약만 핵심 블록에 넣고, 월운 카드에서는 별도 카드로 빼지 않는다.
  * - 차트-fixed 슬롯(money_monthly / health_monthly / relation_advice / oheng_monthly_core 등)은
  *   12개월 동일 노출이 되므로 여기서 사용하지 않는다(차트 카드에서 별도 노출).
  * - 풀에 매핑이 없는 십성/운성은 빈 문단으로 두어, 근거 없는 일반 운세 문장으로 채우지 않는다.
  */
+
+/** 월운 카드에서 「이달의 핵심」으로 옮기는 risk_type — RiskCautionCard omit 과 대응 */
+const CORE_EMBED_RELATION_RISK_TYPES = ["ibyeolsu", "ohae"] as const;
+
+function clipOneLine(text: string, max: number): string {
+  const t = text.trim().replace(/\s+/g, " ");
+  if (t.length <= max) return t;
+  const slice = t.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  const stem = lastSpace > 40 ? slice.slice(0, lastSpace) : slice;
+  return stem.trimEnd() + "…";
+}
+
+function appendMonthlyRelationRiskSummaries(
+  m: MonthlyFortuneEngineMonth,
+  narrativeSlots: NarrativeSlots | null | undefined,
+  out: string[],
+): void {
+  const merged = mergeMonthlyFortuneRisks(
+    narrativeSlots?.risk?.shinsal_risks,
+    m.monthRiskSlots ?? undefined,
+  );
+  for (const rt of CORE_EMBED_RELATION_RISK_TYPES) {
+    const slot = merged.find(
+      (r) => r.found !== false && r.risk_type?.trim() === rt,
+    );
+    if (!slot) continue;
+    const core = (slot.core_message || "").trim();
+    const warn = (slot.warning || "").trim();
+    const rawLabel = (slot.label_ko || "").trim();
+    const shortLabel = rawLabel.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+    const body = clipOneLine(core || warn, 130);
+    if (!body) continue;
+    const line = shortLabel ? `${shortLabel}: ${body}` : body;
+    const dup = out.some((p) => p.slice(0, 40) === line.slice(0, 40));
+    if (!dup) out.push(line);
+  }
+}
 
 const SIPSIN_MONTHLY_LINE: Record<string, string> = {
   비견: "이달은 동등한 협력이 잘 맞는 흐름입니다. 책임 범위를 처음에 글로 정해 두면 마찰이 줄어듭니다.",
@@ -47,7 +88,10 @@ function pickFirst(...slots: (string | undefined | null)[]): string {
   return "";
 }
 
-export function buildMonthlyFriendlyParagraphs(m: MonthlyFortuneEngineMonth): string[] {
+export function buildMonthlyFriendlyParagraphs(
+  m: MonthlyFortuneEngineMonth,
+  narrativeSlots?: NarrativeSlots | null,
+): string[] {
   const out: string[] = [];
 
   // p1: 일간 월별 팁 — 일간 기질 × 이달 월 인덱스 → 매월 다른 사주 근거 문장
@@ -77,6 +121,8 @@ export function buildMonthlyFriendlyParagraphs(m: MonthlyFortuneEngineMonth): st
   const stage = (m.twelveStage || "").trim();
   const p4 = TWELVE_STAGE_LINE[stage];
   if (p4) out.push(p4);
+
+  appendMonthlyRelationRiskSummaries(m, narrativeSlots, out);
 
   // p5: overallFlow / flow 첫 단락 — 종합 흐름 보강 (기존 출력과 중복 방지)
   const flowRaw = pickFirst(m.overallFlow, m.flow);
