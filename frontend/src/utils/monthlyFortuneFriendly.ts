@@ -7,8 +7,7 @@ import { mergeMonthlyFortuneRisks } from "@/utils/mergeMonthlyFortuneRisks";
  * 운트임 '근거 매핑' 비가역 룰:
  * - 모든 문단은 그 달의 사주 계산값(월간 십성 · 12운성 · 일간 팁 풀의 월별 인덱스 ·
  *   지배 오행 전략 풀의 월별 인덱스 · luck_score)에 직결되어야 한다.
- * - 관계 위험 패턴(ibyeolsu·ohae)은 월별 monthRiskSlots(+월 미부 여 시 원국 risk 슬롯)과 동일 병합 근거로
- *   한 줄 요약만 핵심 블록에 넣고, 월운 카드에서는 별도 카드로 빼지 않는다.
+ * - 관계 위험 패턴(ibyeolsu·ohae) 요약은 월별 슬롯의 **warning** 우선(core_message 는 DB 고정이라 매달 같음).
  * - 차트-fixed 슬롯(money_monthly / health_monthly / relation_advice / oheng_monthly_core 등)은
  *   12개월 동일 노출이 되므로 여기서 사용하지 않는다(차트 카드에서 별도 노출).
  * - 풀에 매핑이 없는 십성/운성은 빈 문단으로 두어, 근거 없는 일반 운세 문장으로 채우지 않는다.
@@ -40,9 +39,10 @@ function appendMonthlyRelationRiskSummaries(
       (r) => r.found !== false && r.risk_type?.trim() === rt,
     );
     if (!slot) continue;
-    const core = (slot.core_message || "").trim();
     const warn = (slot.warning || "").trim();
-    const body = clipOneLine(core || warn, 130);
+    const core = (slot.core_message || "").trim();
+    // 월별 risk_seed 로 warning/action 이 바뀌고, core_message 는 DB 고정 overview 라 매달 동일함 → warning 우선
+    const body = clipOneLine(warn || core, 150);
     if (!body) continue;
     const dup = out.some((p) => p.slice(0, 40) === body.slice(0, 40));
     if (!dup) out.push(body);
