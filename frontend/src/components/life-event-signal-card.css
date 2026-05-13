@@ -7,6 +7,21 @@
   margin-top: 0.6rem;
 }
 
+/* RiskCautionCard 본문 안 — 카드 제목·각주는 부모가 담당 */
+.life-event-card--embedded {
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+  gap: 0.45rem;
+}
+
+.life-event-card--embedded .life-event-card__section {
+  padding: 0.55rem 0.65rem;
+}
+
+.life-event-card--embedded .life-event-card__header {
+  margin-bottom: 0.15rem;
+}
+
 /* ── 섹션 ─────────────────────────────────────── */
 .life-event-card__section {
   border-radius: 12px;

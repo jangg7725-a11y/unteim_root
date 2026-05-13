@@ -1,7 +1,8 @@
 // frontend/src/components/RiskCautionCard.tsx
 // 신살 기반 위험 패턴 주의 카드 — narrative_slots.risk + health + relation + separation + movement 데이터 출력
 
-import type { NarrativeSlots, SepMovSlot } from "@/types/report";
+import type { MonthlyFortuneEngineMonth, NarrativeSlots, SepMovSlot } from "@/types/report";
+import { LifeEventSignalCard } from "./LifeEventSignalCard";
 import "./risk-caution-card.css";
 
 type RiskSlot = {
@@ -23,6 +24,9 @@ type Props = {
    * 안내 한 줄을 표시합니다. 월별 운세 카드에서만 사용합니다.
    */
   showEmptyCoreFourHint?: boolean;
+  /** 월운 전용 — 인생 사건 신호를 상단에서 “이 시기 주의할 패턴” 카드와 한 블록으로 표시 */
+  lifeEventSignals?: MonthlyFortuneEngineMonth["life_event_signals"];
+  lifeEventMonth?: number;
 };
 
 /** 관재수·손재수·사고수·이별수 — 사용자가 기대하는 네 가지 ‘수’ 패턴 */
@@ -117,6 +121,8 @@ export function RiskCautionCard({
   narrativeSlots,
   monthRiskSlots,
   showEmptyCoreFourHint = false,
+  lifeEventSignals,
+  lifeEventMonth,
 }: Props) {
   const validRisks = mergeShinsalRisks(narrativeSlots?.risk?.shinsal_risks, monthRiskSlots ?? undefined);
   const health = narrativeSlots?.health;
@@ -149,7 +155,10 @@ export function RiskCautionCard({
   const hasSeparation = !!separation?.found;
   const hasMovement = !!movement?.found;
 
+  const hasLifeEvents = !!(lifeEventSignals && lifeEventSignals.length > 0);
+
   const hasAnythingToShow =
+    hasLifeEvents ||
     hasHealth ||
     hasRelation ||
     hasSeparation ||
@@ -171,6 +180,14 @@ export function RiskCautionCard({
       </h3>
 
       <div className="risk-card__body">
+        {hasLifeEvents && lifeEventSignals && (
+          <LifeEventSignalCard
+            variant="embedded"
+            events={lifeEventSignals}
+            month={typeof lifeEventMonth === "number" ? lifeEventMonth : 1}
+          />
+        )}
+
         {/* 건강 박스 */}
         {hasHealth && (
           <div className="risk-card__item risk-card__item--health">

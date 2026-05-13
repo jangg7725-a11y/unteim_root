@@ -9,23 +9,29 @@ type LifeEvent = NonNullable<MonthlyFortuneEngineMonth["life_event_signals"]>[nu
 type Props = {
   events: LifeEvent[];
   month: number;
+  /** `embedded`: 상위 `RiskCautionCard` 안에 넣을 때 — 중복 제목·각주 생략 */
+  variant?: "standalone" | "embedded";
 };
 
-export function LifeEventSignalCard({ events, month }: Props) {
+export function LifeEventSignalCard({ events, month, variant = "standalone" }: Props) {
   if (!events || events.length === 0) return null;
 
   const cautionEvents = events.filter((e) => e.category === "caution");
   const positiveEvents = events.filter((e) => e.category === "positive");
+  const embedded = variant === "embedded";
+
+  const cautionTitle = embedded ? "월운 신호" : `${month}월 주의 신호`;
+  const positiveTitle = embedded ? "좋은 기운" : `${month}월 좋은 기운`;
 
   return (
-    <div className="life-event-card">
+    <div className={embedded ? "life-event-card life-event-card--embedded" : "life-event-card"}>
       {cautionEvents.length > 0 && (
         <div className="life-event-card__section life-event-card__section--caution">
           <div className="life-event-card__header">
-            <span className="life-event-card__header-icon">🔍</span>
-            <span className="life-event-card__header-title">
-              {month}월 주의 신호
-            </span>
+            {!embedded && (
+              <span className="life-event-card__header-icon">🔍</span>
+            )}
+            <span className="life-event-card__header-title">{cautionTitle}</span>
           </div>
           <div className="life-event-card__items">
             {cautionEvents.map((event) => (
@@ -49,19 +55,21 @@ export function LifeEventSignalCard({ events, month }: Props) {
               </div>
             ))}
           </div>
-          <p className="life-event-card__note">
-            사주 충극·신살 구조 기반 경향 안내입니다. 단정이 아닌 참고 정보로 활용하세요.
-          </p>
+          {!embedded && (
+            <p className="life-event-card__note">
+              사주 충극·신살 구조 기반 경향 안내입니다. 단정이 아닌 참고 정보로 활용하세요.
+            </p>
+          )}
         </div>
       )}
 
       {positiveEvents.length > 0 && (
         <div className="life-event-card__section life-event-card__section--positive">
           <div className="life-event-card__header">
-            <span className="life-event-card__header-icon">🌟</span>
-            <span className="life-event-card__header-title">
-              {month}월 좋은 기운
-            </span>
+            {!embedded && (
+              <span className="life-event-card__header-icon">🌟</span>
+            )}
+            <span className="life-event-card__header-title">{positiveTitle}</span>
           </div>
           <div className="life-event-card__items">
             {positiveEvents.map((event) => (

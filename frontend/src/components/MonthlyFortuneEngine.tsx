@@ -3,7 +3,6 @@ import type { MonthlyFortuneEnginePayload, NarrativeSlots } from "@/types/report
 import { buildMonthlyFriendlyParagraphs } from "@/utils/monthlyFortuneFriendly";
 import { buildCounselorEmotionText } from "@/utils/buildCounselorEmotionText";
 import { deriveMonthlyCategories, type MonthCategory, type ShinsalEntry } from "@/utils/deriveMonthlyCategories";
-import { LifeEventSignalCard } from "./LifeEventSignalCard";
 import { RiskCautionCard } from "./RiskCautionCard";
 import "./monthly-fortune-book.css";
 
@@ -340,11 +339,6 @@ export function MonthlyFortuneEngine({
               )}
             </div>
 
-            {/* ── 인생 사건 신호 ── */}
-            {m.life_event_signals && m.life_event_signals.length > 0 && (
-              <LifeEventSignalCard events={m.life_event_signals} month={m.month} />
-            )}
-
             {/* ── 핵심 사건 예측 ── */}
             {coreEvents ? (
               <div className="mfb__core-events">
@@ -379,6 +373,8 @@ export function MonthlyFortuneEngine({
               narrativeSlots={narrativeSlots}
               monthRiskSlots={m.monthRiskSlots}
               showEmptyCoreFourHint
+              lifeEventSignals={m.life_event_signals}
+              lifeEventMonth={m.month}
             />
 
             {/* ── 행동 가이드 (잘 풀리는 방향 포함) ── */}
