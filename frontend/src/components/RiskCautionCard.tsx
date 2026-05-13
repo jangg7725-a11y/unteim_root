@@ -18,7 +18,20 @@ type Props = {
   narrativeSlots?: NarrativeSlots | null;
   /** 월지와 맞닿아 발동한 위험 신살 슬롯 — 엔진 `monthRiskSlots`, 달마다 다름 */
   monthRiskSlots?: RiskSlot[] | null;
+  /**
+   * true일 때 관재·손재·사고·이별(gwanjaesu/sonjaesu/accident_su/ibyeolsu) 슬롯이 하나도 없으면
+   * 안내 한 줄을 표시합니다. 월별 운세 카드에서만 사용합니다.
+   */
+  showEmptyCoreFourHint?: boolean;
 };
+
+/** 관재수·손재수·사고수·이별수 — 사용자가 기대하는 네 가지 ‘수’ 패턴 */
+const CORE_FOUR_RISK_TYPES = new Set([
+  "gwanjaesu",
+  "sonjaesu",
+  "accident_su",
+  "ibyeolsu",
+]);
 
 const RISK_ICON: Record<string, string> = {
   "관재수(官災數)": "⚖️",
@@ -100,12 +113,26 @@ function SepMovBox({ slot, icon, colorClass }: { slot: SepMovSlot; icon: string;
   );
 }
 
-export function RiskCautionCard({ narrativeSlots, monthRiskSlots }: Props) {
+export function RiskCautionCard({
+  narrativeSlots,
+  monthRiskSlots,
+  showEmptyCoreFourHint = false,
+}: Props) {
   const validRisks = mergeShinsalRisks(narrativeSlots?.risk?.shinsal_risks, monthRiskSlots ?? undefined);
   const health = narrativeSlots?.health;
   const relation = narrativeSlots?.relation;
   const separation = narrativeSlots?.separation;
   const movement = narrativeSlots?.movement;
+
+  const coreFourRisks = validRisks.filter(
+    (r) => typeof r.risk_type === "string" && CORE_FOUR_RISK_TYPES.has(r.risk_type),
+  );
+  const otherRisks = validRisks.filter(
+    (r) => !r.risk_type || !CORE_FOUR_RISK_TYPES.has(r.risk_type),
+  );
+
+  const showCoreFourEmptyNote =
+    showEmptyCoreFourHint && coreFourRisks.length === 0;
 
   const healthTendency =
     health?.daymaster?.health_tendency || health?.oheng?.care || "";
@@ -122,7 +149,15 @@ export function RiskCautionCard({ narrativeSlots, monthRiskSlots }: Props) {
   const hasSeparation = !!separation?.found;
   const hasMovement = !!movement?.found;
 
-  if (!hasShinsal && !hasHealth && !hasRelation && !hasSeparation && !hasMovement) return null;
+  const hasAnythingToShow =
+    hasHealth ||
+    hasRelation ||
+    hasSeparation ||
+    hasMovement ||
+    hasShinsal ||
+    showCoreFourEmptyNote;
+
+  if (!hasAnythingToShow) return null;
 
   return (
     <section
@@ -190,11 +225,56 @@ export function RiskCautionCard({ narrativeSlots, monthRiskSlots }: Props) {
           <SepMovBox slot={movement} icon="🚀" colorClass="risk-card__item--movement" />
         )}
 
-        {/* 신살 위험 패턴 */}
-        {validRisks.map((risk) => {
+        {/* 관재·손재·사고·이별 네 가지가 없는 달(월별) */}
+        {showCoreFourEmptyNote && (
+          <div
+            className="risk-card__item risk-card__item--empty-core-four"
+            role="status"
+            aria-live="polite"
+          >
+            <p className="risk-card__empty-core-four-text">해당 내용이 없어요~^^</p>
+          </div>
+        )}
+
+        {/* 신살 위험 패턴 — 네 가지 우선, 그 외(횡재·구설 등) */}
+        {coreFourRisks.map((risk) => {
           const label = risk.label_ko ?? "";
           const positive = isPositive(label);
           const rk = risk.risk_type || label;
+          return (
+            <div
+              key={rk}
+              className={`risk-card__item ${positive ? "risk-card__item--positive" : "risk-card__item--caution"}`}
+            >
+              <div className="risk-card__item-head">
+                <span className="risk-card__item-icon" aria-hidden>
+                  {getIcon(label)}
+                </span>
+                <span className="risk-card__item-label">{label}</span>
+              </div>
+
+              {risk.core_message && (
+                <p className="risk-card__core">{risk.core_message}</p>
+              )}
+              {risk.warning && (
+                <div className="risk-card__row">
+                  <span className="risk-card__row-label">주의</span>
+                  <p className="risk-card__row-text">{risk.warning}</p>
+                </div>
+              )}
+              {risk.action && (
+                <div className="risk-card__row">
+                  <span className="risk-card__row-label">행동</span>
+                  <p className="risk-card__row-text">{risk.action}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {otherRisks.map((risk) => {
+          const label = risk.label_ko ?? "";
+          const positive = isPositive(label);
+          const rk = `other-${risk.risk_type || label}`;
           return (
             <div
               key={rk}

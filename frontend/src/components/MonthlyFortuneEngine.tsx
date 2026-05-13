@@ -375,7 +375,11 @@ export function MonthlyFortuneEngine({
             </div>
 
             {/* ── 이 시기 주의할 패턴 (행동 가이드 바로 위) ── */}
-            <RiskCautionCard narrativeSlots={narrativeSlots} monthRiskSlots={m.monthRiskSlots} />
+            <RiskCautionCard
+              narrativeSlots={narrativeSlots}
+              monthRiskSlots={m.monthRiskSlots}
+              showEmptyCoreFourHint
+            />
 
             {/* ── 행동 가이드 (잘 풀리는 방향 포함) ── */}
             {(goodBullets.length > 0 || opportunityText || behaviorGuide) ? (

@@ -165,3 +165,18 @@
   color: #9b8ab0;
   text-align: right;
 }
+
+/* 월별: 관재·손재·사고·이별 해당 없음 */
+.risk-card__item--empty-core-four {
+  background: rgba(147, 197, 253, 0.12);
+  border: 1px dashed rgba(59, 130, 246, 0.28);
+  text-align: center;
+  padding: 0.65rem 0.5rem;
+}
+
+.risk-card__empty-core-four-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #4b5563;
+}
