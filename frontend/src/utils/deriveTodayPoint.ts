@@ -180,6 +180,21 @@ export function deriveTodayPoint(
       return { headline: "앞으로 10년 대운의 큰 흐름을 확인해 보세요." };
     }
 
+    case "m10": {
+      // 성격·기질 — personality + narrativeSlots 기반
+      const p = report.personality;
+      const careerHint =
+        slots?.career?.daymaster?.care_tip ||
+        slots?.career?.oheng?.strength;
+      if (p) {
+        return {
+          headline: trim(p, 60),
+          sub: careerHint ? trim(careerHint, 50) : "나의 기질과 강점을 자세히 확인해 보세요.",
+        };
+      }
+      return { headline: "나의 사주 기반 성격과 기질 패턴을 확인해 보세요." };
+    }
+
     default:
       return { headline: "사주 기반 오늘의 포인트를 확인해 보세요." };
   }
