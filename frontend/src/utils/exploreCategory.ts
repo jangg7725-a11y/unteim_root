@@ -12,7 +12,7 @@ export type ExploreCategoryAction =
 
 /**
  * 탐색 허브 카테고리 id → 리포트 메타(월 포커스·스크롤 앵커) 또는 다른 탭.
- * 월운은 기본적으로 현재 달로 맞춥니다.
+ * 스크롤 앵커는 현재 사주 리포트 탭 DOM과 일치해야 함(미존재 시 스크롤 무반응).
  */
 export function exploreActionForCategoryId(id: string): ExploreCategoryAction {
   const m = getCurrentCalendarMonth();
@@ -20,37 +20,34 @@ export function exploreActionForCategoryId(id: string): ExploreCategoryAction {
   switch (id) {
     case "m1":
       return { type: "report", meta: { focusMonth: m } };
-    // m2~m9: 바텀시트의 "자세히 보기" 목적지 — 월운 앵커 대신 각 섹션 앵커로 연결
+
     case "m2":
-      return { type: "report", meta: { reportAnchor: "report-anchor-today" } };
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
     case "m3":
-      return { type: "report", meta: { reportAnchor: "report-anchor-compatibility" } };
+      return { type: "report", meta: { reportAnchor: "report-section-relation" } };
     case "m4":
-      return { type: "report", meta: { reportAnchor: "report-section-work" } };
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
     case "m5":
-      return { type: "report", meta: { reportAnchor: "report-section-personality" } };
     case "m6":
-      return { type: "report", meta: { reportAnchor: "report-section-personality" } };
+    case "m10":
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
     case "m7":
-      return { type: "report", meta: { reportAnchor: "report-anchor-overview" } };
     case "m8":
-      return { type: "report", meta: { reportAnchor: "report-anchor-overview" } };
     case "m9":
-      return { type: "report", meta: { reportAnchor: "report-anchor-daewoon" } };
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
 
     case "l1":
-      return { type: "report", meta: { reportAnchor: "report-anchor-compatibility" } };
+      return { type: "report", meta: { reportAnchor: "report-section-relation" } };
     case "l2":
       return { type: "report", meta: { focusMonth: m } };
     case "l3":
-      return { type: "report", meta: { reportAnchor: "report-section-health" } };
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
     case "l4":
-      return { type: "report", meta: { reportAnchor: "report-section-personality" } };
-    // 피드 카드에서 이전된 항목
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
     case "f1":
-      return { type: "report", meta: { reportAnchor: "report-anchor-compatibility" } };
+      return { type: "report", meta: { reportAnchor: "report-section-relation" } };
     case "f2":
-      return { type: "report", meta: { reportAnchor: "report-section-work" } };
+      return { type: "report", meta: { focusMonth: m, reportAnchor: "report-anchor-monthly" } };
 
     case "q1":
       return { type: "counsel" };

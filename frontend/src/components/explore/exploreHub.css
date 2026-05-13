@@ -1,5 +1,23 @@
 /* 탐색 허브 — 카드·그리드 (운트임 팔레트) */
 
+.explore-hub__today-card-wrap {
+  margin: 0 0 0.5rem;
+}
+
+.explore-hub__today-card-eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7c3aed;
+}
+
+/* 내 사주 영역별 운세 → 소액 포인트 질문(리스트) */
+.explore-hub__micro-flow {
+  margin: 0.75rem 0 0.15rem;
+}
+
 .explore-hub {
   position: relative;
   max-width: 28rem;

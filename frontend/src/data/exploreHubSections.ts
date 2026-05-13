@@ -42,7 +42,7 @@ export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
     title: "사주로 알아보는 나의 오늘",
     layout: "cards",
     items: [
-      { id: "m2", label: "오늘의 리듬",     icon: "🌤️", description: "오늘 내 에너지, 어디에 쓸까?",    theme: "teal",   areaLabel: "오늘" },
+      { id: "m2", label: "오늘의 운세",     icon: "🌤️", description: "오늘 내 에너지, 어디에 쓸까?",    theme: "teal",   areaLabel: "오늘" },
       { id: "m3", label: "관계·인연",        icon: "💬", description: "지금 내 곁의 사람, 괜찮을까?",   theme: "rose",   areaLabel: "오늘" },
       { id: "m4", label: "일·재물",          icon: "💼", description: "돈과 일, 지금 흐름이 맞나요?",   theme: "amber",  areaLabel: "오늘" },
       { id: "m5", label: "마음·성향",        icon: "🌙", description: "내가 반응하는 방식, 왜 그럴까?", theme: "indigo", areaLabel: "오늘" },
@@ -63,6 +63,7 @@ export const EXPLORE_HUB_SECTIONS: ExploreHubSection[] = [
       { id: "l2", label: "택일·일정",         icon: "🗓️", description: "이날, 시작해도 괜찮을까요?",           theme: "teal",   areaLabel: "택일" },
       { id: "l3", label: "건강·휴식",         icon: "🌿", description: "내 몸이 지금 보내는 신호는?",          theme: "green",  areaLabel: "건강" },
       { id: "l4", label: "심리·습관",         icon: "🧠", description: "나도 모르게 반복하는 패턴은?",         theme: "violet", areaLabel: "심리" },
+      { id: "m10", label: "성격·기질",       icon: "🧭", description: "나는 어떤 사람일까?",                 theme: "violet", areaLabel: "성향" },
       { id: "f1", label: "사람 앞의 나",      icon: "💕", description: "대인·연애에서 드러나는 패턴",          theme: "rose",   areaLabel: "이번 달" },
       { id: "f2", label: "일과 재물의 리듬",  icon: "💼", description: "업무·재물 흐름을 보는 관점",           theme: "amber",  areaLabel: "사주" },
     ],

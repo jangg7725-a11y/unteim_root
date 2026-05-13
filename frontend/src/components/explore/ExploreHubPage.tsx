@@ -1,15 +1,18 @@
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import type { FeedNavigateMeta, FeedTabTarget } from "@/types/contentFeed";
 import { useSajuSession } from "@/context/SajuSessionContext";
 import { EXPLORE_HUB_SECTIONS, type ExploreHubItem } from "@/data/exploreHubSections";
 import { exploreActionForCategoryId } from "@/utils/exploreCategory";
 import { deriveTodayPoint, type TodayPointResult } from "@/utils/deriveTodayPoint";
+import { deriveTodayFortuneFromReport } from "@/utils/reportTodayCard";
+import { TodayFortuneCard } from "@/components/TodayFortuneCard";
+import { MicroPointOfferFlow } from "@/components/MicroPointOfferFlow";
 import { TodayPointSheet } from "./TodayPointSheet";
 import { SajuGateModal } from "./SajuGateModal";
 import "./exploreHub.css";
 
 /** flow 섹션(사주로 알아보는 나의 오늘) 항목 — 클릭 시 바텀시트 표시 */
-const FLOW_SHEET_IDS = new Set(["m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"]);
+const FLOW_SHEET_IDS = new Set(["m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10"]);
 
 type SheetState = {
   item: ExploreHubItem;
@@ -34,10 +37,23 @@ export function ExploreHubPage({
   onOpenSavedReportFlow,
   onOpenAuth,
 }: Props) {
-  const { sessionEmail, reportData } = useSajuSession();
+  const { sessionEmail, reportData, birth } = useSajuSession();
+  const todayFortuneData = useMemo(() => deriveTodayFortuneFromReport(reportData ?? null), [reportData]);
   const [gateOpen, setGateOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [sheet, setSheet] = useState<SheetState | null>(null);
+
+  const handleMicroPointCounsel = useCallback(async () => {
+    if (!hasReport) {
+      try {
+        setNavigating(true);
+        await onOpenSavedReportFlow(undefined);
+      } finally {
+        setNavigating(false);
+      }
+    }
+    onNavigateTab("counsel");
+  }, [hasReport, onOpenSavedReportFlow, onNavigateTab]);
 
   /** flow 섹션 항목 클릭 → 바텀시트 */
   const openTodaySheet = useCallback(
@@ -123,12 +139,17 @@ export function ExploreHubPage({
           </p>
         </header>
 
+        <section className="explore-hub__today-card-wrap" aria-label="사주로알아보는 나의오늘">
+          <p className="explore-hub__today-card-eyebrow">사주로 알아보는 나의 오늘</p>
+          <TodayFortuneCard data={todayFortuneData ?? undefined} supplementaryLine={null} />
+        </section>
+
         {EXPLORE_HUB_SECTIONS.map((section) => (
-          <section
-            key={section.id}
-            className={`explore-hub__section${section.layout === "action" ? " explore-hub__section--action" : ""}`}
-            aria-labelledby={`hub-sec-${section.id}`}
-          >
+          <Fragment key={section.id}>
+            <section
+              className={`explore-hub__section${section.layout === "action" ? " explore-hub__section--action" : ""}`}
+              aria-labelledby={`hub-sec-${section.id}`}
+            >
             <p className="explore-hub__eyebrow">{section.eyebrow}</p>
             <h2 id={`hub-sec-${section.id}`} className="explore-hub__sec-title">
               {section.title}
@@ -272,6 +293,12 @@ export function ExploreHubPage({
             )}
 
           </section>
+            {section.id === "life" ? (
+              <div className="explore-hub__micro-flow">
+                <MicroPointOfferFlow birth={birth} onGoCounsel={handleMicroPointCounsel} />
+              </div>
+            ) : null}
+          </Fragment>
         ))}
       </div>
 
