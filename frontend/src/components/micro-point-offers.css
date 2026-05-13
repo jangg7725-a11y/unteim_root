@@ -1,4 +1,4 @@
-.micro-point-offers {
+.mpo {
   margin: 1rem 0 0;
   padding: 0.9rem 0.85rem;
   border-radius: 16px;
@@ -6,81 +6,118 @@
   border: 1px solid rgba(124, 58, 237, 0.14);
 }
 
-.micro-point-offers__head {
+.mpo__head {
   margin-bottom: 0.75rem;
 }
 
-.micro-point-offers__title {
+.mpo__title {
   margin: 0 0 0.25rem;
   font-size: 0.96rem;
   font-weight: 800;
   color: #3f2f63;
 }
 
-.micro-point-offers__sub {
+.mpo__sub {
   margin: 0;
   font-size: 0.76rem;
   color: #6b6578;
 }
 
-.micro-point-offers__categories {
-  display: grid;
+.mpo__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mpo__row {
+  display: flex;
+  align-items: center;
   gap: 0.65rem;
-}
-
-.micro-point-offers__category {
-  border-radius: 12px;
-  padding: 0.65rem;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(110, 90, 140, 0.1);
-}
-
-.micro-point-offers__category-title {
-  margin: 0 0 0.45rem;
-  font-size: 0.83rem;
-  font-weight: 700;
-  color: #5b21b6;
-}
-
-.micro-point-offers__items {
-  display: grid;
-  gap: 0.42rem;
-}
-
-.micro-point-offers__item {
-  border: 1px solid rgba(124, 58, 237, 0.12);
-  border-radius: 10px;
-  background: rgba(250, 245, 255, 0.65);
-  padding: 0.55rem 0.65rem;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.7rem 0.1rem;
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   font: inherit;
   color: inherit;
+  transition: background 0.12s;
 }
 
-.micro-point-offers__item:hover {
-  background: rgba(245, 238, 255, 0.92);
+.mpo__row:first-child {
+  border-top: 1px solid rgba(124, 58, 237, 0.08);
 }
 
-.micro-point-offers__q {
-  margin: 0;
-  font-size: 0.8rem;
+.mpo__row:last-child {
+  border-bottom: none;
+}
+
+.mpo__row:hover {
+  background: rgba(245, 238, 255, 0.55);
+}
+
+.mpo__ico {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.09);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.mpo__text {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.mpo__area {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #7c3aed;
+  letter-spacing: 0.02em;
+}
+
+.mpo__q {
+  font-size: 0.84rem;
   font-weight: 700;
-  color: #4338ca;
+  color: #2d1f54;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.micro-point-offers__desc {
-  margin: 0.2rem 0 0;
-  font-size: 0.73rem;
-  color: #5c5266;
-}
-
-.micro-point-offers__price {
-  margin: 0.25rem 0 0;
+.mpo__desc {
   font-size: 0.72rem;
+  color: #6b6578;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mpo__arrow {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: #a78bfa;
+  line-height: 1;
+}
+
+.mpo__price {
+  flex-shrink: 0;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
 }
-

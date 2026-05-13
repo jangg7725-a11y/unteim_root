@@ -10,6 +10,7 @@ export type MicroPointOfferItem = {
 export type MicroPointOfferCategory = {
   id: string;
   title: string;
+  icon: string;
   items: MicroPointOfferItem[];
 };
 
@@ -17,6 +18,7 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
   {
     id: "love-fate",
     title: "연애/인연",
+    icon: "💕",
     items: [
       { question: "우리 사랑할까요?", description: "두 사람의 감정선이 어디까지 이어질지 확인해요.", price: 900, type: "pair" },
       { question: "우리 인연 맞나요?", description: "스쳐 가는 인연인지, 깊어질 인연인지 짚어봐요.", price: 900, type: "pair" },
@@ -26,6 +28,7 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
   {
     id: "partner-mind",
     title: "상대 마음",
+    icon: "💭",
     items: [
       { question: "상대의 마음은?", description: "겉으로 보이지 않는 속마음을 차분히 읽어봐요.", price: 900, type: "pair" },
       { question: "연락 안 하는 이유는?", description: "지금 멈춘 이유와 감정의 온도를 확인해요.", price: 900, type: "pair" },
@@ -35,6 +38,7 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
   {
     id: "reunion",
     title: "재회",
+    icon: "🔄",
     items: [
       { question: "다시 만날 수 있을까요?", description: "재회 가능성과 관계 회복의 조건을 살펴봐요.", price: 1000, type: "pair" },
       { question: "기다리면 돌아올까요?", description: "기다림이 의미 있는지 지금 판단해봐요.", price: 900, type: "pair" },
@@ -43,6 +47,7 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
   {
     id: "timing",
     title: "타이밍",
+    icon: "⏰",
     items: [
       {
         question: "지금 연락해도 될까요?",
@@ -63,6 +68,7 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
   {
     id: "emotion",
     title: "감정",
+    icon: "🌙",
     items: [
       {
         question: "나의 마음 상태는?",
@@ -83,6 +89,7 @@ export const MICRO_POINT_OFFERS: MicroPointOfferCategory[] = [
   {
     id: "compatibility",
     title: "궁합",
+    icon: "🤝",
     items: [
       { question: "우리 궁합은?", description: "성향·리듬의 맞물림을 쉽게 확인해요.", price: 1200, type: "pair" },
       { question: "결혼 궁합은?", description: "생활 궁합과 장기 안정성을 함께 점검해요.", price: 1500, type: "pair" },
